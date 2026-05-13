@@ -1,7 +1,6 @@
 from django import forms
-from .models import Crop
 from django.contrib.auth import get_user_model
-from .models import WorkCommitment
+from .models import Crop, WorkCommitment
 
 # Fetch your CustomUser model
 User = get_user_model()
@@ -14,13 +13,21 @@ class WorkCommitmentForm(forms.ModelForm):
         widgets = {
             "name": forms.TextInput(
                 attrs={
-                    "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5",
+                    "class": (
+                        "bg-gray-50 border border-gray-300 text-gray-900 "
+                        "text-sm rounded-lg focus:ring-emerald-500 "
+                        "focus:border-emerald-500 block w-full p-2.5"
+                    ),
                     "placeholder": "e.g., Full Share",
                 }
             ),
             "required_hours": forms.NumberInput(
                 attrs={
-                    "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5",
+                    "class": (
+                        "bg-gray-50 border border-gray-300 text-gray-900 "
+                        "text-sm rounded-lg focus:ring-emerald-500 "
+                        "focus:border-emerald-500 block w-full p-2.5"
+                    ),
                     "placeholder": "80",
                 }
             ),
@@ -49,7 +56,7 @@ class VolunteerCreationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         if self.request_user and not self.request_user.is_staff:
-            # If the user is only a Farm Manager, remove the Manager roles from the dropdown
+            # If the user is only a Farm Manager, remove the Manager roles
             if self.request_user.role == "farm_manager":
                 self.fields["role"].choices = [
                     choice
