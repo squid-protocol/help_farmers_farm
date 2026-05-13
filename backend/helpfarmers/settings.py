@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts',  # <-- Our custom user app
     'farms',
+    'logs',
 ]
 
 MIDDLEWARE = [
@@ -101,3 +102,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Tell Django to use our custom user model
 AUTH_USER_MODEL = 'accounts.CustomUser'
+
+LOGIN_REDIRECT_URL = '/log-hours/'
