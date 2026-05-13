@@ -21,7 +21,12 @@
                         <div class="hidden sm:block text-sm text-gray-500">
                             Logged in as: <strong class="text-gray-900">{{ user.username }}</strong>
                         </div>
+                        
                         <a href="{% url 'log_hours' %}" class="text-gray-600 hover:text-green-600 font-medium transition">Log Hours</a>
+                        
+                        <a href="{% url 'farm_impact' %}" class="text-gray-600 hover:text-green-600 font-medium transition flex items-center gap-1">
+                            📊 Farm Impact
+                        </a>
                         
                         {% if user.is_staff or user.role == 'account_manager' or user.role == 'farm_manager' %}
                             <a href="{% url 'manager_dashboard' %}" class="text-green-600 hover:text-green-800 font-semibold transition">Manage Farm</a>
