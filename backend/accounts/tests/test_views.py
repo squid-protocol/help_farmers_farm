@@ -77,7 +77,7 @@ class ProfileViewsTests(TestCase):
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1"
             "HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
         )
-        
+
         response = self.client.post(
             reverse("upload_avatar"), {"avatar_base64": dummy_base64_image}
         )
