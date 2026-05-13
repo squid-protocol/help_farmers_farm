@@ -2,13 +2,12 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import CustomUser
 
+@admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
-    # This controls what columns show up in the main list view
-    list_display = ('username', 'email', 'first_name', 'last_name', 'farm', 'is_staff')
+    # Added 'role' so you can see it at a glance in the main list
+    list_display = ('username', 'email', 'first_name', 'last_name', 'role', 'farm', 'is_staff')
     
-    # This adds the 'farm' dropdown to the user's edit page
+    # Added 'role' to the editable fields on the user detail page
     fieldsets = UserAdmin.fieldsets + (
-        ('Farm Link', {'fields': ('farm',)}),
+        ('Farm & Role Assignment', {'fields': ('farm', 'role')}),
     )
-
-admin.site.register(CustomUser, CustomUserAdmin)
