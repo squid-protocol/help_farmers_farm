@@ -23,6 +23,8 @@ class LogEntryForm(forms.ModelForm):
         # CRITICAL MULTI-TENANCY LOGIC:
         # Filter the crop dropdown to ONLY show active crops from this specific volunteer's farm.
         if user and user.farm:
-            self.fields["crop"].queryset = Crop.objects.filter(farm=user.farm, is_active=True)
+            self.fields["crop"].queryset = Crop.objects.filter(
+                farm=user.farm, is_active=True
+            )
         else:
             self.fields["crop"].queryset = Crop.objects.none()

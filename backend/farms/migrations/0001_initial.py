@@ -14,7 +14,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="Farm",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("name", models.CharField(max_length=255)),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
             ],
@@ -22,16 +30,29 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="Crop",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("crop_name", models.CharField(max_length=100)),
                 ("category", models.CharField(blank=True, max_length=100, null=True)),
                 ("variety", models.CharField(blank=True, max_length=100, null=True)),
                 ("is_active", models.BooleanField(default=True)),
-                ("data_source", models.CharField(blank=True, max_length=100, null=True)),
+                (
+                    "data_source",
+                    models.CharField(blank=True, max_length=100, null=True),
+                ),
                 (
                     "farm",
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, related_name="crops", to="farms.farm"
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="crops",
+                        to="farms.farm",
                     ),
                 ),
             ],

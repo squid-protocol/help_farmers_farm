@@ -8,24 +8,27 @@ from logs.models import LogEntry
 
 User = get_user_model()
 
+
 class LogEntryModelTests(TestCase):
     def setUp(self):
         # 1. Set up the baseline "controlled environment"
         self.farm = Farm.objects.create(name="Test Farm")
-        self.user = User.objects.create_user(username="testvol", password="password", farm=self.farm)
+        self.user = User.objects.create_user(
+            username="testvol", password="password", farm=self.farm
+        )
         self.crop = Crop.objects.create(farm=self.farm, crop_name="Test Tomatoes")
 
     def test_future_date_rejected(self):
         # 2. The Hypothesis: Logging hours for tomorrow should fail.
         tomorrow = timezone.now().date() + timedelta(days=1)
-        
+
         future_log = LogEntry(
             farm=self.farm,
             volunteer=self.user,
             crop=self.crop,
-            activity='P',
+            activity="P",
             duration_hours=2.00,
-            date_logged=tomorrow
+            date_logged=tomorrow,
         )
 
         # 3. The Experiment: We assert that calling full_clean() raises a ValidationError

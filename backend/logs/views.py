@@ -23,7 +23,9 @@ def log_hours_view(request):
     user_logs = LogEntry.objects.filter(volunteer=request.user)
 
     # 2. Add up all their hours using 'duration_hours'
-    total_hours = user_logs.aggregate(Sum("duration_hours"))["duration_hours__sum"] or 0.0
+    total_hours = (
+        user_logs.aggregate(Sum("duration_hours"))["duration_hours__sum"] or 0.0
+    )
 
     # 3. Grab their 5 most recent shifts sorted by 'date_logged'
     recent_logs = user_logs.order_by("-date_logged")[:5]

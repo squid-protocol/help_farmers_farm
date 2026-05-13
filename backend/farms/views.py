@@ -39,7 +39,9 @@ def manager_dashboard(request):
 
         elif "submit_volunteer" in request.POST:
             # 2. Pass the logged-in user to the submitted form
-            volunteer_form = VolunteerCreationForm(request.POST, request_user=request.user)
+            volunteer_form = VolunteerCreationForm(
+                request.POST, request_user=request.user
+            )
             if volunteer_form.is_valid():
                 new_user = volunteer_form.save(commit=False)
                 new_user.farm = my_farm
@@ -69,11 +71,15 @@ def volunteer_detail_view(request, volunteer_id):
 
     # 2. SECURITY: Ensure the manager is looking at a volunteer from their OWN farm
     if not request.user.is_staff and volunteer.farm != request.user.farm:
-        raise PermissionDenied("You do not have permission to view volunteers outside your farm.")
+        raise PermissionDenied(
+            "You do not have permission to view volunteers outside your farm."
+        )
 
     # 3. Fetch logs and crunch the numbers
     user_logs = LogEntry.objects.filter(volunteer=volunteer)
-    total_hours = user_logs.aggregate(Sum("duration_hours"))["duration_hours__sum"] or 0.0
+    total_hours = (
+        user_logs.aggregate(Sum("duration_hours"))["duration_hours__sum"] or 0.0
+    )
 
     # Grab their 15 most recent shifts so the manager has good visibility
     recent_logs = user_logs.order_by("-date_logged")[:15]
@@ -97,8 +103,13 @@ def remove_user_view(request, user_id):
         raise PermissionDenied("Cannot remove users outside your farm.")
 
     # RULE 2: Farm Managers cannot delete Account Managers or other Farm Managers
-    if request.user.role == "farm_manager" and user_to_remove.role in ["account_manager", "farm_manager"]:
-        raise PermissionDenied("Farm Managers do not have permission to remove other managers.")
+    if request.user.role == "farm_manager" and user_to_remove.role in [
+        "account_manager",
+        "farm_manager",
+    ]:
+        raise PermissionDenied(
+            "Farm Managers do not have permission to remove other managers."
+        )
 
     # RULE 3: You can't delete yourself
     if request.user == user_to_remove:
@@ -154,12 +165,21 @@ def farm_impact_view(request):
 
         # Only draw the bar if there is actually data for this activity
         if sum(y_values) > 0:
-            fig.add_trace(go.Bar(name=act_label, x=crops, y=y_values, marker_color=activity_colors.get(act_code)))
+            fig.add_trace(
+                go.Bar(
+                    name=act_label,
+                    x=crops,
+                    y=y_values,
+                    marker_color=activity_colors.get(act_code),
+                )
+            )
 
     # 5. Make it look beautiful and responsive
     fig.update_layout(
         barmode="stack",
-        title=dict(text=f"Seasonal Labor Hours: {farm.name}", font=dict(size=22), x=0.5),
+        title=dict(
+            text=f"Seasonal Labor Hours: {farm.name}", font=dict(size=22), x=0.5
+        ),
         plot_bgcolor="rgba(250,250,250,1)",
         paper_bgcolor="white",
         margin=dict(l=50, r=50, t=80, b=100),
@@ -170,4 +190,6 @@ def farm_impact_view(request):
     # 6. Convert the interactive graph to a safe HTML string so Tailwind can render it
     chart_html = fig.to_html(full_html=False, include_plotlyjs="cdn")
 
-    return render(request, "farms/farm_impact.html", {"chart": chart_html, "farm": farm})
+    return render(
+        request, "farms/farm_impact.html", {"chart": chart_html, "farm": farm}
+    )

@@ -18,11 +18,24 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="LogEntry",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 (
                     "activity",
                     models.CharField(
-                        choices=[("P", "Plant"), ("T", "Tend"), ("H", "Harvest"), ("O", "Off-Season/Other")],
+                        choices=[
+                            ("P", "Plant"),
+                            ("T", "Tend"),
+                            ("H", "Harvest"),
+                            ("O", "Off-Season/Other"),
+                        ],
                         max_length=1,
                     ),
                 ),
@@ -32,19 +45,25 @@ class Migration(migrations.Migration):
                 (
                     "crop",
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, related_name="logs", to="farms.crop"
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="logs",
+                        to="farms.crop",
                     ),
                 ),
                 (
                     "farm",
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, related_name="logs", to="farms.farm"
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="logs",
+                        to="farms.farm",
                     ),
                 ),
                 (
                     "volunteer",
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, related_name="logs", to=settings.AUTH_USER_MODEL
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="logs",
+                        to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],

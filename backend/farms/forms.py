@@ -13,7 +13,9 @@ class CropForm(forms.ModelForm):
 
 
 class VolunteerCreationForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput(), help_text="Provide a temporary password.")
+    password = forms.CharField(
+        widget=forms.PasswordInput(), help_text="Provide a temporary password."
+    )
 
     class Meta:
         model = User

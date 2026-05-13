@@ -16,7 +16,9 @@ class CustomUser(AbstractUser):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="volunteer")
 
     # The existing multi-tenant link
-    farm = models.ForeignKey(Farm, on_delete=models.CASCADE, null=True, blank=True, related_name="volunteers")
+    farm = models.ForeignKey(
+        Farm, on_delete=models.CASCADE, null=True, blank=True, related_name="volunteers"
+    )
 
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"
