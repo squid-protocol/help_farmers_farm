@@ -73,8 +73,11 @@ class ProfileViewsTests(TestCase):
     def test_upload_avatar_post(self):
         """Tests uploading an avatar via base64 data."""
         # This is a tiny 1x1 pixel transparent PNG encoded in base64
-        dummy_base64_image = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
-
+        dummy_base64_image = (
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1"
+            "HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+        )
+        
         response = self.client.post(
             reverse("upload_avatar"), {"avatar_base64": dummy_base64_image}
         )
