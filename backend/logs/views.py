@@ -15,19 +15,20 @@ def log_hours_view(request):
     current_year = datetime.now().year
 
     # 1. Handle New Shift Submissions
-    if request.method == "POST":
-        form = LogEntryForm(request.POST)
+    if request.method == 'POST':
+        # THE FIX: Add user=request.user to the POST instantiation
+        form = LogEntryForm(request.POST, user=request.user)
+        
         if form.is_valid():
             new_log = form.save(commit=False)
             new_log.volunteer = user
-            # Assign the user's farm to the log automatically
-            new_log.farm = user.farm
+            new_log.farm = user.farm 
             new_log.save()
             messages.success(request, "Shift logged successfully!")
-            # POST/Redirect/GET pattern ensures stats recalculate perfectly
-            return redirect("log_hours")
+            return redirect('log_hours') 
     else:
-        form = LogEntryForm()
+        # THE FIX: Add user=request.user to the GET instantiation as well
+        form = LogEntryForm(user=request.user)
 
     # 2. Fetch User's Data
     all_logs = LogEntry.objects.filter(volunteer=user)
