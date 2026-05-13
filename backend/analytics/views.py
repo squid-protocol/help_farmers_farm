@@ -199,3 +199,103 @@ def get_activity_heatmap(request):
 
     chart_html = fig.to_html(full_html=False, include_plotlyjs=False)
     return render(request, "analytics/partials/chart.html", {"chart": chart_html})
+
+@login_required
+def get_term_heatmap(request):
+    farm = request.user.farm
+    year = request.GET.get('year', 'all')
+
+    # 1. FETCH DATA
+    logs = LogEntry.objects.filter(farm=farm).exclude(crop__isnull=True)
+    if year != 'all':
+        logs = logs.filter(date_logged__year=int(year))
+
+    data = list(logs.values('date_logged', 'crop__crop_name', 'activity'))
+    
+    if not data:
+        empty_html = """
+        <div class="flex flex-col items-center justify-center py-20 text-gray-400">
+            <p class="text-xl font-medium">No term occurrence data found for this timeframe.</p>
+        </div>
+        """
+        return render(request, "analytics/partials/chart.html", {"chart": empty_html})
+
+    df = pd.DataFrame(data)
+    
+    # 2. PREPARE DATA
+    df['WeekOfYear'] = pd.to_datetime(df['date_logged']).dt.isocalendar().week.astype(int)
+    activity_names = dict(LogEntry.ACTIVITY_CHOICES)
+    df['Activity_Label'] = df['activity'].map(activity_names)
+
+    # 3. SPLIT AND STACK (The Magic Trick)
+    # Count every log entry as an occurrence for its Crop...
+    df_veggies = df[['WeekOfYear', 'crop__crop_name']].rename(columns={'crop__crop_name': 'Term'})
+    # ...AND as an occurrence for its Activity
+    df_activities = df[['WeekOfYear', 'Activity_Label']].rename(columns={'Activity_Label': 'Term'})
+    
+    # Stack them together
+    df_terms = pd.concat([df_veggies, df_activities]).dropna(subset=['Term'])
+
+    # 4. AGGREGATE
+    # Count how many times each term appeared in each week
+    agg_df = df_terms.groupby(['Term', 'WeekOfYear']).size().reset_index(name='Occurrences')
+
+    # Organize the Y-Axis so Activities are at the top, Veggies at the bottom
+    all_unique_terms = agg_df['Term'].unique().tolist()
+    activity_list = sorted([name for code, name in activity_names.items() if name in all_unique_terms])
+    veggie_list = sorted([t for t in all_unique_terms if t not in activity_list])
+    ordered_terms = activity_list + veggie_list
+    
+    weeks = list(range(1, 53))
+
+    # Pivot to create the grid (Fill missing weeks with 0)
+    pivot_z = agg_df.pivot(index='Term', columns='WeekOfYear', values='Occurrences').reindex(index=ordered_terms, columns=weeks, fill_value=0)
+    
+    # Convert to standard Python list for Plotly JSON serialization
+    z_matrix = pivot_z.values.tolist()
+
+    # 5. BUILD THE PLOTLY FIGURE
+    fig = go.Figure()
+
+    # Main Heatmap Trace 
+    fig.add_trace(go.Heatmap(
+        z=z_matrix,
+        x=weeks,
+        y=ordered_terms,
+        colorscale='Teal', 
+        xgap=1, 
+        ygap=1, 
+        hovertemplate='<b>Week:</b> %{x}<br><b>Term:</b> %{y}<br><b>Occurrences:</b> %{z} logs<extra></extra>',
+        showscale=True,
+        colorbar=dict(title="Occurrences", thickness=15) # <--- Cleaned up!
+    ))
+
+    # The Ghost Trace (Mirrors labels to the right side of the screen)
+    fig.add_trace(go.Heatmap(
+        z=[[None]*len(weeks)]*len(ordered_terms),
+        x=weeks, y=ordered_terms,
+        yaxis='y2', showscale=False, hoverinfo='skip'
+    ))
+
+    # 6. USER-FRIENDLY AXES
+    xaxis_config = dict(title="Week of Year", tickmode="linear", dtick=4, showgrid=True, gridcolor='rgba(200,200,200,0.3)')
+    if year != 'all':
+        xaxis_config = dict(
+            tickmode='array',
+            tickvals=[1, 5, 9, 14, 18, 22, 27, 31, 36, 40, 44, 48],
+            ticktext=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            showgrid=True, gridcolor='rgba(200,200,200,0.3)'
+        )
+
+    fig.update_layout(
+        plot_bgcolor='rgba(250,250,250,1)', paper_bgcolor='white',
+        margin=dict(l=150, r=150, t=20, b=80),
+        height=max(400, len(ordered_terms) * 25 + 150),
+        xaxis=xaxis_config,
+        yaxis=dict(title="", tickfont=dict(size=13), automargin=True),
+        yaxis2=dict(overlaying='y', side='right', matches='y', showgrid=False, tickfont=dict(size=13)),
+        hoverlabel=dict(bgcolor="white", font_size=13, font_color="black")
+    )
+
+    chart_html = fig.to_html(full_html=False, include_plotlyjs=False)
+    return render(request, "analytics/partials/chart.html", {"chart": chart_html})
