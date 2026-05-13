@@ -1,9 +1,30 @@
 from django import forms
 from .models import Crop
 from django.contrib.auth import get_user_model
+from .models import WorkCommitment
 
 # Fetch your CustomUser model
 User = get_user_model()
+
+
+class WorkCommitmentForm(forms.ModelForm):
+    class Meta:
+        model = WorkCommitment
+        fields = ["name", "required_hours"]
+        widgets = {
+            "name": forms.TextInput(
+                attrs={
+                    "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5",
+                    "placeholder": "e.g., Full Share",
+                }
+            ),
+            "required_hours": forms.NumberInput(
+                attrs={
+                    "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5",
+                    "placeholder": "80",
+                }
+            ),
+        }
 
 
 class CropForm(forms.ModelForm):

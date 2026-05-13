@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-10">
+    <div class="mb-8">
+        <h1 class="text-3xl font-extrabold text-gray-900">Manage Work Commitments</h1>
+        <p class="text-gray-500 mt-2">Create standard volunteer goals for {{ farm.name }}.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Current Commitments</h2>
+            
+            {% if commitments %}
+                <ul class="space-y-3">
+                    {% for item in commitments %}
+                    <li class="p-4 bg-gray-50 rounded-lg border border-gray-100 flex justify-between items-center">
+                        <span class="font-bold text-gray-800">{{ item.name }}</span>
+                        <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-0.5 rounded">{{ item.required_hours }} Hours</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-gray-500 text-sm">No work commitments set up yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm h-fit">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Add New Commitment</h2>
+            
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label class="block mb-2 text-sm font-medium text-gray-900">Commitment Name</label>
+                    {{ form.name }}
+                </div>
+                <div class="mb-6">
+                    <label class="block mb-2 text-sm font-medium text-gray-900">Required Hours</label>
+                    {{ form.required_hours }}
+                </div>
+                <button type="submit" class="w-full text-white bg-emerald-600 hover:bg-emerald-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition">
+                    Create Commitment
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

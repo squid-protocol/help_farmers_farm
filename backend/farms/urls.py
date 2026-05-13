@@ -11,4 +11,5 @@ urlpatterns = [
     path("remove-user/<int:user_id>/", views.remove_user_view, name="remove_user"),
     # NEW: The Farm Impact Dashboard
     path("impact/", views.farm_impact_view, name="farm_impact"),
+    path("commitments/", views.manage_work_commitments, name="manage_work_commitments"),
 ]

@@ -1,14 +1,18 @@
+# --- Django Core & Utility Imports ---
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
 from django.db.models import Sum
 from django.views.decorators.http import require_POST
+from django.contrib import messages
 
+# --- Local App Imports (Farms) ---
+from .models import Crop, WorkCommitment
+from .forms import CropForm, VolunteerCreationForm, WorkCommitmentForm
 
-from .models import Crop
-from .forms import CropForm, VolunteerCreationForm
-from logs.models import LogEntry  # Pulls the logs so we can calculate hours
+# --- Other App Imports ---
+from logs.models import LogEntry
 
 User = get_user_model()
 
@@ -23,9 +27,10 @@ def is_manager(user):
 def manager_dashboard(request):
     my_farm = request.user.farm
 
+    # Instantiate all three empty forms
     crop_form = CropForm()
-    # 1. Pass the logged-in user to the empty form
     volunteer_form = VolunteerCreationForm(request_user=request.user)
+    commitment_form = WorkCommitmentForm()  # <-- NEW
 
     if request.method == "POST":
         if "submit_crop" in request.POST:
@@ -34,10 +39,10 @@ def manager_dashboard(request):
                 new_crop = crop_form.save(commit=False)
                 new_crop.farm = my_farm
                 new_crop.save()
+                messages.success(request, "Crop added successfully!")
                 return redirect("manager_dashboard")
 
         elif "submit_volunteer" in request.POST:
-            # 2. Pass the logged-in user to the submitted form
             volunteer_form = VolunteerCreationForm(
                 request.POST, request_user=request.user
             )
@@ -46,35 +51,50 @@ def manager_dashboard(request):
                 new_user.farm = my_farm
                 new_user.set_password(volunteer_form.cleaned_data["password"])
                 new_user.save()
+                messages.success(request, "Volunteer created successfully!")
                 return redirect("manager_dashboard")
 
+        # <-- NEW: Handle Work Commitment Submission -->
+        elif "submit_commitment" in request.POST:
+            commitment_form = WorkCommitmentForm(request.POST)
+            if commitment_form.is_valid():
+                new_commitment = commitment_form.save(commit=False)
+                new_commitment.farm = my_farm
+                new_commitment.save()
+                messages.success(request, "Work commitment added successfully!")
+                return redirect("manager_dashboard")
+
+    # Fetch all the data to display in the lists
     crops = Crop.objects.filter(farm=my_farm).order_by("-is_active", "crop_name")
     volunteers = User.objects.filter(farm=my_farm).order_by("role", "username")
+    commitments = WorkCommitment.objects.filter(farm=my_farm)  # <-- NEW
 
     context = {
         "farm": my_farm,
         "crop_form": crop_form,
         "volunteer_form": volunteer_form,
+        "commitment_form": commitment_form,  # <-- NEW
         "crops": crops,
         "volunteers": volunteers,
+        "commitments": commitments,  # <-- NEW
     }
     return render(request, "farms/manager_dashboard.html", context)
 
 
-# --- The New Volunteer Detail View ---
+# --- The Volunteer Detail View ---
 @login_required
 @user_passes_test(is_manager, login_url="/log-hours/")
 def volunteer_detail_view(request, volunteer_id):
     # SECURE: Forces the requested user to belong to the manager's farm
     volunteer = get_object_or_404(User, id=volunteer_id, farm=request.user.farm)
 
-    # 2. SECURITY: Ensure the manager is looking at a volunteer from their OWN farm
+    # SECURITY: Ensure the manager is looking at a volunteer from their OWN farm
     if not request.user.is_staff and volunteer.farm != request.user.farm:
         raise PermissionDenied(
             "You do not have permission to view volunteers outside your farm."
         )
 
-    # 3. Fetch logs and crunch the numbers
+    # Fetch logs and crunch the numbers
     user_logs = LogEntry.objects.filter(volunteer=volunteer)
     total_hours = (
         user_logs.aggregate(Sum("duration_hours"))["duration_hours__sum"] or 0.0
@@ -126,3 +146,28 @@ def farm_impact_view(request):
     crops = Crop.objects.filter(farm=farm, is_active=True).order_by("crop_name")
 
     return render(request, "farms/farm_impact.html", {"farm": farm, "crops": crops})
+
+
+@login_required
+@user_passes_test(is_manager, login_url="/log-hours/")
+def manage_work_commitments(request):
+    farm = request.user.farm
+    commitments = WorkCommitment.objects.filter(farm=farm)
+
+    if request.method == "POST":
+        form = WorkCommitmentForm(request.POST)
+        if form.is_valid():
+            # FIXED: commitFalse=True is now commit=False
+            new_commitment = form.save(commit=False)
+            new_commitment.farm = farm
+            new_commitment.save()
+            messages.success(request, "Work commitment added successfully!")
+            return redirect("manage_work_commitments")
+    else:
+        form = WorkCommitmentForm()
+
+    return render(
+        request,
+        "farms/manage_commitments.html",
+        {"form": form, "commitments": commitments, "farm": farm},
+    )

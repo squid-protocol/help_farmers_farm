@@ -82,19 +82,48 @@
                                 <span style="color: #666; font-size: 0.9em;">{{ volunteer.get_role_display }}</span>
                                 
                                 {% if user.id != volunteer.id %}
-                                    
                                     {% if user.is_staff or user.role == 'account_manager' or volunteer.role != 'account_manager' and volunteer.role != 'farm_manager' %}
                                         <form action="{% url 'remove_user' volunteer.id %}" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to completely remove this user?');">
                                             {% csrf_token %}
                                             <button type="submit" style="background: none; border: none; font-size: 1.2em; cursor: pointer; padding: 0;" title="Remove User">🗑️</button>
                                         </form>
                                     {% endif %}
-                                    
                                 {% endif %}
                             </div>
                         </li>
                     {% empty %}
                         <p style="color: #666;">No volunteers added yet.</p>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <hr style="margin-top: 40px; border: 0; border-top: 1px solid #ddd;">
+        
+        <div style="display: flex; gap: 40px; margin-top: 40px; margin-bottom: 40px;">
+            <div style="flex: 1; background: #fdfbf5; padding: 20px; border-radius: 8px; border: 1px solid #f3e8b1;">
+                <h3 style="margin-top: 0;">Add a Work Commitment</h3>
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ commitment_form.as_p }}
+                    <button type="submit" name="submit_commitment" style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold;">+ Create Commitment</button>
+                </form>
+            </div>
+
+            <div style="flex: 1;">
+                <h3 style="margin-top: 0;">Current Work Commitments</h3>
+                <ul style="list-style-type: none; padding: 0;">
+                    {% for item in commitments %}
+                        <li style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                            <span>
+                                <strong>{{ item.name }}</strong> 
+                            </span>
+                            <span style="background: #d1fae5; color: #065f46; padding: 4px 8px; border-radius: 12px; font-size: 0.85em; font-weight: bold;">
+                                {{ item.required_hours }} Hours
+                            </span>
+                        </li>
+                    {% empty %}
+                        <p style="color: #666;">No work commitments added yet.</p>
                     {% endfor %}
                 </ul>
             </div>

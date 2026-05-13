@@ -21,3 +21,14 @@ class Crop(models.Model):
 
     def __str__(self):
         return f"{self.crop_name} - {self.variety}" if self.variety else self.crop_name
+
+
+class WorkCommitment(models.Model):
+    farm = models.ForeignKey(
+        Farm, on_delete=models.CASCADE, related_name="work_commitments"
+    )
+    name = models.CharField(max_length=100)  # e.g., "Full Share", "Half Share"
+    required_hours = models.IntegerField(default=0)  # e.g., 80, 50
+
+    def __str__(self):
+        return f"{self.name} ({self.required_hours} hrs)"
