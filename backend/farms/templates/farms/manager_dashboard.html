@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farm Manager Dashboard</title>
+</head>
+<body>
+    <div style="max-width: 900px; margin: 40px auto; font-family: sans-serif;">
+
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;">
+            <div>Logged in as: <strong>{{ user.username }}</strong> ({{ user.farm }})</div>
+            <div>
+                <a href="{% url 'log_hours' %}" style="margin-right: 15px; text-decoration: none;">🔙 Back to Logging</a>
+                {% if user.is_staff %}
+                    <a href="{% url 'admin:index' %}" style="margin-right: 15px; color: blue; text-decoration: none;">⚙️ Admin</a>
+                {% endif %}
+                <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" style="background: none; border: none; color: red; text-decoration: underline; cursor: pointer; font-size: 16px;">Log Out</button>
+                </form>
+            </div>
+        </div>
+
+        <h2>🌾 {{ farm.name }} - Manager Dashboard</h2>
+
+        <div style="display: flex; gap: 40px; margin-top: 30px;">
+            <div style="flex: 1; background: #eef7ee; padding: 20px; border-radius: 8px; border: 1px solid #c8e6c9;">
+                <h3 style="margin-top: 0;">Add a New Crop</h3>
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ crop_form.as_p }}
+                    <button type="submit" name="submit_crop" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%;">+ Add Crop</button>
+                </form>
+            </div>
+
+            <div style="flex: 1; background: #f4f6f8; padding: 20px; border-radius: 8px; border: 1px solid #dae1e7;">
+                <h3 style="margin-top: 0;">Add a Volunteer</h3>
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ volunteer_form.as_p }}
+                    <button type="submit" name="submit_volunteer" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%;">+ Create Volunteer</button>
+                </form>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 40px; margin-top: 40px;">
+            <div style="flex: 1;">
+                <h3>Current Crops</h3>
+                <ul style="list-style-type: none; padding: 0;">
+                    {% for crop in crops %}
+                        <li style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;">
+                            <span>
+                                <strong>{{ crop.crop_name }}</strong> 
+                                {% if crop.variety %}({{ crop.variety }}){% endif %}
+                            </span>
+                            {% if crop.is_active %}
+                                <span style="color: green; font-size: 0.9em;">Active</span>
+                            {% else %}
+                                <span style="color: red; font-size: 0.9em;">Inactive</span>
+                            {% endif %}
+                        </li>
+                    {% empty %}
+                        <p style="color: #666;">No crops added yet.</p>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div style="flex: 1;">
+                <h3>Volunteer Roster</h3>
+                <ul style="list-style-type: none; padding: 0;">
+                    {% for volunteer in volunteers %}
+                        <li style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;">
+                            <span>
+                                <strong>{{ volunteer.username }}</strong>
+                                {% if volunteer.first_name %} ({{ volunteer.first_name }} {{ volunteer.last_name }}){% endif %}
+                            </span>
+                            <span style="color: #666; font-size: 0.9em;">{{ volunteer.get_role_display }}</span>
+                        </li>
+                    {% empty %}
+                        <p style="color: #666;">No volunteers added yet.</p>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
