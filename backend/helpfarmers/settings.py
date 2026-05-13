@@ -125,3 +125,7 @@ AXES_RESET_ON_SUCCESS = True  # Reset the counter if they log in successfully
 
 # During development, print emails to the console instead of actually sending them
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+# settings.py (at the bottom)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

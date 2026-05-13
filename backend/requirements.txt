@@ -12,6 +12,7 @@ mypy_extensions==1.1.0
 narwhals==2.21.0
 packaging==26.2
 pathspec==1.1.1
+pillow==12.2.0
 platformdirs==4.9.6
 plotly==6.7.0
 psycopg2-binary==2.9.12

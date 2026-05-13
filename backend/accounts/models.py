@@ -2,7 +2,6 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from farms.models import Farm
 
-
 class CustomUser(AbstractUser):
     # Define the hierarchy of roles
     ROLE_CHOICES = [
@@ -19,6 +18,9 @@ class CustomUser(AbstractUser):
     farm = models.ForeignKey(
         Farm, on_delete=models.CASCADE, null=True, blank=True, related_name="volunteers"
     )
+
+    # THE MISSING PIECE: Allow users to upload avatars
+    avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
 
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"
