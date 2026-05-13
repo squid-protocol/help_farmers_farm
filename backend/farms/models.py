@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Farm(models.Model):
     name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -7,10 +8,11 @@ class Farm(models.Model):
     def __str__(self):
         return self.name
 
+
 class Crop(models.Model):
     # The Row-Level Multi-Tenancy link
-    farm = models.ForeignKey(Farm, on_delete=models.CASCADE, related_name='crops')
-    
+    farm = models.ForeignKey(Farm, on_delete=models.CASCADE, related_name="crops")
+
     crop_name = models.CharField(max_length=100)
     category = models.CharField(max_length=100, blank=True, null=True)
     variety = models.CharField(max_length=100, blank=True, null=True)

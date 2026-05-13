@@ -6,13 +6,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0002_customuser_farm'),
+        ("accounts", "0002_customuser_farm"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='customuser',
-            name='role',
-            field=models.CharField(choices=[('account_manager', 'Account Manager (System Admin)'), ('farm_manager', 'Farm Manager (Local Admin)'), ('volunteer', 'Active Volunteer'), ('friend', 'Friend (Read-Only/Legacy)')], default='volunteer', max_length=20),
+            model_name="customuser",
+            name="role",
+            field=models.CharField(
+                choices=[
+                    ("account_manager", "Account Manager (System Admin)"),
+                    ("farm_manager", "Farm Manager (Local Admin)"),
+                    ("volunteer", "Active Volunteer"),
+                    ("friend", "Friend (Read-Only/Legacy)"),
+                ],
+                default="volunteer",
+                max_length=20,
+            ),
         ),
     ]

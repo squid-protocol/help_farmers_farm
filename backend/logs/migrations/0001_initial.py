@@ -10,22 +10,43 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('farms', '0001_initial'),
+        ("farms", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='LogEntry',
+            name="LogEntry",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('activity', models.CharField(choices=[('P', 'Plant'), ('T', 'Tend'), ('H', 'Harvest'), ('O', 'Off-Season/Other')], max_length=1)),
-                ('duration_hours', models.DecimalField(decimal_places=2, max_digits=4)),
-                ('date_logged', models.DateField()),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('crop', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='logs', to='farms.crop')),
-                ('farm', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='logs', to='farms.farm')),
-                ('volunteer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='logs', to=settings.AUTH_USER_MODEL)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "activity",
+                    models.CharField(
+                        choices=[("P", "Plant"), ("T", "Tend"), ("H", "Harvest"), ("O", "Off-Season/Other")],
+                        max_length=1,
+                    ),
+                ),
+                ("duration_hours", models.DecimalField(decimal_places=2, max_digits=4)),
+                ("date_logged", models.DateField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "crop",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name="logs", to="farms.crop"
+                    ),
+                ),
+                (
+                    "farm",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name="logs", to="farms.farm"
+                    ),
+                ),
+                (
+                    "volunteer",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name="logs", to=settings.AUTH_USER_MODEL
+                    ),
+                ),
             ],
         ),
     ]
