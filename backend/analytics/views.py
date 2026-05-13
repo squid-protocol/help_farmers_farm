@@ -406,3 +406,126 @@ def get_term_heatmap(request):
 
     chart_html = fig.to_html(full_html=False, include_plotlyjs=False)
     return render(request, "analytics/partials/chart.html", {"chart": chart_html})
+
+
+@login_required
+def get_seasonal_timeline(request):
+    farm = request.user.farm
+    year = request.GET.get("year", "all")
+
+    # 1. FETCH DATA
+    logs = LogEntry.objects.filter(farm=farm).exclude(crop__isnull=True)
+    if year != "all":
+        logs = logs.filter(date_logged__year=int(year))
+
+    data = list(logs.values("date_logged", "crop__crop_name", "activity"))
+
+    if not data:
+        empty_html = (
+            '<div class="flex flex-col items-center justify-center py-20 text-gray-400">'
+            '<svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">'
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" '
+            'd="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 '
+            "01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 "
+            '01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>'
+            '<p class="text-xl font-medium">No timeline data available for this timeframe.</p>'
+            "</div>"
+        )
+        return render(request, "analytics/partials/chart.html", {"chart": empty_html})
+
+    df = pd.DataFrame(data)
+
+    # 2. CALCULATE START AND END WEEKS
+    df["WeekOfYear"] = (
+        pd.to_datetime(df["date_logged"]).dt.isocalendar().week.astype(int)
+    )
+    activity_names = dict(LogEntry.ACTIVITY_CHOICES)
+
+    # Group by crop and activity to find the absolute min and max week (recreating your ETL logic)
+    agg_df = (
+        df.groupby(["crop__crop_name", "activity"])
+        .agg(StartWeek=("WeekOfYear", "min"), EndWeek=("WeekOfYear", "max"))
+        .reset_index()
+    )
+
+    # To draw a Plotly bar from Start to End, the X value must be the duration
+    agg_df["Duration"] = agg_df["EndWeek"] - agg_df["StartWeek"] + 1
+
+    # Sort crops alphabetically for the Y-axis
+    unique_crops = sorted(agg_df["crop__crop_name"].unique().tolist(), reverse=True)
+
+    # 3. BUILD THE PLOTLY GANTT CHART
+    fig = go.Figure()
+    activity_colors = {"P": "#10b981", "T": "#f59e0b", "H": "#ef4444", "O": "#94a3b8"}
+
+    for act_code, act_label in activity_names.items():
+        act_data = agg_df[agg_df["activity"] == act_code]
+        if not act_data.empty:
+            fig.add_trace(
+                go.Bar(
+                    name=act_label,
+                    x=act_data["Duration"],
+                    y=act_data["crop__crop_name"],
+                    base=act_data[
+                        "StartWeek"
+                    ],  # This is the magic trick! Pushes the bar to the Start Week
+                    orientation="h",
+                    marker_color=activity_colors.get(act_code, "#94a3b8"),
+                    hovertemplate="<b>%{y}</b><br>"
+                    + act_label
+                    + "<br>Start Week: %{base}<br>End Week: %{customdata}<extra></extra>",
+                    customdata=act_data["EndWeek"],
+                )
+            )
+
+    # 4. USER-FRIENDLY AXES
+    xaxis_config = dict(
+        title="Week of Year",
+        tickmode="linear",
+        dtick=4,
+        range=[0, 53],  # Lock the view to 52 weeks
+        showgrid=True,
+        gridcolor="rgba(200,200,200,0.3)",
+    )
+    if year != "all":
+        xaxis_config.update(
+            dict(
+                tickmode="array",
+                tickvals=[1, 5, 9, 14, 18, 22, 27, 31, 36, 40, 44, 48],
+                ticktext=[
+                    "Jan",
+                    "Feb",
+                    "Mar",
+                    "Apr",
+                    "May",
+                    "Jun",
+                    "Jul",
+                    "Aug",
+                    "Sep",
+                    "Oct",
+                    "Nov",
+                    "Dec",
+                ],
+            )
+        )
+
+    fig.update_layout(
+        barmode="group",  # If activities overlap weeks, this stacks them neatly side-by-side!
+        plot_bgcolor="rgba(250,250,250,1)",
+        paper_bgcolor="white",
+        margin=dict(l=150, r=50, t=20, b=80),
+        height=max(400, len(unique_crops) * 60 + 150),
+        xaxis=xaxis_config,
+        yaxis=dict(
+            title="",
+            tickfont=dict(size=13),
+            automargin=True,
+            categoryorder="array",
+            categoryarray=unique_crops,
+        ),
+        legend=dict(orientation="h", yanchor="top", y=-0.15, xanchor="center", x=0.5),
+        hoverlabel=dict(bgcolor="white", font_size=13, font_color="black"),
+    )
+
+    chart_html = fig.to_html(full_html=False, include_plotlyjs=False)
+    return render(request, "analytics/partials/chart.html", {"chart": chart_html})
