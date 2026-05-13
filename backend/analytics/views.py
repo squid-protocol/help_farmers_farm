@@ -4,6 +4,8 @@ from django.db.models import Sum
 from django.utils import timezone
 from datetime import timedelta
 import plotly.graph_objects as go
+import pandas as pd
+import html
 
 from logs.models import LogEntry
 
@@ -87,5 +89,113 @@ def get_impact_chart(request):
         hoverlabel=dict(bgcolor="white", font_size=15, font_color="black"),
     )
 
-    chart_html = fig.to_html(full_html=False, include_plotlyjs="cdn")
+    chart_html = fig.to_html(full_html=False, include_plotlyjs=False)
+    return render(request, "analytics/partials/chart.html", {"chart": chart_html})
+
+@login_required
+def get_activity_heatmap(request):
+    farm = request.user.farm
+    year = request.GET.get('year', 'all')
+
+    # 1. FETCH DATA
+    logs = LogEntry.objects.filter(farm=farm).exclude(crop__isnull=True)
+    if year != 'all':
+        logs = logs.filter(date_logged__year=int(year))
+
+    data = list(logs.values('date_logged', 'crop__crop_name', 'crop__category', 'activity'))
+    
+    if not data:
+        empty_html = """
+        <div class="flex flex-col items-center justify-center py-20 text-gray-400">
+            <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+            <p class="text-xl font-medium">No activity data found for this timeframe.</p>
+        </div>
+        """
+        return render(request, "analytics/partials/chart.html", {"chart": empty_html})
+
+    df = pd.DataFrame(data)
+    
+    # 2. CLEAN AND PREPARE DATA
+    df['WeekOfYear'] = pd.to_datetime(df['date_logged']).dt.isocalendar().week.astype(int)
+    
+    # THE FIX: Force empty strings to become proper nulls before filling
+    df['Display_Veggie'] = df['crop__category'].replace('', pd.NA).fillna(df['crop__crop_name'])
+
+    activity_priority = {'O': 0, 'T': 1, 'P': 2, 'H': 3}
+    activity_names = dict(LogEntry.ACTIVITY_CHOICES)
+    
+    df['Activity_Num'] = df['activity'].map(activity_priority)
+
+    # 3. AGGREGATE
+    agg_df = df.groupby(['Display_Veggie', 'WeekOfYear']).agg(
+        Dominant_Activity=('Activity_Num', 'max')
+    ).reset_index()
+
+    veggies = sorted(agg_df['Display_Veggie'].unique())
+    weeks = list(range(1, 53))
+
+    pivot_z = agg_df.pivot(index='Display_Veggie', columns='WeekOfYear', values='Dominant_Activity').reindex(index=veggies, columns=weeks)
+
+    # THE FIX: Explicitly cast NaNs to None so the JSON parser doesn't swallow them
+    z_matrix = pivot_z.where(pd.notnull(pivot_z), None).values.tolist()
+
+    # 4. BUILD THE PLOTLY FIGURE
+    fig = go.Figure()
+    
+    # THE FIX: Create a sharp "stepped" colorscale so Plotly doesn't blend colors
+    discrete_colorscale = [
+        [0.00, '#94a3b8'], [0.25, '#94a3b8'], # 0: Off-Season (Slate)
+        [0.25, '#f59e0b'], [0.50, '#f59e0b'], # 1: Tending (Amber)
+        [0.50, '#10b981'], [0.75, '#10b981'], # 2: Planting (Emerald)
+        [0.75, '#ef4444'], [1.00, '#ef4444']  # 3: Harvesting (Red)
+    ]
+
+    # Main Heatmap Trace
+    fig.add_trace(go.Heatmap(
+        z=z_matrix,
+        x=weeks,
+        y=veggies,
+        colorscale=discrete_colorscale, # <-- Use the new stepped colorscale
+        zmin=-0.5, zmax=3.5,            # <-- Offset min/max so our 0,1,2,3 values sit perfectly in the center of the color blocks
+        xgap=2, 
+        ygap=2, 
+        hovertemplate='<b>Week:</b> %{x}<br><b>Veggie:</b> %{y}<extra></extra>',
+        showscale=True,
+        colorbar=dict(
+            title="",
+            orientation="h", x=0.5, y=-0.15,
+            tickvals=[0, 1, 2, 3],
+            ticktext=[activity_names.get('O'), activity_names.get('T'), activity_names.get('P'), activity_names.get('H')],
+            tickfont=dict(size=14)
+        )
+    ))
+
+    # The Ghost Trace (Mirrors labels to the right side of the screen)
+    fig.add_trace(go.Heatmap(
+        z=[[None]*len(weeks)]*len(veggies),
+        x=weeks, y=veggies,
+        yaxis='y2', showscale=False, hoverinfo='skip'
+    ))
+
+    # 5. USER-FRIENDLY AXES
+    xaxis_config = dict(title="Week of Year", tickmode="linear", dtick=4, showgrid=True, gridcolor='rgba(200,200,200,0.3)')
+    if year != 'all':
+        xaxis_config = dict(
+            tickmode='array',
+            tickvals=[1, 5, 9, 14, 18, 22, 27, 31, 36, 40, 44, 48],
+            ticktext=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            showgrid=True, gridcolor='rgba(200,200,200,0.3)'
+        )
+
+    fig.update_layout(
+        plot_bgcolor='rgba(250,250,250,1)', paper_bgcolor='white',
+        margin=dict(l=150, r=150, t=20, b=80),
+        height=max(400, len(veggies) * 35 + 150),
+        xaxis=xaxis_config,
+        yaxis=dict(title="", tickfont=dict(size=13), automargin=True),
+        yaxis2=dict(overlaying='y', side='right', matches='y', showgrid=False, tickfont=dict(size=13)),
+        hoverlabel=dict(bgcolor="white", font_size=13, font_color="black")
+    )
+
+    chart_html = fig.to_html(full_html=False, include_plotlyjs=False)
     return render(request, "analytics/partials/chart.html", {"chart": chart_html})
