@@ -7,48 +7,52 @@ from django.utils import timezone
 
 User = get_user_model()
 
+
 class LogHoursIntegrationTests(TestCase):
     def setUp(self):
         # 1. Arrange: Build the world
         self.client = Client()
         self.farm = Farm.objects.create(name="Schuler Test Farm")
         self.crop = Crop.objects.create(farm=self.farm, crop_name="Heirloom Tomatoes")
-        
+
         self.user = User.objects.create_user(
-            username="test_volunteer", 
-            password="my_secure_password123",
-            farm=self.farm
+            username="test_volunteer", password="my_secure_password123", farm=self.farm
         )
-        
+
         # Force the invisible browser to log in, bypassing the security bouncer
         self.client.force_login(self.user)
-        self.log_url = reverse('log_hours') # Assuming your urls.py named this route 'log_hours'
+        self.log_url = reverse(
+            "log_hours"
+        )  # Assuming your urls.py named this route 'log_hours'
 
     def test_page_loads_for_logged_in_users(self):
         # Act: Try to visit the logging page
         response = self.client.get(self.log_url)
-        
+
         # Assert: The page should load successfully (HTTP 200)
         self.assertEqual(response.status_code, 200)
 
     def test_successful_form_submission_creates_database_record(self):
         # Act: Fill out the form and hit submit
         today = timezone.now().date()
-        
-        response = self.client.post(self.log_url, {
-            'date_logged': today,
-            'crop': self.crop.id,
-            'activity': 'T',  # 'T' for Tend
-            'duration_hours': '4.00'
-        })
+
+        response = self.client.post(
+            self.log_url,
+            {
+                "date_logged": today,
+                "crop": self.crop.id,
+                "activity": "T",  # 'T' for Tend
+                "duration_hours": "4.00",
+            },
+        )
 
         # Assert Part 1: Did the server accept it and redirect? (HTTP 302)
         self.assertEqual(response.status_code, 302)
-        
+
         # Assert Part 2: The ultimate proof. Is it actually in the database?
         self.assertEqual(LogEntry.objects.count(), 1)
-        
+
         # Assert Part 3: Did it save the data correctly?
         saved_log = LogEntry.objects.first()
         self.assertEqual(saved_log.duration_hours, 4.00)
-        self.assertEqual(saved_log.activity, 'T')
+        self.assertEqual(saved_log.activity, "T")
