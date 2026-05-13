@@ -17,11 +17,10 @@ Instead of using Django's default User model, we use a `CustomUser` model (inher
 
 ## Features
 
-### 1. The Personal Impact Dashboard (`profile_view`)
-When a volunteer views their profile, they don't just see a settings form. The view queries the `logs` app to calculate:
-* **Progress Bar:** Compares their `total_hours` for the current year against their assigned `work_commitment.required_hours`.
-* **Fun Stats:** Calculates their "Most Worked Crop" and "Most Common Task".
-* **Visual Breakdown:** Uses Plotly to generate interactive donut charts showing how their time is distributed.
+### 1. Basic Profile Management (`profile_view`)
+When a volunteer views their profile, they can manage their core user settings and identity:
+* **Personal Details:** Update their first name, last name, email, and username.
+* **Note:** The Personal Impact Dashboard (progress bars, Plotly charts, etc.) was previously located here but has been migrated to the `logs` app to centralize time-tracking visualizations.
 
 ### 2. Avatar Cropping (Cropper.js Integration)
 To ensure all user profile pictures are perfectly square and don't break the UI, we handle image uploads entirely on the frontend before hitting the server:

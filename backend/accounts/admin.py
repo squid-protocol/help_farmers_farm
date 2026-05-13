@@ -13,10 +13,16 @@ class CustomUserAdmin(UserAdmin):
         "last_name",
         "role",
         "farm",
+        "work_commitment",
         "is_staff",
     )
 
     # Added 'role' to the editable fields on the user detail page
     fieldsets = UserAdmin.fieldsets + (
-        ("Farm & Role Assignment", {"fields": ("farm", "role")}),
+        ("Farm & Role Assignment", {"fields": ("farm", "role", "work_commitment")}),
+    )
+
+    # Added to ensure the fields appear when manually creating a NEW user
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        ("Farm & Role Assignment", {"fields": ("farm", "role", "work_commitment")}),
     )
