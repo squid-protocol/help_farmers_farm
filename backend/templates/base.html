@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HelpFarmers</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
 </head>
 <body class="bg-white text-gray-800 min-h-screen flex flex-col">
 
@@ -18,12 +19,12 @@
 
                 <div class="flex items-center space-x-6">
                     {% if user.is_authenticated %}
-                        <div class="hidden sm:block text-sm text-gray-500">
-                            Logged in as: 
-                            <a href="{% url 'profile' %}" class="font-bold text-gray-900 hover:text-green-600 underline decoration-green-400 decoration-2 underline-offset-4 transition" title="Edit Profile & Password">
-                                {{ user.username }}
-                            </a>
-                        </div>
+                        
+                        <a href="{% url 'profile' %}" class="flex items-center gap-2 hover:opacity-80 transition-opacity" title="Edit Profile & Password">
+                            <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.first_name|default:user.username }}&background=10b981&color=fff&size=64{% endif %}" 
+                                 class="w-8 h-8 rounded-full object-cover border border-green-500 shadow-sm" alt="{{ user.username }}">
+                            <span class="hidden sm:block text-sm font-bold text-gray-900">{{ user.username }}</span>
+                        </a>
                         
                         <a href="{% url 'log_hours' %}" class="text-gray-600 hover:text-green-600 font-medium transition">Log Hours</a>
                         
