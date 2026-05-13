@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="text-center py-20 px-4 sm:px-6 lg:px-8">
+    <h1 class="text-5xl md:text-6xl font-extrabold text-gray-900 tracking-tight mb-6">
+        Honoring the Volunteers <br class="hidden sm:block">
+        <span class="text-green-600">Who Make Farms Possible.</span>
+    </h1>
+    <p class="mt-4 max-w-2xl text-xl text-gray-500 mx-auto mb-10">
+        Volunteers are the lifeblood of local agriculture. <strong>Helping Farmers Farm</strong> is a platform built for any farm to effortlessly track hours, celebrate impact, and show off the incredible stats of the people who help you grow.
+    </p>
+    
+    <div class="flex justify-center gap-4">
+        {% if user.is_authenticated %}
+            <a href="{% url 'log_hours' %}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-10 rounded-xl shadow-lg transition transform hover:-translate-y-1">Go to Dashboard</a>
+        {% else %}
+            <a href="{% url 'login' %}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-10 rounded-xl shadow-lg transition transform hover:-translate-y-1">Log In</a>
+            <a href="#" class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-4 px-10 rounded-xl shadow-sm transition">Learn More</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="py-16 border-t border-gray-100">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+        
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            <div class="text-5xl mb-4">🏆</div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Honor Every Hour</h3>
+            <p class="text-gray-500">Volunteers can easily log their shifts and instantly see their lifetime impact on a personalized, gamified reward dashboard.</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            <div class="text-5xl mb-4">🌱</div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">For Any Farm</h3>
+            <p class="text-gray-500">Whether you run a small community garden or a massive cooperative, our flexible tools adapt to your specific crops and activities.</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            <div class="text-5xl mb-4">📊</div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Show Off Stats</h3>
+            <p class="text-gray-500">Managers get powerful, easy-to-read analytics to highlight top contributors, track seasonal trends, and recognize hard work.</p>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

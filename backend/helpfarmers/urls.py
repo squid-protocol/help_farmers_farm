@@ -1,13 +1,11 @@
 from django.contrib import admin
 from django.urls import path, include
-from django.views.generic import RedirectView
+from django.views.generic import TemplateView # <-- Add this import
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/', include('django.contrib.auth.urls')), 
-    
-    path('farm/', include('farms.urls')), # <-- Add this line!
-    
-    path('', RedirectView.as_view(pattern_name='log_hours', permanent=False)),
-    path('', include('logs.urls')), 
+    path('accounts/', include('django.contrib.auth.urls')),
+    path('', TemplateView.as_view(template_name='landing.html'), name='home'), # <-- Add this path
+    path('', include('logs.urls')),
+    path('farm/', include('farms.urls')),
 ]
