@@ -1,9 +1,10 @@
 from django.db import models
 
+
 class Farm(models.Model):
     name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     # --- NEW: Season Boundaries ---
     season_start = models.DateField(null=True, blank=True)
     season_end = models.DateField(null=True, blank=True)

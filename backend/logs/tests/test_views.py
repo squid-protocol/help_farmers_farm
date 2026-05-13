@@ -34,7 +34,7 @@ class LogHoursIntegrationTests(TestCase):
 
     def test_successful_form_submission_creates_database_record(self):
         # Format the date as a string exactly how HTML forms send it
-        today_str = timezone.now().date().strftime('%Y-%m-%d')
+        today_str = timezone.now().date().strftime("%Y-%m-%d")
 
         response = self.client.post(
             self.log_url,
@@ -50,7 +50,7 @@ class LogHoursIntegrationTests(TestCase):
         # If the form fails validation, print the exact reason to the console
         if response.status_code == 200:
             print("\n🚨 FORM VALIDATION FAILED. HERE IS WHY:")
-            print(response.context['form'].errors)
+            print(response.context["form"].errors)
 
         # Assert Part 1: Did the server accept it and redirect? (HTTP 302)
         self.assertEqual(response.status_code, 302)

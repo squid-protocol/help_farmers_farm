@@ -31,7 +31,7 @@ def manager_dashboard(request):
     crop_form = CropForm()
     volunteer_form = VolunteerCreationForm(request_user=request.user)
     commitment_form = WorkCommitmentForm()
-    
+
     # NEW: The Farm Settings form (pre-filled with the current farm's data)
     farm_form = FarmSettingsForm(instance=my_farm)
 
@@ -65,7 +65,7 @@ def manager_dashboard(request):
                 new_commitment.save()
                 messages.success(request, "Work commitment added successfully!")
                 return redirect("manager_dashboard")
-                
+
         # <-- NEW: Handle Farm Settings Submission -->
         elif "submit_farm_settings" in request.POST:
             farm_form = FarmSettingsForm(request.POST, instance=my_farm)

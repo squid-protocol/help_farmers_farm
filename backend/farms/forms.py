@@ -64,6 +64,7 @@ class VolunteerCreationForm(forms.ModelForm):
                     if choice[0] not in ["account_manager", "farm_manager"]
                 ]
 
+
 class FarmSettingsForm(forms.ModelForm):
     class Meta:
         model = Farm
