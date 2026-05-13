@@ -1,9 +1,11 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from farms.models import Farm
 
 class CustomUser(AbstractUser):
-    # We are using AbstractUser so we keep Django's built-in auth (passwords, emails, etc.)
-    # Later, we will add a ForeignKey linking the user to a specific Farm here.
+    # Link the user to a farm. 
+    # null=True, blank=True ensures you can create a master admin account that doesn't belong to just one farm.
+    farm = models.ForeignKey(Farm, on_delete=models.CASCADE, null=True, blank=True, related_name='volunteers')
     
     def __str__(self):
         return self.username

@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'accounts',  # <-- Our custom user app
+    'farms',
 ]
 
 MIDDLEWARE = [
