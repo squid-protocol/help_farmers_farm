@@ -123,73 +123,7 @@ def remove_user_view(request, user_id):
 @login_required
 def farm_impact_view(request):
     farm = request.user.farm
-
-    # 1. THE MAGIC ORM QUERY: PostgreSQL groups by crop & activity, and sums the hours instantly.
-    aggregated_data = (
-        LogEntry.objects.filter(farm=farm)
-        .values("crop__crop_name", "activity")
-        .annotate(total_hours=Sum("duration_hours"))
-        .order_by("crop__crop_name")
-    )
-
-    # 2. Extract the unique crop names for our X-axis
-    crops = sorted(list(set([item["crop__crop_name"] for item in aggregated_data])))
-
-    # 3. Define your colors (Semantic, modern SaaS palette)
-    activity_colors = {
-        "P": "#10b981",  # Planting (Emerald Green - Growth)
-        "T": "#f59e0b",  # Tending (Warm Amber/Yellow - Sun/Maintenance)
-        "H": "#ef4444",  # Harvesting (Ripe Red - Yield/Action)
-        "O": "#94a3b8",  # Off-Season (Dormant Slate Grey - Rest)
-    }
-
-    # We grab the readable labels from your models.py choices
-    activity_labels = dict(LogEntry.ACTIVITY_CHOICES)
-
-    # 4. Build the Plotly Figure
-    fig = go.Figure()
-
-    for act_code, act_label in activity_labels.items():
-        y_values = []
-        for crop in crops:
-            # Find the total hours for this specific crop + activity combo. Default to 0.
-            hours = next(
-                (
-                    float(item["total_hours"])
-                    for item in aggregated_data
-                    if item["crop__crop_name"] == crop and item["activity"] == act_code
-                ),
-                0,
-            )
-            y_values.append(hours)
-
-        # Only draw the bar if there is actually data for this activity
-        if sum(y_values) > 0:
-            fig.add_trace(
-                go.Bar(
-                    name=act_label,
-                    x=crops,
-                    y=y_values,
-                    marker_color=activity_colors.get(act_code),
-                )
-            )
-
-    # 5. Make it look beautiful and responsive
-    fig.update_layout(
-        barmode="stack",
-        title=dict(
-            text=f"Seasonal Labor Hours: {farm.name}", font=dict(size=22), x=0.5
-        ),
-        plot_bgcolor="rgba(250,250,250,1)",
-        paper_bgcolor="white",
-        margin=dict(l=50, r=50, t=80, b=100),
-        legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5),
-        hoverlabel=dict(bgcolor="white", font_size=15, font_color="black"),
-    )
-
-    # 6. Convert the interactive graph to a safe HTML string so Tailwind can render it
-    chart_html = fig.to_html(full_html=False, include_plotlyjs="cdn")
-
-    return render(
-        request, "farms/farm_impact.html", {"chart": chart_html, "farm": farm}
-    )
+    # Just grab the active crops so we can populate the dropdown menu
+    crops = Crop.objects.filter(farm=farm, is_active=True).order_by("crop_name")
+    
+    return render(request, "farms/farm_impact.html", {"farm": farm, "crops": crops})

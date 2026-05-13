@@ -3,12 +3,41 @@
 {% block content %}
 <div class="max-w-5xl mx-auto">
     <div class="text-center mb-10">
-        <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight">Our Collective Impact</h1>
-        <p class="text-lg text-gray-500 mt-2">See how our volunteer hours break down across the farm.</p>
+        <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight">Seasonal Labor Hours: {{ farm.name }}</h1>
+        <p class="text-lg text-gray-500 mt-2">Filter to see how volunteer hours break down across the farm.</p>
     </div>
 
-    <div class="bg-white p-2 md:p-6 rounded-2xl border border-gray-200 shadow-sm">
-        {{ chart|safe }}
+    <form class="flex flex-col sm:flex-row gap-4 mb-6 justify-center"
+          hx-get="{% url 'get_impact_chart' %}" 
+          hx-target="#chart-container" 
+          hx-trigger="change">
+        
+        <select name="timeframe" class="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-medium cursor-pointer">
+            <option value="all">All-Time</option>
+            <option value="30">Last 30 Days</option>
+            <option value="90">Last 90 Days</option>
+            <option value="365">Past Year</option>
+        </select>
+
+        <select name="crop_id" class="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-medium cursor-pointer">
+            <option value="all">All Crops</option>
+            {% for crop in crops %}
+                <option value="{{ crop.id }}">{{ crop.crop_name }}</option>
+            {% endfor %}
+        </select>
+    </form>
+
+    <div class="bg-white p-2 md:p-6 rounded-2xl border border-gray-200 shadow-sm relative min-h-[500px]">
+        
+        <div class="htmx-indicator absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-2xl z-10">
+            <svg class="animate-spin h-10 w-10 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        </div>
+
+        <div id="chart-container" 
+             hx-get="{% url 'get_impact_chart' %}" 
+             hx-trigger="load">
+             </div>
+
     </div>
 </div>
 {% endblock %}
