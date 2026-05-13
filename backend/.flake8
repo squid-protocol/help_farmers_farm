@@ -1,0 +1,13 @@
+[flake8]
+# Increase max line length (standard PEP8 is 79, which is too short for modern web dev)
+max-line-length = 119
+
+# Ignore auto-generated files and virtual environments
+exclude = 
+    .git,
+    __pycache__,
+    migrations,
+    venv,
+    env,
+    manage.py,
+    helpfarmers/settings.py
