@@ -2,6 +2,12 @@
 {% load tailwind_filters %}
 
 {% block content %}
+<style>
+    .htmx-indicator { display: none; }
+    .htmx-request .htmx-indicator { display: inline-block; }
+    .htmx-request .submit-text { display: none; }
+</style>
+
 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             
     <div class="bg-white p-6 md:p-8 rounded-xl border border-gray-200 shadow-sm">
@@ -13,12 +19,20 @@
                 Your account is set to "Friend" status. You can view your past summaries, but cannot log new hours. Please contact a Farm Manager if this is a mistake.
             </div>
         {% else %}
-            <form method="POST">
+            <form hx-post="{% url 'log_hours' %}" 
+                  hx-target="#recent-shifts-list" 
+                  hx-swap="afterbegin" 
+                  hx-on::after-request="this.reset()">
                 {% csrf_token %}
                 {{ form|crispy }}
                 
-                <button type="submit" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow transition duration-150 ease-in-out">
-                    Submit Log
+                <button type="submit" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow transition duration-150 ease-in-out flex justify-center items-center h-12">
+                    <span class="submit-text">Submit Log</span>
+                    
+                    <svg class="htmx-indicator animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
                 </button>
             </form>
         {% endif %}
@@ -29,12 +43,13 @@
         
         <div class="bg-green-50 border border-green-200 p-6 text-center rounded-xl mb-8 shadow-inner">
             <span class="text-sm font-bold text-green-800 uppercase tracking-wider">Lifetime Volunteered</span><br>
-            <span class="text-6xl font-black text-green-600 my-2 block">{{ total_hours }}</span>
+            <span class="text-6xl font-black text-green-600 my-2 block" id="total-hours-display">{{ total_hours }}</span>
             <span class="text-green-800 font-medium">hours</span>
         </div>
 
         <h3 class="text-lg font-bold text-gray-800 mb-4 border-b border-gray-200 pb-2">Recent Shifts</h3>
-        <ul class="space-y-3">
+        
+        <ul id="recent-shifts-list" class="space-y-3">
             {% for log in recent_logs %}
                 <li class="bg-white p-4 rounded-lg border border-gray-100 shadow-sm flex justify-between items-center">
                     <div>
@@ -49,10 +64,34 @@
                     </div>
                 </li>
             {% empty %}
-                <p class="text-gray-500 italic text-sm text-center py-4">No hours logged yet. Submit your first shift to see it here!</p>
+                <p class="text-gray-500 italic text-sm text-center py-4" id="empty-state-message">No hours logged yet. Submit your first shift to see it here!</p>
             {% endfor %}
         </ul>
     </div>
 
 </div>
+
+<div id="success-toast" class="fixed bottom-6 right-6 bg-gray-900 text-white px-6 py-4 rounded-xl shadow-2xl transform translate-y-24 opacity-0 transition-all duration-300 z-50 flex items-center gap-3 pointer-events-none">
+    <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+    <span class="font-medium text-lg">Shift logged successfully!</span>
+</div>
+
+<script>
+    // Listen for the custom 'showToast' trigger sent from views.py
+    document.body.addEventListener('showToast', function() {
+        const toast = document.getElementById('success-toast');
+        const emptyState = document.getElementById('empty-state-message');
+        
+        // If the "No hours logged yet" message is there, hide it
+        if (emptyState) { emptyState.style.display = 'none'; }
+        
+        // Slide the toast up
+        toast.classList.remove('translate-y-24', 'opacity-0');
+        
+        // Hide it after 3 seconds
+        setTimeout(() => {
+            toast.classList.add('translate-y-24', 'opacity-0');
+        }, 3000);
+    });
+</script>
 {% endblock %}

@@ -1,0 +1,12 @@
+<li class="bg-white p-4 rounded-lg border border-gray-100 shadow-sm flex justify-between items-center animate-[pulse_1s_ease-in-out]">
+    <div>
+        <strong class="text-gray-900">{{ log.date_logged }}</strong> 
+        <span class="text-gray-400 mx-2">|</span>
+        <span class="text-gray-600 font-medium">
+            {{ log.get_activity_display }} {% if log.crop %}{{ log.crop }}{% else %}General Task{% endif %}
+        </span>
+    </div>
+    <div class="font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-md text-sm">
+        {{ log.duration_hours }} hrs
+    </div>
+</li>
