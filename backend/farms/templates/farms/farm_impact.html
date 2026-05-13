@@ -1,143 +1,159 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farm Manager Dashboard</title>
+</head>
+<body>
+    <div style="max-width: 900px; margin: 40px auto; font-family: sans-serif;">
 
-{% block content %}
-<style>
-    .htmx-indicator { display: none; }
-    .htmx-request .htmx-indicator { display: flex; }
-</style>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;">
+            <div>Logged in as: <strong>{{ user.username }}</strong> ({{ user.farm }})</div>
+            <div>
+                <a href="{% url 'log_hours' %}" style="margin-right: 15px; text-decoration: none;">🔙 Back to Logging</a>
+                
+                <a href="{% url 'progress_report' %}" style="margin-right: 15px; font-weight: bold; color: #10b981; text-decoration: none;">📊 Progress Report</a>
+                
+                {% if user.is_staff %}
+                    <a href="{% url 'admin:index' %}" style="margin-right: 15px; color: blue; text-decoration: none;">⚙️ Admin</a>
+                {% endif %}
+                <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" style="background: none; border: none; color: red; text-decoration: underline; cursor: pointer; font-size: 16px;">Log Out</button>
+                </form>
+            </div>
+        </div>
 
-<div class="max-w-6xl mx-auto space-y-12">
-    
-    <div class="text-center">
-        <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight">Seasonal Labor Hours: {{ farm.name }}</h1>
-        <p class="text-lg text-gray-500 mt-2">Filter to see how volunteer hours break down across the farm.</p>
+        <h2>🌾 {{ farm.name }} - Manager Dashboard</h2>
+
+        <div style="background: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <h3 style="margin-top: 0; color: #1e293b;">⚙️ Farm Settings</h3>
+            <form method="POST" style="display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
+                {% csrf_token %}
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="display:block; font-size: 0.85em; font-weight: bold; margin-bottom: 5px; color: #475569;">Farm Name</label>
+                    {{ farm_form.name }}
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="display:block; font-size: 0.85em; font-weight: bold; margin-bottom: 5px; color: #475569;">Season Starts</label>
+                    {{ farm_form.season_start }}
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="display:block; font-size: 0.85em; font-weight: bold; margin-bottom: 5px; color: #475569;">Season Ends</label>
+                    {{ farm_form.season_end }}
+                </div>
+                <button type="submit" name="submit_farm_settings" style="padding: 10px 20px; background: #334155; color: white; border: none; border-radius: 6px; cursor: pointer; height: fit-content; font-weight: bold;">
+                    Save Settings
+                </button>
+            </form>
+        </div>
+
+        <div style="display: flex; gap: 40px; margin-top: 30px;">
+            <div style="flex: 1; background: #eef7ee; padding: 20px; border-radius: 8px; border: 1px solid #c8e6c9;">
+                <h3 style="margin-top: 0;">Add a New Crop</h3>
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ crop_form.as_p }}
+                    <button type="submit" name="submit_crop" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%;">+ Add Crop</button>
+                </form>
+            </div>
+
+            <div style="flex: 1; background: #f4f6f8; padding: 20px; border-radius: 8px; border: 1px solid #dae1e7;">
+                <h3 style="margin-top: 0;">Add a Volunteer</h3>
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ volunteer_form.as_p }}
+                    <button type="submit" name="submit_volunteer" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%;">+ Create Volunteer</button>
+                </form>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 40px; margin-top: 40px;">
+            <div style="flex: 1;">
+                <h3>Current Crops</h3>
+                <ul style="list-style-type: none; padding: 0;">
+                    {% for crop in crops %}
+                        <li style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;">
+                            <span>
+                                <strong>{{ crop.crop_name }}</strong> 
+                                {% if crop.variety %}({{ crop.variety }}){% endif %}
+                            </span>
+                            {% if crop.is_active %}
+                                <span style="color: green; font-size: 0.9em;">Active</span>
+                            {% else %}
+                                <span style="color: red; font-size: 0.9em;">Inactive</span>
+                            {% endif %}
+                        </li>
+                    {% empty %}
+                        <p style="color: #666;">No crops added yet.</p>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div style="flex: 1;">
+                <h3>Volunteer Roster</h3>
+                <ul style="list-style-type: none; padding: 0;">
+                    {% for volunteer in volunteers %}
+                        <li style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                            <span>
+                                <a href="{% url 'volunteer_detail' volunteer.id %}" style="text-decoration: none; color: #007bff; font-size: 1.1em;">
+                                    <strong>{{ volunteer.username }}</strong>
+                                </a>
+                                {% if volunteer.first_name %} <span style="color: #555;">({{ volunteer.first_name }} {{ volunteer.last_name }})</span>{% endif %}
+                            </span>
+                            
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <span style="color: #666; font-size: 0.9em;">{{ volunteer.get_role_display }}</span>
+                                
+                                {% if user.id != volunteer.id %}
+                                    {% if user.is_staff or user.role == 'account_manager' or volunteer.role != 'account_manager' and volunteer.role != 'farm_manager' %}
+                                        <form action="{% url 'remove_user' volunteer.id %}" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to completely remove this user?');">
+                                            {% csrf_token %}
+                                            <button type="submit" style="background: none; border: none; font-size: 1.2em; cursor: pointer; padding: 0;" title="Remove User">🗑️</button>
+                                        </form>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </li>
+                    {% empty %}
+                        <p style="color: #666;">No volunteers added yet.</p>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <hr style="margin-top: 40px; border: 0; border-top: 1px solid #ddd;">
+        
+        <div style="display: flex; gap: 40px; margin-top: 40px; margin-bottom: 40px;">
+            <div style="flex: 1; background: #fdfbf5; padding: 20px; border-radius: 8px; border: 1px solid #f3e8b1;">
+                <h3 style="margin-top: 0;">Add a Work Commitment</h3>
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ commitment_form.as_p }}
+                    <button type="submit" name="submit_commitment" style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold;">+ Create Commitment</button>
+                </form>
+            </div>
+
+            <div style="flex: 1;">
+                <h3 style="margin-top: 0;">Current Work Commitments</h3>
+                <ul style="list-style-type: none; padding: 0;">
+                    {% for item in commitments %}
+                        <li style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                            <span>
+                                <strong>{{ item.name }}</strong> 
+                            </span>
+                            <span style="background: #d1fae5; color: #065f46; padding: 4px 8px; border-radius: 12px; font-size: 0.85em; font-weight: bold;">
+                                {{ item.required_hours }} Hours
+                            </span>
+                        </li>
+                    {% empty %}
+                        <p style="color: #666;">No work commitments added yet.</p>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
     </div>
-
-    <div>
-        <form class="flex flex-col sm:flex-row gap-4 mb-4 justify-center" 
-              hx-get="{% url 'get_impact_chart' %}" 
-              hx-target="#chart-1-container" 
-              hx-trigger="change">
-            
-            <select name="timeframe" class="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-medium cursor-pointer">
-                <option value="all">All-Time</option>
-                <option value="30">Last 30 Days</option>
-                <option value="90">Last 90 Days</option>
-                <option value="365">Past Year</option>
-            </select>
-            
-            <select name="crop_id" class="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-medium cursor-pointer">
-                <option value="all">All Crops</option>
-                {% for crop in crops %}
-                    <option value="{{ crop.id }}">{{ crop.crop_name }}</option>
-                {% endfor %}
-            </select>
-        </form>
-
-        <div class="bg-white p-2 md:p-6 rounded-2xl border border-gray-200 shadow-sm relative min-h-[500px]">
-            <div class="htmx-indicator absolute inset-0 bg-white bg-opacity-75 items-center justify-center rounded-2xl z-10">
-                <svg class="animate-spin h-10 w-10 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            </div>
-            
-            <div id="chart-1-container" 
-                 hx-get="{% url 'get_impact_chart' %}" 
-                 hx-trigger="revealed">
-            </div>
-        </div>
-    </div>
-
-    <div class="pt-8 border-t border-gray-200">
-        <div class="text-center mb-6">
-            <h2 class="text-2xl font-bold text-gray-900">Dominant Activities per Week</h2>
-            <p class="text-gray-500">See the seasonal rhythm of planting, tending, and harvesting for each crop group.</p>
-        </div>
-
-        <form class="flex justify-center mb-4" 
-              hx-get="{% url 'get_activity_heatmap' %}" 
-              hx-target="#chart-2-container" 
-              hx-trigger="change">
-            
-            <select name="year" class="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-medium cursor-pointer">
-                <option value="all">All Years Combined</option>
-                <option value="2026">2026</option>
-                <option value="2025">2025</option>
-                <option value="2024">2024</option>
-            </select>
-        </form>
-
-        <div class="bg-white p-2 md:p-6 rounded-2xl border border-gray-200 shadow-sm relative min-h-[500px]">
-            <div class="htmx-indicator absolute inset-0 bg-white bg-opacity-75 items-center justify-center rounded-2xl z-10">
-                <svg class="animate-spin h-10 w-10 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            </div>
-            
-            <div id="chart-2-container" 
-                 hx-get="{% url 'get_activity_heatmap' %}" 
-                 hx-trigger="revealed">
-            </div>
-        </div>
-    </div>
-
-    <div class="pt-8 border-t border-gray-200">
-        <div class="text-center mb-6">
-            <h2 class="text-2xl font-bold text-gray-900">Term Frequency (Log Count)</h2>
-            <p class="text-gray-500">See how often specific crops and activities are mentioned in your logs.</p>
-        </div>
-
-        <form class="flex justify-center mb-4" 
-              hx-get="{% url 'get_term_heatmap' %}" 
-              hx-target="#chart-3-container" 
-              hx-trigger="change">
-            
-            <select name="year" class="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-medium cursor-pointer">
-                <option value="all">All Years Combined</option>
-                <option value="2026">2026</option>
-                <option value="2025">2025</option>
-                <option value="2024">2024</option>
-            </select>
-        </form>
-
-        <div class="bg-white p-2 md:p-6 rounded-2xl border border-gray-200 shadow-sm relative min-h-[400px]">
-            <div class="htmx-indicator absolute inset-0 bg-white bg-opacity-75 items-center justify-center rounded-2xl z-10">
-                <svg class="animate-spin h-10 w-10 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            </div>
-            
-            <div id="chart-3-container" 
-                 hx-get="{% url 'get_term_heatmap' %}" 
-                 hx-trigger="revealed">
-            </div>
-        </div>
-    </div>
-
-    <div class="pt-8 border-t border-gray-200">
-        <div class="text-center mb-6">
-            <h2 class="text-2xl font-bold text-gray-900">Seasonal Workflow Timeline</h2>
-            <p class="text-gray-500">View the start and end weeks for planting, tending, and harvesting phases.</p>
-        </div>
-
-        <form class="flex justify-center mb-4" 
-              hx-get="{% url 'get_seasonal_timeline' %}" 
-              hx-target="#chart-4-container" 
-              hx-trigger="change">
-            
-            <select name="year" class="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-medium cursor-pointer">
-                <option value="all">All Years Combined</option>
-                <option value="2026">2026</option>
-                <option value="2025">2025</option>
-                <option value="2024">2024</option>
-            </select>
-        </form>
-
-        <div class="bg-white p-2 md:p-6 rounded-2xl border border-gray-200 shadow-sm relative min-h-[400px]">
-            <div class="htmx-indicator absolute inset-0 bg-white bg-opacity-75 items-center justify-center rounded-2xl z-10">
-                <svg class="animate-spin h-10 w-10 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            </div>
-            
-            <div id="chart-4-container" 
-                 hx-get="{% url 'get_seasonal_timeline' %}" 
-                 hx-trigger="revealed">
-            </div>
-        </div>
-    </div>
-
-</div>
-{% endblock %}
+</body>
+</html>
