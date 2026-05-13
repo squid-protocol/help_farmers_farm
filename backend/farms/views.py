@@ -125,5 +125,5 @@ def farm_impact_view(request):
     farm = request.user.farm
     # Just grab the active crops so we can populate the dropdown menu
     crops = Crop.objects.filter(farm=farm, is_active=True).order_by("crop_name")
-    
+
     return render(request, "farms/farm_impact.html", {"farm": farm, "crops": crops})

@@ -26,7 +26,7 @@ INSTALLED_APPS = [
     "crispy_forms",
     "crispy_tailwind",
     "axes",
-    'analytics'
+    "analytics",
 ]
 
 MIDDLEWARE = [
@@ -128,5 +128,5 @@ AXES_RESET_ON_SUCCESS = True  # Reset the counter if they log in successfully
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # settings.py (at the bottom)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"

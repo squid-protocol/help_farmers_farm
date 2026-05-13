@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from farms.models import Farm
 
+
 class CustomUser(AbstractUser):
     # Define the hierarchy of roles
     ROLE_CHOICES = [
