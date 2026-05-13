@@ -23,6 +23,8 @@ INSTALLED_APPS = [
     'accounts',  # <-- Our custom user app
     'farms',
     'logs',
+    'crispy_forms',
+    'crispy_tailwind',
 ]
 
 MIDDLEWARE = [
@@ -40,7 +42,7 @@ ROOT_URLCONF = 'helpfarmers.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'], # <--- THIS IS THE ONLY CHANGE
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -104,3 +106,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
 LOGIN_REDIRECT_URL = '/log-hours/'
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
+CRISPY_TEMPLATE_PACK = "tailwind"
