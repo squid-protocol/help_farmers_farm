@@ -20,8 +20,18 @@ class CustomUser(AbstractUser):
         Farm, on_delete=models.CASCADE, null=True, blank=True, related_name="volunteers"
     )
 
-    # THE MISSING PIECE: Allow users to upload avatars
+    # Allow users to upload avatars
     avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
+
+    # In accounts/models.py
+    # Inside the CustomUser class:
+    work_commitment = models.ForeignKey(
+        "farms.WorkCommitment",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="volunteers",
+    )
 
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"
