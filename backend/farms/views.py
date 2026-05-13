@@ -6,6 +6,7 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import Sum
 from django.views.decorators.http import require_POST
 from django.contrib import messages
+from django.utils import timezone  # <-- NEW: Required for the progress report
 
 # --- Local App Imports (Farms) ---
 from .models import Crop, WorkCommitment
@@ -157,3 +158,53 @@ def farm_impact_view(request):
     crops = Crop.objects.filter(farm=farm, is_active=True).order_by("crop_name")
 
     return render(request, "farms/farm_impact.html", {"farm": farm, "crops": crops})
+
+
+# --- NEW: Volunteer Progress Report ---
+@login_required
+@user_passes_test(is_manager, login_url="/log-hours/")
+def progress_report_view(request):
+    farm = request.user.farm
+    current_year = timezone.now().year
+
+    # Grab all active volunteers on this farm
+    volunteers = User.objects.filter(farm=farm).exclude(role="friend")
+
+    # We will build a dictionary to group users by their commitment tier
+    grouped_data = {}
+
+    for vol in volunteers:
+        # Calculate their total hours for the year
+        logs = LogEntry.objects.filter(volunteer=vol, date_logged__year=current_year)
+        total_hours = logs.aggregate(total=Sum("duration_hours"))["total"] or 0.0
+
+        target = vol.work_commitment.required_hours if vol.work_commitment else 0
+        pct = min((total_hours / target) * 100, 100) if target > 0 else 0
+
+        vol_data = {
+            "user": vol,
+            "total_hours": round(total_hours, 1),
+            "target": target,
+            "pct": round(pct, 0),
+        }
+
+        # Use the commitment name as the group key, or 'Standard Volunteers'
+        group_key = (
+            vol.work_commitment.name if vol.work_commitment else "Standard Volunteers"
+        )
+
+        if group_key not in grouped_data:
+            grouped_data[group_key] = []
+
+        grouped_data[group_key].append(vol_data)
+
+    # Sort each group so the volunteers with the LOWEST progress are at the top
+    for key in grouped_data:
+        grouped_data[key].sort(key=lambda x: x["total_hours"])
+
+    context = {
+        "farm": farm,
+        "current_year": current_year,
+        "grouped_data": grouped_data,
+    }
+    return render(request, "farms/progress_report.html", context)
