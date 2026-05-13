@@ -9,7 +9,7 @@ from django.contrib import messages
 
 # --- Local App Imports (Farms) ---
 from .models import Crop, WorkCommitment
-from .forms import CropForm, VolunteerCreationForm, WorkCommitmentForm
+from .forms import CropForm, VolunteerCreationForm, WorkCommitmentForm, FarmSettingsForm
 
 # --- Other App Imports ---
 from logs.models import LogEntry
@@ -27,10 +27,13 @@ def is_manager(user):
 def manager_dashboard(request):
     my_farm = request.user.farm
 
-    # Instantiate all three empty forms
+    # Instantiate all forms
     crop_form = CropForm()
     volunteer_form = VolunteerCreationForm(request_user=request.user)
-    commitment_form = WorkCommitmentForm()  # <-- NEW
+    commitment_form = WorkCommitmentForm()
+    
+    # NEW: The Farm Settings form (pre-filled with the current farm's data)
+    farm_form = FarmSettingsForm(instance=my_farm)
 
     if request.method == "POST":
         if "submit_crop" in request.POST:
@@ -54,7 +57,6 @@ def manager_dashboard(request):
                 messages.success(request, "Volunteer created successfully!")
                 return redirect("manager_dashboard")
 
-        # <-- NEW: Handle Work Commitment Submission -->
         elif "submit_commitment" in request.POST:
             commitment_form = WorkCommitmentForm(request.POST)
             if commitment_form.is_valid():
@@ -63,20 +65,29 @@ def manager_dashboard(request):
                 new_commitment.save()
                 messages.success(request, "Work commitment added successfully!")
                 return redirect("manager_dashboard")
+                
+        # <-- NEW: Handle Farm Settings Submission -->
+        elif "submit_farm_settings" in request.POST:
+            farm_form = FarmSettingsForm(request.POST, instance=my_farm)
+            if farm_form.is_valid():
+                farm_form.save()
+                messages.success(request, "Farm settings updated successfully!")
+                return redirect("manager_dashboard")
 
     # Fetch all the data to display in the lists
     crops = Crop.objects.filter(farm=my_farm).order_by("-is_active", "crop_name")
     volunteers = User.objects.filter(farm=my_farm).order_by("role", "username")
-    commitments = WorkCommitment.objects.filter(farm=my_farm)  # <-- NEW
+    commitments = WorkCommitment.objects.filter(farm=my_farm)
 
     context = {
         "farm": my_farm,
+        "farm_form": farm_form,  # <-- NEW
         "crop_form": crop_form,
         "volunteer_form": volunteer_form,
-        "commitment_form": commitment_form,  # <-- NEW
+        "commitment_form": commitment_form,
         "crops": crops,
         "volunteers": volunteers,
-        "commitments": commitments,  # <-- NEW
+        "commitments": commitments,
     }
     return render(request, "farms/manager_dashboard.html", context)
 
@@ -146,28 +157,3 @@ def farm_impact_view(request):
     crops = Crop.objects.filter(farm=farm, is_active=True).order_by("crop_name")
 
     return render(request, "farms/farm_impact.html", {"farm": farm, "crops": crops})
-
-
-@login_required
-@user_passes_test(is_manager, login_url="/log-hours/")
-def manage_work_commitments(request):
-    farm = request.user.farm
-    commitments = WorkCommitment.objects.filter(farm=farm)
-
-    if request.method == "POST":
-        form = WorkCommitmentForm(request.POST)
-        if form.is_valid():
-            # FIXED: commitFalse=True is now commit=False
-            new_commitment = form.save(commit=False)
-            new_commitment.farm = farm
-            new_commitment.save()
-            messages.success(request, "Work commitment added successfully!")
-            return redirect("manage_work_commitments")
-    else:
-        form = WorkCommitmentForm()
-
-    return render(
-        request,
-        "farms/manage_commitments.html",
-        {"form": form, "commitments": commitments, "farm": farm},
-    )

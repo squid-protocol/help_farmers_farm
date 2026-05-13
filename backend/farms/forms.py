@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth import get_user_model
-from .models import Crop, WorkCommitment
+from .models import Crop, WorkCommitment, Farm
 
 # Fetch your CustomUser model
 User = get_user_model()
@@ -63,3 +63,27 @@ class VolunteerCreationForm(forms.ModelForm):
                     for choice in self.fields["role"].choices
                     if choice[0] not in ["account_manager", "farm_manager"]
                 ]
+
+class FarmSettingsForm(forms.ModelForm):
+    class Meta:
+        model = Farm
+        fields = ["name", "season_start", "season_end"]
+        widgets = {
+            "name": forms.TextInput(
+                attrs={
+                    "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5",
+                }
+            ),
+            "season_start": forms.DateInput(
+                attrs={
+                    "type": "date",  # Forces the browser to render a calendar picker
+                    "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5",
+                }
+            ),
+            "season_end": forms.DateInput(
+                attrs={
+                    "type": "date",
+                    "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5",
+                }
+            ),
+        }

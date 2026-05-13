@@ -24,6 +24,28 @@
 
         <h2>🌾 {{ farm.name }} - Manager Dashboard</h2>
 
+        <div style="background: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <h3 style="margin-top: 0; color: #1e293b;">⚙️ Farm Settings</h3>
+            <form method="POST" style="display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
+                {% csrf_token %}
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="display:block; font-size: 0.85em; font-weight: bold; margin-bottom: 5px; color: #475569;">Farm Name</label>
+                    {{ farm_form.name }}
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="display:block; font-size: 0.85em; font-weight: bold; margin-bottom: 5px; color: #475569;">Season Starts</label>
+                    {{ farm_form.season_start }}
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="display:block; font-size: 0.85em; font-weight: bold; margin-bottom: 5px; color: #475569;">Season Ends</label>
+                    {{ farm_form.season_end }}
+                </div>
+                <button type="submit" name="submit_farm_settings" style="padding: 10px 20px; background: #334155; color: white; border: none; border-radius: 6px; cursor: pointer; height: fit-content; font-weight: bold;">
+                    Save Settings
+                </button>
+            </form>
+        </div>
+
         <div style="display: flex; gap: 40px; margin-top: 30px;">
             <div style="flex: 1; background: #eef7ee; padding: 20px; border-radius: 8px; border: 1px solid #c8e6c9;">
                 <h3 style="margin-top: 0;">Add a New Crop</h3>
