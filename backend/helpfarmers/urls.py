@@ -11,6 +11,7 @@ urlpatterns = [
     path("", TemplateView.as_view(template_name="landing.html"), name="home"),
     path("", include("logs.urls")),
     path("farm/", include("farms.urls")),
+    path("analytics/", include("analytics.urls")), # <-- Add this!
 ]
 
 # THE FIX: Tell the development server how to serve uploaded media files
