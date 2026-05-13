@@ -70,12 +70,28 @@
                 <h3>Volunteer Roster</h3>
                 <ul style="list-style-type: none; padding: 0;">
                     {% for volunteer in volunteers %}
-                        <li style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;">
+                        <li style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
                             <span>
-                                <strong>{{ volunteer.username }}</strong>
-                                {% if volunteer.first_name %} ({{ volunteer.first_name }} {{ volunteer.last_name }}){% endif %}
+                                <a href="{% url 'volunteer_detail' volunteer.id %}" style="text-decoration: none; color: #007bff; font-size: 1.1em;">
+                                    <strong>{{ volunteer.username }}</strong>
+                                </a>
+                                {% if volunteer.first_name %} <span style="color: #555;">({{ volunteer.first_name }} {{ volunteer.last_name }})</span>{% endif %}
                             </span>
-                            <span style="color: #666; font-size: 0.9em;">{{ volunteer.get_role_display }}</span>
+                            
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <span style="color: #666; font-size: 0.9em;">{{ volunteer.get_role_display }}</span>
+                                
+                                {% if user.id != volunteer.id %}
+                                    
+                                    {% if user.is_staff or user.role == 'account_manager' or volunteer.role != 'account_manager' and volunteer.role != 'farm_manager' %}
+                                        <form action="{% url 'remove_user' volunteer.id %}" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to completely remove this user?');">
+                                            {% csrf_token %}
+                                            <button type="submit" style="background: none; border: none; font-size: 1.2em; cursor: pointer; padding: 0;" title="Remove User">🗑️</button>
+                                        </form>
+                                    {% endif %}
+                                    
+                                {% endif %}
+                            </div>
                         </li>
                     {% empty %}
                         <p style="color: #666;">No volunteers added yet.</p>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ volunteer.username }}'s Stats</title>
+</head>
+<body>
+    <div style="max-width: 800px; margin: 40px auto; font-family: sans-serif;">
+
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;">
+            <div>
+                <a href="{% url 'manager_dashboard' %}" style="text-decoration: none; font-size: 18px;">🔙 Back to Dashboard</a>
+            </div>
+            <div>
+                <strong>Farm Manager View</strong>
+            </div>
+        </div>
+
+        <h2 style="margin-bottom: 5px;">Volunteer Profile: {{ volunteer.first_name }} {{ volunteer.last_name }}</h2>
+        <p style="color: #666; margin-top: 0;">Username: <strong>{{ volunteer.username }}</strong> | Role: {{ volunteer.get_role_display }}</p>
+
+        <div style="background: #eef7ee; border: 1px solid #c8e6c9; padding: 20px; text-align: center; border-radius: 8px; margin-top: 30px; margin-bottom: 30px;">
+            <span style="font-size: 1.2em; color: #555;">Lifetime Volunteered</span><br>
+            <span style="font-size: 3em; font-weight: bold; color: #28a745;">{{ total_hours }}</span>
+            <span style="font-size: 1.2em; color: #555;"> hours</span>
+        </div>
+
+        <h3>Recent Shift History</h3>
+        <ul style="list-style-type: none; padding: 0;">
+            {% for log in recent_logs %}
+                <li style="padding: 10px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong>{{ log.date_logged }}</strong> - 
+                        <span style="color: #666;">
+                            {{ log.get_activity_display }} {% if log.crop %}{{ log.crop }}{% else %}General Task{% endif %}
+                        </span>
+                    </div>
+                    <div style="font-weight: bold; color: #007bff;">
+                        {{ log.duration_hours }} hrs
+                    </div>
+                </li>
+            {% empty %}
+                <p style="color: #666; font-style: italic;">This volunteer hasn't logged any hours yet.</p>
+            {% endfor %}
+        </ul>
+
+    </div>
+</body>
+</html>
