@@ -6,36 +6,71 @@
     <title>Log Farm Hours</title>
 </head>
 <body>
-    <div style="max-width: 600px; margin: 40px auto; font-family: sans-serif;">
+    <div style="max-width: 900px; margin: 40px auto; font-family: sans-serif;">
 
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;">
             <div>Logged in as: <strong>{{ user.username }}</strong> ({{ user.farm }})</div>
-            
             <div>
+                {% if user.role == 'farm_manager' or user.role == 'account_manager' or user.is_staff %}
+                    <a href="{% url 'manager_dashboard' %}" style="margin-right: 15px; color: green; text-decoration: none; font-weight: bold;">🌾 Manage Farm</a>
+                {% endif %}
                 {% if user.is_staff %}
                     <a href="{% url 'admin:index' %}" style="margin-right: 15px; color: blue; text-decoration: none;">⚙️ Admin Panel</a>
                 {% endif %}
-                
                 <form action="{% url 'logout' %}" method="post" style="display: inline;">
                     {% csrf_token %}
                     <button type="submit" style="background: none; border: none; color: red; text-decoration: underline; cursor: pointer; font-size: 16px;">Log Out</button>
                 </form>
             </div>
         </div>
-        <h2>Log Your Farm Hours</h2>
-        
-        {% if user.role == 'friend' %}
-            <div style="background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; border: 1px solid #f5c6cb;">
-                <strong>Notice:</strong> Your account is currently set to "Friend" (Read-Only) status. You can view your past summaries, but you cannot log new hours. Please contact a Farm Manager if this is a mistake.
-            </div>
-        {% else %}
-            <form method="POST">
-                {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit" style="padding: 10px 20px; font-size: 16px; margin-top: 10px;">Submit Log</button>
-            </form>
-        {% endif %}
 
+        <div style="display: flex; gap: 40px; margin-top: 30px;">
+            
+            <div style="flex: 1;">
+                <h2>Log Your Farm Hours</h2>
+                {% if user.role == 'friend' %}
+                    <div style="background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; border: 1px solid #f5c6cb;">
+                        <strong>Notice:</strong> Your account is currently set to "Friend" (Read-Only) status. You can view your past summaries, but you cannot log new hours. Please contact a Farm Manager if this is a mistake.
+                    </div>
+                {% else %}
+                    <form method="POST">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <button type="submit" style="padding: 10px 20px; font-size: 16px; margin-top: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%;">Submit Log</button>
+                    </form>
+                {% endif %}
+            </div>
+
+            <div style="flex: 1; background: #f4f6f8; padding: 20px; border-radius: 8px; border: 1px solid #dae1e7;">
+                <h2 style="margin-top: 0; color: #333;">Your Impact</h2>
+                
+                <div style="background: #eef7ee; border: 1px solid #c8e6c9; padding: 20px; text-align: center; border-radius: 8px; margin-bottom: 20px;">
+                    <span style="font-size: 1.2em; color: #555;">Lifetime Volunteered</span><br>
+                    <span style="font-size: 3em; font-weight: bold; color: #28a745;">{{ total_hours }}</span>
+                    <span style="font-size: 1.2em; color: #555;"> hours</span>
+                </div>
+
+                <h3>Recent Shifts</h3>
+                <ul style="list-style-type: none; padding: 0;">
+                    {% for log in recent_logs %}
+                        <li style="padding: 10px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>{{ log.date_logged }}</strong> - 
+                                <span style="color: #666;">
+                                    {{ log.get_activity_display }} {% if log.crop %}{{ log.crop }}{% else %}General Task{% endif %}
+                                </span>
+                            </div>
+                            <div style="font-weight: bold; color: #007bff;">
+                                {{ log.duration_hours }} hrs
+                            </div>
+                        </li>
+                    {% empty %}
+                        <p style="color: #666; font-style: italic;">No hours logged yet. Submit your first shift to see it here!</p>
+                    {% endfor %}
+                </ul>
+            </div>
+
+        </div>
     </div>
 </body>
 </html>
