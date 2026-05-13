@@ -29,6 +29,7 @@ class LoginActionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Your username and password didn't match")
 
+
 # --- ADDED: Tests for accounts/views.py ---
 class ProfileViewsTests(TestCase):
     def setUp(self):
@@ -42,44 +43,45 @@ class ProfileViewsTests(TestCase):
 
     def test_profile_view_get(self):
         """Tests that the profile page loads successfully."""
-        response = self.client.get(reverse('profile'))
+        response = self.client.get(reverse("profile"))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'accounts/profile.html')
+        self.assertTemplateUsed(response, "accounts/profile.html")
 
     def test_profile_view_post_valid(self):
         """Tests submitting a valid profile update."""
-        # We need to send ALL required fields for the form. 
+        # We need to send ALL required fields for the form.
         # Adding username, as it's almost always required by User forms!
         post_data = {
-            'username': self.user.username, 
-            'first_name': 'Updated',
-            'last_name': 'Name',
-            'email': 'test@example.com'
+            "username": self.user.username,
+            "first_name": "Updated",
+            "last_name": "Name",
+            "email": "test@example.com",
         }
-        
-        response = self.client.post(reverse('profile'), post_data)
-        
-        # DEBUG TRICK: If the form fails validation and returns 200, 
+
+        response = self.client.post(reverse("profile"), post_data)
+
+        # DEBUG TRICK: If the form fails validation and returns 200,
         # print the exact form errors to the terminal so we can see them!
         if response.status_code == 200:
             print("\n--- FORM VALIDATION FAILED ---")
-            print(response.context['form'].errors)
+            print(response.context["form"].errors)
             print("------------------------------\n")
-            
+
         # Check that it redirects back to the profile page on success
-        self.assertRedirects(response, reverse('profile'))
+        self.assertRedirects(response, reverse("profile"))
+
     def test_upload_avatar_post(self):
         """Tests uploading an avatar via base64 data."""
         # This is a tiny 1x1 pixel transparent PNG encoded in base64
         dummy_base64_image = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
-        
-        response = self.client.post(reverse('upload_avatar'), {
-            'avatar_base64': dummy_base64_image
-        })
-        
+
+        response = self.client.post(
+            reverse("upload_avatar"), {"avatar_base64": dummy_base64_image}
+        )
+
         # Check that it redirects back to the profile page
-        self.assertRedirects(response, reverse('profile'))
-        
+        self.assertRedirects(response, reverse("profile"))
+
         # Verify the avatar was actually saved to the user model
         self.user.refresh_from_db()
         self.assertTrue(bool(self.user.avatar))

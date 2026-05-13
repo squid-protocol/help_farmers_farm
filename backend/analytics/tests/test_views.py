@@ -5,40 +5,41 @@ from accounts.models import CustomUser
 from farms.models import Farm, Crop  # Adjust if Crop is in logs.models!
 from logs.models import LogEntry
 
+
 class AnalyticsViewsTest(TestCase):
     def setUp(self):
         # 1. Create a dummy farm and user
         self.farm = Farm.objects.create(name="Test Farm")
-        self.user = CustomUser.objects.create_user(username="testuser", password="testpass", farm=self.farm)
-        
+        self.user = CustomUser.objects.create_user(
+            username="testuser", password="testpass", farm=self.farm
+        )
+
         # 2. Create a dummy crop
         self.crop = Crop.objects.create(
-            crop_name="Tomatoes", 
-            category="Nightshades", 
-            farm=self.farm
+            crop_name="Tomatoes", category="Nightshades", farm=self.farm
         )
-        
+
         # 3. Create a dummy log entry so Pandas has data to crunch!
         LogEntry.objects.create(
             farm=self.farm,
             volunteer=self.user,
             crop=self.crop,
-            activity='P', # P for Planting
+            activity="P",  # P for Planting
             duration_hours=2.5,
-            date_logged=timezone.now().date()
+            date_logged=timezone.now().date(),
         )
 
     def test_impact_chart_loads_with_data(self):
-        self.client.force_login(self.user) # <--- Changed this line!
-        response = self.client.get(reverse('get_impact_chart'))
+        self.client.force_login(self.user)  # <--- Changed this line!
+        response = self.client.get(reverse("get_impact_chart"))
         self.assertEqual(response.status_code, 200)
 
     def test_heatmap_loads_with_data(self):
-        self.client.force_login(self.user) # <--- Changed this line!
-        response = self.client.get(reverse('get_activity_heatmap'))
+        self.client.force_login(self.user)  # <--- Changed this line!
+        response = self.client.get(reverse("get_activity_heatmap"))
         self.assertEqual(response.status_code, 200)
 
     def test_term_heatmap_loads_with_data(self):
-        self.client.force_login(self.user) # <--- Changed this line!
-        response = self.client.get(reverse('get_term_heatmap'))
+        self.client.force_login(self.user)  # <--- Changed this line!
+        response = self.client.get(reverse("get_term_heatmap"))
         self.assertEqual(response.status_code, 200)
