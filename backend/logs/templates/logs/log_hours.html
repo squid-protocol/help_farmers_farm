@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Farm Hours</title>
+</head>
+<body>
+    <div style="max-width: 600px; margin: 40px auto; font-family: sans-serif;">
+
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;">
+            <div>Logged in as: <strong>{{ user.username }}</strong> ({{ user.farm }})</div>
+            
+            <div>
+                {% if user.is_staff %}
+                    <a href="{% url 'admin:index' %}" style="margin-right: 15px; color: blue; text-decoration: none;">⚙️ Admin Panel</a>
+                {% endif %}
+                
+                <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" style="background: none; border: none; color: red; text-decoration: underline; cursor: pointer; font-size: 16px;">Log Out</button>
+                </form>
+            </div>
+        </div>
+        <h2>Log Your Farm Hours</h2>
+        
+        {% if user.role == 'friend' %}
+            <div style="background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; border: 1px solid #f5c6cb;">
+                <strong>Notice:</strong> Your account is currently set to "Friend" (Read-Only) status. You can view your past summaries, but you cannot log new hours. Please contact a Farm Manager if this is a mistake.
+            </div>
+        {% else %}
+            <form method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" style="padding: 10px 20px; font-size: 16px; margin-top: 10px;">Submit Log</button>
+            </form>
+        {% endif %}
+
+    </div>
+</body>
+</html>
