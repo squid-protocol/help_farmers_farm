@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'logs',
     'crispy_forms',
     'crispy_tailwind',
+    'axes'
 ]
 
 MIDDLEWARE = [
@@ -35,6 +36,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'axes.middleware.AxesMiddleware',
 ]
 
 ROOT_URLCONF = 'helpfarmers.urls'
@@ -109,3 +111,17 @@ LOGIN_REDIRECT_URL = '/log-hours/'
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
 CRISPY_TEMPLATE_PACK = "tailwind"
+
+
+# --- AXES SECURITY SETTINGS ---
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesBackend', # Axes checks for lockouts first
+    'django.contrib.auth.backends.ModelBackend', # Then Django checks the password
+]
+
+AXES_FAILURE_LIMIT = 5          # 5 failed attempts allowed
+AXES_COOLOFF_TIME = 1           # Lock out for 1 hour
+AXES_RESET_ON_SUCCESS = True    # Reset the counter if they log in successfully
+
+# During development, print emails to the console instead of actually sending them
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

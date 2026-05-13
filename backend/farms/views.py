@@ -63,8 +63,8 @@ def manager_dashboard(request):
 @login_required
 @user_passes_test(is_manager, login_url='/log-hours/')
 def volunteer_detail_view(request, volunteer_id):
-    # 1. Fetch the specific volunteer they clicked on
-    volunteer = get_object_or_404(User, id=volunteer_id)
+    # SECURE: Forces the requested user to belong to the manager's farm
+    volunteer = get_object_or_404(User, id=volunteer_id, farm=request.user.farm)
 
     # 2. SECURITY: Ensure the manager is looking at a volunteer from their OWN farm
     if not request.user.is_staff and volunteer.farm != request.user.farm:
