@@ -9,7 +9,6 @@ from django.views.decorators.http import require_POST
 from .models import Crop
 from .forms import CropForm, VolunteerCreationForm
 from logs.models import LogEntry  # Pulls the logs so we can calculate hours
-import plotly.graph_objects as go
 
 User = get_user_model()
 
