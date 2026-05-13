@@ -3,10 +3,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum
 from datetime import datetime
+from django.utils import timezone
 import plotly.graph_objects as go
 
 from .models import LogEntry
-from .forms import LogEntryForm  # Assuming you have a form for this!
+from .forms import LogEntryForm
 
 
 @login_required
@@ -16,9 +17,7 @@ def log_hours_view(request):
 
     # 1. Handle New Shift Submissions
     if request.method == "POST":
-        # THE FIX: Add user=request.user to the POST instantiation
         form = LogEntryForm(request.POST, user=request.user)
-
         if form.is_valid():
             new_log = form.save(commit=False)
             new_log.volunteer = user
@@ -27,7 +26,6 @@ def log_hours_view(request):
             messages.success(request, "Shift logged successfully!")
             return redirect("log_hours")
     else:
-        # THE FIX: Add user=request.user to the GET instantiation as well
         form = LogEntryForm(user=request.user)
 
     # 2. Fetch User's Data
@@ -44,7 +42,7 @@ def log_hours_view(request):
     # Generate one 🌱 emoji per season
     season_badges = "🌱" * seasons_volunteered
 
-    # 4. Calculate Commitment Progress
+    # 4. Calculate Commitment Progress & Pacing
     if user.work_commitment:
         target_hours = user.work_commitment.required_hours
         tier_name = user.work_commitment.name
@@ -54,9 +52,29 @@ def log_hours_view(request):
 
     progress_pct = 0
     remaining_hours = 0
+    required_pace = 0
+
     if target_hours > 0:
         progress_pct = min((season_hours / target_hours) * 100, 100)
         remaining_hours = max(target_hours - season_hours, 0)
+
+        # NEW: The Pacing Engine
+        if user.farm.season_start and user.farm.season_end and remaining_hours > 0:
+            today = timezone.now().date()
+            season_end = user.farm.season_end
+            season_start = user.farm.season_start
+
+            # Only calculate if the season isn't over yet
+            if today < season_end:
+                # If the season hasn't started yet, use the total season length
+                if today < season_start:
+                    days_remaining = (season_end - season_start).days
+                else:
+                    days_remaining = (season_end - today).days
+
+                # Convert days to weeks (using max to prevent dividing by zero in the final days)
+                weeks_remaining = max(days_remaining / 7.0, 1.0)
+                required_pace = remaining_hours / weeks_remaining
 
     # 5. Calculate "Fun Stats" (Based on this Season)
     activity_map = dict(LogEntry.ACTIVITY_CHOICES)
@@ -150,6 +168,7 @@ def log_hours_view(request):
         "tier_name": tier_name,
         "progress_pct": progress_pct,
         "remaining_hours": round(remaining_hours, 1),
+        "required_pace": round(required_pace, 1),
         "top_veggie": top_veggie,
         "top_act": top_act,
         "veggie_chart": veggie_chart_html,
