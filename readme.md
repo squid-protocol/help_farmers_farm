@@ -1,79 +1,99 @@
-# HelpFarmers: Farm Log & Analytics Dashboard
+# Help Farmers Farm - Volunteer & Impact Tracking System
 
-A comprehensive web application built to help community farms and agricultural projects track volunteer hours, manage crop seasons, and visualize labor data.
+A robust, multi-tenant Django web application designed to manage farm volunteers, track logged hours securely, and visualize complex farm impact metrics dynamically. 
 
-## 🚀 Features
+---
 
-* **Role-Based Dashboards:** Dedicated views for Farm Managers and Volunteers.
-* **Streamlined Time Tracking:** Fast, intuitive logging for planting, tending, and harvesting activities.
-* **Interactive Analytics:** Dynamic, HTMX-powered dashboards featuring Pandas and Plotly visualizations (Total Hours, Seasonal Activity Heatmaps, and Term Frequency).
-* **Secure Profiles:** Custom user accounts with profile management, avatar cropping/uploading, and brute-force login protection via Django-Axes.
+## 🤖 UNIVERSAL LLM DIRECTIVES & ARCHITECTURAL RULES
+*If you are an AI, LLM, or new developer reading this repository, you MUST adhere strictly to the following core directives before suggesting any code changes:*
 
-## 🛠️ Tech Stack
+### 1. Frontend & UI Paradigm
+* **HTMX over SPA:** This project uses **HTMX** for dynamic partial page updates. Do NOT suggest refactoring to React, Vue, or Angular. Views should return localized HTML fragments when handling HTMX requests.
+* **Tailwind CSS (Local Pipeline):** We use a Node-based Tailwind compilation pipeline (`django-tailwind`) located in the `theme/` app. Do NOT suggest adding Tailwind via CDN. Forms are rendered using `crispy-tailwind`.
+* **Plotly.js for Charts:** All data visualization is handled by Plotly. The charts are built server-side via Python/Pandas, stripped of their JS payload (`include_plotlyjs=False`), and rendered on the frontend using a globally loaded CDN script.
 
-* **Backend:** Python 3.12, Django 5.x
-* **Data Processing & Visualization:** Pandas, Plotly
-* **Frontend:** HTML, Tailwind CSS, HTMX (for dynamic, SPA-like interactions without writing JavaScript)
-* **Testing & Formatting:** `coverage`, `flake8`, `black`
+### 2. Database & Data Isolation (CRITICAL)
+* **Row-Level Multi-Tenancy:** The entire platform revolves around the `farms.Farm` model. Almost every query involving Users, Crops, or Work Commitments **MUST** be filtered by `farm=request.user.farm`. Never write a view that leaks data across different farms.
+* **Soft Deletes / Data Preservation:** We rely on `on_delete=models.SET_NULL` for historical data (like `LogEntry.volunteer` or `LogEntry.crop`). Do NOT suggest changing these to `CASCADE`, as deleting a volunteer or crop should never destroy a farm's historical impact analytics.
+* **No Future Logging:** The `LogEntry` model strictly prohibits logging hours in the future via a custom validator.
 
-## 📂 Project Structure
+### 3. Security & Infrastructure
+* **Secret Management:** Hardcoded secrets are strictly forbidden. Use `django-environ` via the `.env` file. 
+* **Strict HTTPS:** The `helpfarmers/settings.py` enforces `SECURE_SSL_REDIRECT` and secure cookies when `DEBUG=False`. 
+* **Testing Bypass:** To prevent automated tests from failing due to `301 Redirects`, a `TESTING = 'test' in sys.argv` flag safely bypasses SSL checks during local CI/CD runs. Do not remove this.
+* **Avatar Uploads:** Do NOT use standard `multipart/form-data` for avatars. The frontend uses Cropper.js to send a Base64 string to the backend, which decodes it into a `ContentFile`.
 
-* `helpfarmers/` - Core Django project settings and routing.
-* `accounts/` - Custom user models, authentication, and avatar management.
-* `farms/` - Farm data models and Manager dashboards.
-* `logs/` - Volunteer time entry models and forms.
-* `analytics/` - Data aggregation and Plotly chart generation.
+---
 
-## 💻 Local Development Setup
+## 📂 APPLICATION BOUNDARIES (Micro-Services Map)
 
-To get this project running on your local machine, follow these steps:
+The project is strictly divided into domain-specific apps. **Do not mix their responsibilities.**
 
-**1. Clone the repository**
-```bash
-git clone https://github.com/YOUR_USERNAME/help_farmers_farm.git
-cd help_farmers_farm/backend
+* **`accounts/` (Identity & Routing):** * Manages the `CustomUser` model (Inherits from `AbstractUser`).
+  * Handles Role-Based Access (`account_manager`, `farm_manager`, `volunteer`).
+  * Processes Base64 avatar uploads.
+  * *Rule:* Never place charting logic or time-tracking logic here.
+* **`farms/` (Tenancy & Management):** * Holds the core `Farm`, `Crop`, and `WorkCommitment` models.
+  * Contains the multi-form `manager_dashboard` for admin control.
+  * Generates the Progress Report for volunteers.
+* **`logs/` (Transactional Core):** * Contains the `LogEntry` model (Uses exact `DecimalField` math).
+  * Handles the volunteer pacing engine and individual dashboard generation.
+  * Protects against rapid "Double-Click" duplicate submissions via `unique_together`.
+* **`analytics/` (Data Visualization Engine):** * Acts purely as an HTMX API endpoint for rendering Plotly charts.
+  * Transforms raw `LogEntry` QuerySets into Pandas DataFrames for complex aggregation (like 52-week heatmaps).
+  * *Rule:* Do not return JSON here. Return `analytics/partials/chart.html`.
+
+---
+
+## 🛠 LOCAL DEVELOPMENT SETUP
+
+### 1. Requirements
+* Python 3.10+
+* Node.js v20+ (Required for the `theme/` Tailwind compilation)
+* PostgreSQL
+
+### 2. Environment Variables
+Create a `.env` file in the `backend/` directory:
+```env
+# backend/.env
+SECRET_KEY=your_secure_random_key_here
+DEBUG=True
+ALLOWED_HOSTS=127.0.0.1,localhost
 ```
 
-**2. Create and activate a virtual environment**
+### 3. Installation & Bootstrapping
+Activate your virtual environment and run the following from the `/backend/` directory:
 ```bash
-python3 -m venv farm_venv
-source farm_venv/bin/activate  # On Windows use: farm_venv\Scripts\activate
-```
-
-**3. Install dependencies**
-```bash
+# 1. Install Python packages
 pip install -r requirements.txt
-```
 
-**4. Run database migrations**
-```bash
-python manage.py makemigrations
+# 2. Install Node dependencies for Tailwind
+python manage.py tailwind install
+
+# 3. Run Database Migrations
 python manage.py migrate
 ```
 
-**5. Create a superuser (Admin)**
+### 4. Running the Development Server
+We use **Honcho** to manage multiple processes (Django + Tailwind Watcher). 
+Do NOT run `manage.py runserver` manually. From the `backend/` directory, run:
 ```bash
-python manage.py createsuperuser
+honcho start
 ```
+*Note: The `accounts` app contains a threading hook that will automatically open your default browser to `http://127.0.0.1:8000/accounts/login/` roughly 1.5 seconds after Honcho boots.*
 
-**6. Start the development server**
+---
+
+## 🧪 TESTING & CI/CD
+To run the automated test suite locally:
 ```bash
-python manage.py runserver
+python manage.py test
 ```
-Visit `http://127.0.0.1:8000` in your browser.
+*The test suite automatically bypasses HTTPS security headers so the native Django test client can execute standard HTTP requests without crashing.*
 
-## 🧪 Testing and CI/CD
+---
 
-This project enforces strict code quality and test coverage. A GitHub Actions pipeline automatically runs on every push.
-
-**Run the test suite with coverage:**
-```bash
-coverage run manage.py test
-coverage report
-```
-*(Note: CI requires a minimum coverage of 75%)*
-
-**Run the code formatter:**
-```bash
-black .
-```
+## 🚀 CURRENT ROADMAP & STATUS
+* **Phase 1: Security Hardening** - COMPLETE (django-environ, HTTPS headers, .gitignore).
+* **Phase 2: Documentation** - COMPLETE (LLM-optimized READMEs established).
+* **Phase 3: Legacy Data ETL** - IN PROGRESS. We are currently building custom management commands in `utils/` to extract legacy flat files/SQL dumps, transform them to map to the new Row-Level Multi-Tenant schema, and load them into PostgreSQL.
