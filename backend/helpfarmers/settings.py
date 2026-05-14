@@ -2,6 +2,9 @@ import os
 from pathlib import Path
 import environ
 
+import sys
+TESTING = 'test' in sys.argv
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -174,8 +177,8 @@ LOGGING = {
 }
 
 # --- SECURITY & HTTPS HEADERS ---
-# These are only activated in production when DEBUG is False.
-if not DEBUG:
+# These are only activated in production when DEBUG is False AND we aren't running tests.
+if not DEBUG and not TESTING:
     # Force all HTTP traffic to redirect to secure HTTPS
     SECURE_SSL_REDIRECT = True
     
@@ -189,7 +192,7 @@ if not DEBUG:
     # Enable the browser's built-in XSS protection
     SECURE_BROWSER_XSS_FILTER = True
     
-    # HTTP Strict Transport Security (HSTS) - Forces HTTPS for 1 year
+    # HTTP Strict Transport Security (HSTS)
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
