@@ -1,50 +1,47 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ volunteer.username }}'s Stats</title>
-</head>
-<body>
-    <div style="max-width: 800px; margin: 40px auto; font-family: sans-serif;">
+{% extends "base.html" %}
 
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;">
-            <div>
-                <a href="{% url 'manager_dashboard' %}" style="text-decoration: none; font-size: 18px;">🔙 Back to Dashboard</a>
-            </div>
-            <div>
-                <strong>Farm Manager View</strong>
-            </div>
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    
+    <div class="mb-8">
+        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-4">⚙️ Manager Command Center</h1>
+        <div class="flex flex-wrap gap-2 border-b border-gray-200 pb-4">
+            <a href="{% url 'manager_dashboard' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg shadow-sm transition">🔙 Back to Roster</a>
+            <span class="bg-emerald-100 text-emerald-800 font-bold py-2 px-4 rounded-lg shadow-sm">👤 Volunteer Profile</span>
         </div>
+    </div>
 
-        <h2 style="margin-bottom: 5px;">Volunteer Profile: {{ volunteer.first_name }} {{ volunteer.last_name }}</h2>
-        <p style="color: #666; margin-top: 0;">Username: <strong>{{ volunteer.username }}</strong> | Role: {{ volunteer.get_role_display }}</p>
+    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm mb-8 text-center">
+        <h2 class="text-2xl font-extrabold text-gray-900">{{ volunteer.first_name }} {{ volunteer.last_name }}</h2>
+        <p class="text-gray-500 mt-1">Username: <strong>{{ volunteer.username }}</strong> | Role: {{ volunteer.get_role_display }}</p>
+    </div>
 
-        <div style="background: #eef7ee; border: 1px solid #c8e6c9; padding: 20px; text-align: center; border-radius: 8px; margin-top: 30px; margin-bottom: 30px;">
-            <span style="font-size: 1.2em; color: #555;">Lifetime Volunteered</span><br>
-            <span style="font-size: 3em; font-weight: bold; color: #28a745;">{{ total_hours }}</span>
-            <span style="font-size: 1.2em; color: #555;"> hours</span>
-        </div>
+    <div class="bg-emerald-50 border border-emerald-100 p-8 text-center rounded-2xl shadow-sm mb-8">
+        <span class="text-sm font-bold text-emerald-800 uppercase tracking-widest">Lifetime Volunteered</span><br>
+        <span class="text-6xl font-black text-emerald-600 my-2 block">{{ total_hours }}</span>
+        <span class="text-lg font-medium text-emerald-800">hours</span>
+    </div>
 
-        <h3>Recent Shift History</h3>
-        <ul style="list-style-type: none; padding: 0;">
+    <h3 class="text-xl font-bold text-gray-900 mb-4">Recent Shift History</h3>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-20">
+        <ul class="divide-y divide-gray-100">
             {% for log in recent_logs %}
-                <li style="padding: 10px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center;">
+                <li class="p-4 flex justify-between items-center hover:bg-gray-50 transition">
                     <div>
-                        <strong>{{ log.date_logged }}</strong> - 
-                        <span style="color: #666;">
-                            {{ log.get_activity_display }} {% if log.crop %}{{ log.crop }}{% else %}General Task{% endif %}
+                        <strong class="text-gray-900">{{ log.date_logged|date:"M j, Y" }}</strong>
+                        <span class="text-gray-500 ml-2">
+                            - {{ log.get_activity_display }} {% if log.crop %}{{ log.crop }}{% else %}General Task{% endif %}
                         </span>
                     </div>
-                    <div style="font-weight: bold; color: #007bff;">
+                    <div class="font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-lg">
                         {{ log.duration_hours }} hrs
                     </div>
                 </li>
             {% empty %}
-                <p style="color: #666; font-style: italic;">This volunteer hasn't logged any hours yet.</p>
+                <li class="p-6 text-gray-500 text-center italic">This volunteer hasn't logged any hours yet.</li>
             {% endfor %}
         </ul>
-
     </div>
-</body>
-</html>
+
+</div>
+{% endblock %}
