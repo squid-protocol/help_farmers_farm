@@ -23,17 +23,21 @@ def get_impact_chart(request):
             pass
 
     global_totals = global_logs.values("activity").annotate(total=Sum("duration_hours"))
-    
+
     total_hours = 0
     p_hours = t_hours = h_hours = o_hours = 0
-    
+
     for item in global_totals:
         hours = float(item["total"] or 0)
         total_hours += hours
-        if item["activity"] == "P": p_hours = hours
-        elif item["activity"] == "T": t_hours = hours
-        elif item["activity"] == "H": h_hours = hours
-        elif item["activity"] == "O": o_hours = hours
+        if item["activity"] == "P":
+            p_hours = hours
+        elif item["activity"] == "T":
+            t_hours = hours
+        elif item["activity"] == "H":
+            h_hours = hours
+        elif item["activity"] == "O":
+            o_hours = hours
 
     # Calculate percentages for the CSS widths
     p_pct = (p_hours / total_hours * 100) if total_hours > 0 else 0
@@ -229,9 +233,9 @@ def get_activity_heatmap(request):
             z=z_matrix,
             x=weeks,
             y=veggies,
-            colorscale=discrete_colorscale, 
+            colorscale=discrete_colorscale,
             zmin=-0.5,
-            zmax=3.5, 
+            zmax=3.5,
             # xgap=2, <-- DELETE THIS LINE
             # ygap=2, <-- DELETE THIS LINE
             hovertemplate="<b>Week:</b> %{x}<br><b>Veggie:</b> %{y}<extra></extra>",
@@ -368,9 +372,11 @@ def get_term_heatmap(request):
 
     weeks = list(range(1, 53))
 
-    pivot_z = agg_df.pivot(
-        index="Term", columns="WeekOfYear", values="Occurrences"
-    ).reindex(index=ordered_terms, columns=weeks).fillna(0)
+    pivot_z = (
+        agg_df.pivot(index="Term", columns="WeekOfYear", values="Occurrences")
+        .reindex(index=ordered_terms, columns=weeks)
+        .fillna(0)
+    )
 
     z_matrix = pivot_z.values.tolist()
 
@@ -383,15 +389,15 @@ def get_term_heatmap(request):
             z=z_matrix,
             x=weeks,
             y=ordered_terms,
-            colorscale="YlGnBu", 
+            colorscale="YlGnBu",
             hovertemplate="<b>Week:</b> %{x}<br><b>Term:</b> %{y}<br><b>Occurrences:</b> %{z} logs<extra></extra>",
             showscale=True,
             colorbar=dict(
-                title="Occurrences", 
+                title="Occurrences",
                 thickness=15,
-                orientation="h",   # THE FIX: Lay it flat
-                x=0.5,             # Center it horizontally
-                y=-0.25            # Push it down below the x-axis labels
+                orientation="h",  # THE FIX: Lay it flat
+                x=0.5,  # Center it horizontally
+                y=-0.25,  # Push it down below the x-axis labels
             ),
         )
     )
@@ -458,6 +464,7 @@ def get_term_heatmap(request):
 
     chart_html = fig.to_html(full_html=False, include_plotlyjs=False)
     return render(request, "analytics/partials/chart.html", {"chart": chart_html})
+
 
 @login_required
 def get_seasonal_timeline(request):

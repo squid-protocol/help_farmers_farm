@@ -3,7 +3,8 @@ from pathlib import Path
 import environ
 
 import sys
-TESTING = 'test' in sys.argv
+
+TESTING = "test" in sys.argv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -15,16 +16,16 @@ env = environ.Env(
 )
 
 # Take environment variables from .env file
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 # If the .env file is missing (like on GitHub Actions), fallback to a dummy key
-SECRET_KEY = env('SECRET_KEY', default='django-insecure-github-actions-dummy-key')
+SECRET_KEY = env("SECRET_KEY", default="django-insecure-github-actions-dummy-key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG')
+DEBUG = env("DEBUG")
 
 # Pull allowed hosts from .env, default to local development
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost'])
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["127.0.0.1", "localhost"])
 
 # Application definition
 INSTALLED_APPS = [
@@ -84,7 +85,7 @@ DATABASES = {
         "NAME": "farm_logs",
         "USER": "farm_admin",
         # Consider moving this password to your .env file next!
-        "PASSWORD": "your_secure_password",  
+        "PASSWORD": "your_secure_password",
         "HOST": "localhost",
         "PORT": "5432",
     }
@@ -181,17 +182,17 @@ LOGGING = {
 if not DEBUG and not TESTING:
     # Force all HTTP traffic to redirect to secure HTTPS
     SECURE_SSL_REDIRECT = True
-    
+
     # Ensure session and CSRF cookies are only sent over HTTPS
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    
+
     # Prevent browsers from guessing content types
     SECURE_CONTENT_TYPE_NOSNIFF = True
-    
+
     # Enable the browser's built-in XSS protection
     SECURE_BROWSER_XSS_FILTER = True
-    
+
     # HTTP Strict Transport Security (HSTS)
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
