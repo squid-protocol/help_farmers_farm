@@ -1,38 +1,50 @@
 # Farms App
 
-This app serves as the organizational core of the platform. It handles the "Row-Level Multi-Tenancy" architecture, allowing multiple independent farms to use the software simultaneously without their data overlapping. It also provides the main dashboard for Farm Managers to administrate their operations.
+This app serves as the organizational core of the platform. It handles the "Row-Level Multi-Tenancy" architecture, allowing multiple independent farms to use the software simultaneously without their data overlapping. It also provides the main dashboard and reporting tools for Farm Managers.
 
-## Core Architecture: Multi-Tenancy
+## 🤖 LLM Context & Architectural Rules
+*If you are an AI or LLM reading this repository, adhere strictly to the following constraints for this app:*
 
-The central philosophy of this app is that almost every piece of data in the system belongs to a specific `Farm`. 
+* **Row-Level Multi-Tenancy (CRITICAL):** Almost every query in this app MUST be filtered by `farm=request.user.farm`. Never write a view or query that accidentally exposes `Crop`, `WorkCommitment`, or `User` data across different farms.
+* **Form Submission Paradigm:** The `manager_dashboard` view handles four distinct forms (`CropForm`, `VolunteerCreationForm`, `WorkCommitmentForm`, `FarmSettingsForm`) on a single page. It differentiates them by checking for specific `name` attributes on the submit buttons (e.g., `if "submit_crop" in request.POST:`). Do not suggest breaking these into separate views unless explicitly requested.
+* **Form Styling:** Forms are styled using Django `ModelForm` classes with embedded Tailwind CSS classes within the widget `attrs`. Do not suggest replacing this with manual HTML form rendering or third-party form packages.
+* **Analytics Separation:** The `farm_impact_view` strictly serves the *shell* (the base HTML and dropdowns). The actual HTMX chart endpoints and Plotly logic live in the `analytics` app. Do not add charting logic to `farms/views.py`.
 
-### Key Models:
-* **`Farm`:** The top-level organizational unit.
+---
+
+## 🏗 Core Architecture & Models
+
+The central philosophy of this app is that data belongs to a specific `Farm`. 
+
+* **`Farm`:** The top-level organizational unit. Contains meta-data like `season_start` and `season_end`.
 * **`Crop` (ForeignKey to Farm):** Represents what a specific farm is growing. By isolating crops per farm, "Farm A" can have 5 varieties of tomatoes while "Farm B" only has 1, keeping their individual dropdowns clean.
 * **`WorkCommitment` (ForeignKey to Farm):** Allows each farm to define its own customized share sizes and volunteer goals (e.g., "Full Share: 80 hours" vs "Standard Share: 50 hours").
 
-## Features & Views
+---
+
+## 📡 Views & Security Rules
 
 ### 1. The Manager Dashboard (`manager_dashboard`)
-This is the command center for Farm Managers. From a single unified page, managers can:
-* Add new `Crops` to their farm's registry.
-* Create new `Users` (Volunteers) directly tied to their farm.
-* Define and add new `WorkCommitments`.
-* View active rosters and crop lists.
+* **Function:** The command center for Farm Managers. From a single unified page, managers can add Crops, create Users, define Work Commitments, and update Farm Settings.
+* **Access:** Protected by `@user_passes_test(is_manager)`.
 
 ### 2. Strict Security & Permissions
 The app employs rigorous security checks to prevent privilege escalation and unauthorized access:
-* **The `is_manager` Check:** Custom decorators (`@user_passes_test`) ensure only users with the `farm_manager` or `account_manager` roles can access administrative views.
-* **Form-Level Security:** The `VolunteerCreationForm` explicitly intercepts the user creating the form. If a `farm_manager` is creating a new user, the form dynamically removes `account_manager` and `farm_manager` from the role dropdown, preventing them from granting privileges higher than their own.
-* **Cross-Farm Data Protection:** Views like `volunteer_detail_view` explicitly check that `volunteer.farm == request.user.farm`. A manager from Farm A cannot view or edit a volunteer from Farm B.
-* **Deletion Rules (`remove_user_view`):** Managers can remove volunteers, but strict rules prevent them from deleting themselves, deleting users outside their farm, or deleting system administrators.
+* **Form-Level Security:** The `VolunteerCreationForm` dynamically intercepts the `request_user`. If a `farm_manager` is creating a new user, the form strips `account_manager` and `farm_manager` from the role choices, preventing them from granting privileges higher than their own.
+* **Cross-Farm Data Protection:** Views like `volunteer_detail_view` explicitly check `get_object_or_404(User, id=volunteer_id, farm=request.user.farm)`. A manager from Farm A cannot view or edit a volunteer from Farm B.
+* **Deletion Rules (`remove_user_view`):** Managers can remove volunteers, but strict rules prevent them from:
+    1. Deleting users outside their farm.
+    2. Deleting system administrators (Account/Farm Managers).
+    3. Deleting themselves.
 
-### 3. Farm Impact Analytics
-The `farm_impact_view` serves as the entry point for farm-wide data visualization, querying active crops and rendering the container where the `analytics` app will inject its HTMX-powered charts.
+### 3. The Progress Report (`progress_report_view`)
+* **Function:** A manager-only view that tracks volunteer hour completion against their assigned `WorkCommitment` targets.
+* **Data Flow:** Queries all active volunteers on the farm, calculates their `total_hours` for the current year using `LogEntry` aggregations, calculates the percentage completed (`pct`), and groups them by their `WorkCommitment.name`.
+* **Sorting:** Groups are actively sorted so volunteers with the lowest progress appear at the top of the report.
 
-## Forms Integration
-Instead of building complex HTML forms by hand, this app utilizes Django `ModelForm` classes (e.g., `WorkCommitmentForm`) with embedded Tailwind CSS classes within the widget `attrs`. This ensures the backend dictates the data structure while seamlessly matching the frontend UI design.
+---
 
-## Dependencies
-* `accounts` app (For the `CustomUser` model and role checking)
-* `logs` app (For querying total hours in the volunteer detail view)
+## 🔗 Cross-App Dependencies
+* **`accounts` app:** Provides the `CustomUser` model. `farms/forms.py` manipulates the `CustomUser` roles.
+* **`logs` app:** The `volunteer_detail_view` and `progress_report_view` rely on `logs.LogEntry` to aggregate `Sum("duration_hours")`.
+* **`analytics` app:** Provides the HTMX partials injected into `farm_impact.html`.
