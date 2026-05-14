@@ -27,6 +27,8 @@ INSTALLED_APPS = [
     "crispy_tailwind",
     "axes",
     "analytics",
+    "tailwind",
+    "theme",
 ]
 
 MIDDLEWARE = [
@@ -130,3 +132,8 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 # settings.py (at the bottom)
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+TAILWIND_APP_NAME = "theme"
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
