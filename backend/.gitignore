@@ -1,1 +1,33 @@
+# --- Security & Logs ---
+.env
+django_errors.log
+
+# --- Media & Uploads ---
 media/
+
+# --- Database ---
+# Prevents your local development data from overwriting production!
+db.sqlite3
+
+# --- Python & Django ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+
+# --- Virtual Environment ---
+# Keeps your massive local Python environment out of Git
+farm_venv/
+venv/
+env/
+
+# --- Tailwind & Node.js ---
+# Keeps the 1,700+ dependencies you just downloaded out of Git
+node_modules/
+theme/static_src/node_modules/
+
+# --- OS & IDE Files ---
+.DS_Store
+Thumbs.db
+.vscode/

@@ -1,16 +1,30 @@
+import os
 from pathlib import Path
+import environ
+
+import sys
+TESTING = 'test' in sys.argv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-replace-this-with-a-real-secret-key-later"
+# Initialize environment variables
+env = environ.Env(
+    # Set casting and default values
+    DEBUG=(bool, False)
+)
+
+# Take environment variables from .env file
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
+# If the .env file is missing (like on GitHub Actions), fallback to a dummy key
+SECRET_KEY = env('SECRET_KEY', default='django-insecure-github-actions-dummy-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = []
-
+# Pull allowed hosts from .env, default to local development
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost'])
 
 # Application definition
 INSTALLED_APPS = [
@@ -47,7 +61,7 @@ ROOT_URLCONF = "helpfarmers.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates"],  # <--- THIS IS THE ONLY CHANGE
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -62,7 +76,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "helpfarmers.wsgi.application"
 
-
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 DATABASES = {
@@ -70,12 +83,12 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "farm_logs",
         "USER": "farm_admin",
-        "PASSWORD": "your_secure_password",  # Make sure this matches what you set in psql!
+        # Consider moving this password to your .env file next!
+        "PASSWORD": "your_secure_password",  
         "HOST": "localhost",
         "PORT": "5432",
     }
 }
-
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -93,13 +106,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = "static/"
@@ -115,7 +126,6 @@ LOGIN_REDIRECT_URL = "/log-hours/"
 CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
 CRISPY_TEMPLATE_PACK = "tailwind"
 
-
 # --- AXES SECURITY SETTINGS ---
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesBackend",  # Axes checks for lockouts first
@@ -129,11 +139,60 @@ AXES_RESET_ON_SUCCESS = True  # Reset the counter if they log in successfully
 # During development, print emails to the console instead of actually sending them
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-# settings.py (at the bottom)
+# Media Files
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# Tailwind Engine
 TAILWIND_APP_NAME = "theme"
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
+
+# --- LOGGING CONFIGURATION ---
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "file": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "filename": BASE_DIR / "django_errors.log",
+            "formatter": "verbose",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["file"],
+            "level": "ERROR",
+            "propagate": True,
+        },
+    },
+}
+
+# --- SECURITY & HTTPS HEADERS ---
+# These are only activated in production when DEBUG is False AND we aren't running tests.
+if not DEBUG and not TESTING:
+    # Force all HTTP traffic to redirect to secure HTTPS
+    SECURE_SSL_REDIRECT = True
+    
+    # Ensure session and CSRF cookies are only sent over HTTPS
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    
+    # Prevent browsers from guessing content types
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    
+    # Enable the browser's built-in XSS protection
+    SECURE_BROWSER_XSS_FILTER = True
+    
+    # HTTP Strict Transport Security (HSTS)
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
