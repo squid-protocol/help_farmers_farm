@@ -14,23 +14,16 @@
     </div>
 
     <div>
-        <form class="flex flex-col sm:flex-row gap-4 mb-4 justify-center" 
+        <form class="flex justify-center mb-4" 
               hx-get="{% url 'get_impact_chart' %}" 
               hx-target="#chart-1-container" 
               hx-trigger="change">
             
-            <select name="timeframe" class="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-medium cursor-pointer">
-                <option value="all">All-Time</option>
-                <option value="30">Last 30 Days</option>
-                <option value="90">Last 90 Days</option>
-                <option value="365">Past Year</option>
-            </select>
-            
-            <select name="crop_id" class="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-medium cursor-pointer">
-                <option value="all">All Crops</option>
-                {% for crop in crops %}
-                    <option value="{{ crop.id }}">{{ crop.crop_name }}</option>
-                {% endfor %}
+            <select name="year" class="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-medium cursor-pointer">
+                <option value="all">All Years Combined</option>
+                <option value="2026">2026</option>
+                <option value="2025">2025</option>
+                <option value="2024">2024</option>
             </select>
         </form>
 

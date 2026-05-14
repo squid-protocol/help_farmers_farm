@@ -12,30 +12,86 @@ from logs.models import LogEntry
 @login_required
 def get_impact_chart(request):
     farm = request.user.farm
-    logs = LogEntry.objects.filter(farm=farm)
+    year = request.GET.get("year", "all")
 
-    # 1. CATCH THE HTMX FILTERS
-    timeframe = request.GET.get("timeframe", "all")
-    crop_id = request.GET.get("crop_id", "all")
+    # --- PART 1: THE GLOBAL PROGRESS BAR DATA ---
+    global_logs = LogEntry.objects.filter(farm=farm)
+    if year and year != "all":
+        try:
+            global_logs = global_logs.filter(date_logged__year=int(year))
+        except ValueError:
+            pass
 
-    # 2. APPLY THE FILTERS TO THE DATABASE
-    if timeframe != "all":
-        days_back = int(timeframe)
-        cutoff_date = timezone.now().date() - timedelta(days=days_back)
-        logs = logs.filter(date_logged__gte=cutoff_date)
+    global_totals = global_logs.values("activity").annotate(total=Sum("duration_hours"))
+    
+    total_hours = 0
+    p_hours = t_hours = h_hours = o_hours = 0
+    
+    for item in global_totals:
+        hours = float(item["total"] or 0)
+        total_hours += hours
+        if item["activity"] == "P": p_hours = hours
+        elif item["activity"] == "T": t_hours = hours
+        elif item["activity"] == "H": h_hours = hours
+        elif item["activity"] == "O": o_hours = hours
 
-    if crop_id != "all":
-        logs = logs.filter(crop_id=crop_id)
+    # Calculate percentages for the CSS widths
+    p_pct = (p_hours / total_hours * 100) if total_hours > 0 else 0
+    t_pct = (t_hours / total_hours * 100) if total_hours > 0 else 0
+    h_pct = (h_hours / total_hours * 100) if total_hours > 0 else 0
+    o_pct = (o_hours / total_hours * 100) if total_hours > 0 else 0
 
-    # 3. CRUNCH THE NUMBERS
+    # Build the Fancy Tailwind KPI Dashboard
+    stats_html = f"""
+    <div class="mb-8 p-6 md:p-8 bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col items-center text-center">
+        
+        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Total Farm Labor</h3>
+        <p class="text-5xl md:text-6xl font-black text-gray-900 mb-8 tracking-tight">
+            {int(round(total_hours)):,} <span class="text-2xl text-gray-400 font-bold tracking-normal">Hours</span>
+        </p>
+        
+        <div class="w-full max-w-4xl flex h-4 overflow-hidden rounded-full bg-gray-100 mb-8 shadow-inner">
+            <div style="width: {p_pct}%" class="bg-emerald-500 transition-all duration-500" title="Planting"></div>
+            <div style="width: {t_pct}%" class="bg-amber-500 transition-all duration-500" title="Tending"></div>
+            <div style="width: {h_pct}%" class="bg-red-500 transition-all duration-500" title="Harvesting"></div>
+            <div style="width: {o_pct}%" class="bg-slate-400 transition-all duration-500" title="Off-Season / Other"></div>
+        </div>
+
+        <div class="w-full max-w-4xl grid grid-cols-2 md:grid-cols-4 gap-4">
+            
+            <div class="flex flex-col items-center justify-center p-4 rounded-xl bg-emerald-50 border border-emerald-100">
+                <span class="text-3xl font-extrabold text-emerald-600 mb-1">{int(round(p_hours)):,}</span>
+                <span class="text-xs font-bold text-emerald-800 uppercase tracking-wide">Planting</span>
+            </div>
+            
+            <div class="flex flex-col items-center justify-center p-4 rounded-xl bg-amber-50 border border-amber-100">
+                <span class="text-3xl font-extrabold text-amber-600 mb-1">{int(round(t_hours)):,}</span>
+                <span class="text-xs font-bold text-amber-800 uppercase tracking-wide">Tending</span>
+            </div>
+            
+            <div class="flex flex-col items-center justify-center p-4 rounded-xl bg-red-50 border border-red-100">
+                <span class="text-3xl font-extrabold text-red-600 mb-1">{int(round(h_hours)):,}</span>
+                <span class="text-xs font-bold text-red-800 uppercase tracking-wide">Harvesting</span>
+            </div>
+            
+            <div class="flex flex-col items-center justify-center p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <span class="text-3xl font-extrabold text-slate-600 mb-1">{int(round(o_hours)):,}</span>
+                <span class="text-xs font-bold text-slate-800 uppercase tracking-wide">Other Maint.</span>
+            </div>
+            
+        </div>
+    </div>
+    """
+
+    # --- PART 2: THE CROP BAR CHART DATA ---
+    crop_logs = global_logs.exclude(crop__isnull=True)
     aggregated_data = (
-        logs.values("crop__crop_name", "activity")
+        crop_logs.values("crop__crop_name", "activity")
         .annotate(total_hours=Sum("duration_hours"))
         .order_by("crop__crop_name")
     )
 
-    # If no data matches the filters, return an empty state
-    if not aggregated_data:
+    if not aggregated_data and total_hours == 0:
         empty_html = (
             '<div class="flex flex-col items-center justify-center py-20 text-gray-400">'
             '<svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">'
@@ -48,7 +104,6 @@ def get_impact_chart(request):
         )
         return render(request, "analytics/partials/chart.html", {"chart": empty_html})
 
-    # 4. BUILD THE PLOTLY CHART
     crops = sorted(list(set([item["crop__crop_name"] for item in aggregated_data])))
     activity_colors = {"P": "#10b981", "T": "#f59e0b", "H": "#ef4444", "O": "#94a3b8"}
     activity_labels = dict(LogEntry.ACTIVITY_CHOICES)
@@ -81,15 +136,15 @@ def get_impact_chart(request):
         barmode="stack",
         plot_bgcolor="rgba(250,250,250,1)",
         paper_bgcolor="white",
-        margin=dict(
-            l=50, r=50, t=40, b=80
-        ),  # Reduced top margin since the title is moving to HTML
+        margin=dict(l=50, r=50, t=20, b=80),
         legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5),
         hoverlabel=dict(bgcolor="white", font_size=15, font_color="black"),
     )
 
-    chart_html = fig.to_html(full_html=False, include_plotlyjs=False)
-    return render(request, "analytics/partials/chart.html", {"chart": chart_html})
+    plotly_html = fig.to_html(full_html=False, include_plotlyjs=False)
+    combined_html = stats_html + plotly_html
+
+    return render(request, "analytics/partials/chart.html", {"chart": combined_html})
 
 
 @login_required
@@ -174,11 +229,11 @@ def get_activity_heatmap(request):
             z=z_matrix,
             x=weeks,
             y=veggies,
-            colorscale=discrete_colorscale,  # <-- Use the new stepped colorscale
+            colorscale=discrete_colorscale, 
             zmin=-0.5,
-            zmax=3.5,  # <-- Offset min/max so our 0,1,2,3 values sit perfectly in the center of the color blocks
-            xgap=2,
-            ygap=2,
+            zmax=3.5, 
+            # xgap=2, <-- DELETE THIS LINE
+            # ygap=2, <-- DELETE THIS LINE
             hovertemplate="<b>Week:</b> %{x}<br><b>Veggie:</b> %{y}<extra></extra>",
             showscale=True,
             colorbar=dict(
@@ -290,26 +345,20 @@ def get_term_heatmap(request):
     activity_names = dict(LogEntry.ACTIVITY_CHOICES)
     df["Activity_Label"] = df["activity"].map(activity_names)
 
-    # 3. SPLIT AND STACK (The Magic Trick)
-    # Count every log entry as an occurrence for its Crop...
+    # 3. SPLIT AND STACK
     df_veggies = df[["WeekOfYear", "crop__crop_name"]].rename(
         columns={"crop__crop_name": "Term"}
     )
-    # ...AND as an occurrence for its Activity
     df_activities = df[["WeekOfYear", "Activity_Label"]].rename(
         columns={"Activity_Label": "Term"}
     )
-
-    # Stack them together
     df_terms = pd.concat([df_veggies, df_activities]).dropna(subset=["Term"])
 
     # 4. AGGREGATE
-    # Count how many times each term appeared in each week
     agg_df = (
         df_terms.groupby(["Term", "WeekOfYear"]).size().reset_index(name="Occurrences")
     )
 
-    # Organize the Y-Axis so Activities are at the top, Veggies at the bottom
     all_unique_terms = agg_df["Term"].unique().tolist()
     activity_list = sorted(
         [name for code, name in activity_names.items() if name in all_unique_terms]
@@ -319,12 +368,10 @@ def get_term_heatmap(request):
 
     weeks = list(range(1, 53))
 
-    # Pivot to create the grid (Fill missing weeks with 0)
     pivot_z = agg_df.pivot(
         index="Term", columns="WeekOfYear", values="Occurrences"
-    ).reindex(index=ordered_terms, columns=weeks, fill_value=0)
+    ).reindex(index=ordered_terms, columns=weeks).fillna(0)
 
-    # Convert to standard Python list for Plotly JSON serialization
     z_matrix = pivot_z.values.tolist()
 
     # 5. BUILD THE PLOTLY FIGURE
@@ -336,12 +383,16 @@ def get_term_heatmap(request):
             z=z_matrix,
             x=weeks,
             y=ordered_terms,
-            colorscale="Teal",
-            xgap=1,
-            ygap=1,
+            colorscale="YlGnBu", 
             hovertemplate="<b>Week:</b> %{x}<br><b>Term:</b> %{y}<br><b>Occurrences:</b> %{z} logs<extra></extra>",
             showscale=True,
-            colorbar=dict(title="Occurrences", thickness=15),  # <--- Cleaned up!
+            colorbar=dict(
+                title="Occurrences", 
+                thickness=15,
+                orientation="h",   # THE FIX: Lay it flat
+                x=0.5,             # Center it horizontally
+                y=-0.25            # Push it down below the x-axis labels
+            ),
         )
     )
 
@@ -390,7 +441,8 @@ def get_term_heatmap(request):
     fig.update_layout(
         plot_bgcolor="rgba(250,250,250,1)",
         paper_bgcolor="white",
-        margin=dict(l=150, r=150, t=20, b=80),
+        # THE FIX: Increased the bottom margin (b=120) to make room for the horizontal colorbar
+        margin=dict(l=150, r=150, t=20, b=120),
         height=max(400, len(ordered_terms) * 25 + 150),
         xaxis=xaxis_config,
         yaxis=dict(title="", tickfont=dict(size=13), automargin=True),
@@ -406,7 +458,6 @@ def get_term_heatmap(request):
 
     chart_html = fig.to_html(full_html=False, include_plotlyjs=False)
     return render(request, "analytics/partials/chart.html", {"chart": chart_html})
-
 
 @login_required
 def get_seasonal_timeline(request):
