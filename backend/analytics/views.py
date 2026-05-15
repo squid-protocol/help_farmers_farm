@@ -45,7 +45,7 @@ def get_impact_chart(request):
 
     # Build the Fancy Tailwind KPI Dashboard
     stats_html = f"""
-    <div class="mb-8 p-6 md:p-8 bg-white rounded-2xl border border-gray-200 
+    <div class="mb-8 p-6 md:p-8 bg-white rounded-2xl border border-gray-200
                 shadow-sm flex flex-col items-center text-center">
 
         <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Total Farm Labor</h3>
@@ -57,30 +57,31 @@ def get_impact_chart(request):
             <div style="width: {p_pct}%" class="bg-emerald-500 transition-all duration-500" title="Planting"></div>
             <div style="width: {t_pct}%" class="bg-amber-500 transition-all duration-500" title="Tending"></div>
             <div style="width: {h_pct}%" class="bg-red-500 transition-all duration-500" title="Harvesting"></div>
-            <div style="width: {o_pct}%" class="bg-slate-400 transition-all duration-500" title="Off-Season / Other"></div>
+            <div style="width: {o_pct}%" class="bg-slate-400 transition-all duration-500"
+                 title="Off-Season / Other"></div>
         </div>
 
         <div class="w-full max-w-4xl grid grid-cols-2 md:grid-cols-4 gap-4">
 
-            <div class="flex flex-col items-center justify-center p-4 rounded-xl 
+            <div class="flex flex-col items-center justify-center p-4 rounded-xl
                         bg-emerald-50 border border-emerald-100">
                 <span class="text-3xl font-extrabold text-emerald-600 mb-1">{int(round(p_hours)):,}</span>
                 <span class="text-xs font-bold text-emerald-800 uppercase tracking-wide">Planting</span>
             </div>
 
-            <div class="flex flex-col items-center justify-center p-4 rounded-xl 
+            <div class="flex flex-col items-center justify-center p-4 rounded-xl
                         bg-amber-50 border border-amber-100">
                 <span class="text-3xl font-extrabold text-amber-600 mb-1">{int(round(t_hours)):,}</span>
                 <span class="text-xs font-bold text-amber-800 uppercase tracking-wide">Tending</span>
             </div>
 
-            <div class="flex flex-col items-center justify-center p-4 rounded-xl 
+            <div class="flex flex-col items-center justify-center p-4 rounded-xl
                         bg-red-50 border border-red-100">
                 <span class="text-3xl font-extrabold text-red-600 mb-1">{int(round(h_hours)):,}</span>
                 <span class="text-xs font-bold text-red-800 uppercase tracking-wide">Harvesting</span>
             </div>
 
-            <div class="flex flex-col items-center justify-center p-4 rounded-xl 
+            <div class="flex flex-col items-center justify-center p-4 rounded-xl
                         bg-slate-50 border border-slate-200">
                 <span class="text-3xl font-extrabold text-slate-600 mb-1">{int(round(o_hours)):,}</span>
                 <span class="text-xs font-bold text-slate-800 uppercase tracking-wide">Other Maint.</span>
