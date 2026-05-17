@@ -46,7 +46,7 @@ class WorkCommitment(models.Model):
     )
     name = models.CharField(max_length=100)  # e.g., "Full Share", "Half Share"
     required_hours = models.IntegerField(default=0)  # e.g., 80, 50
-    
+
     # NEW FIELD
     symbol = models.CharField(max_length=5, choices=SYMBOL_CHOICES, default="🌕")
 
