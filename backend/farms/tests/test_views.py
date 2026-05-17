@@ -5,6 +5,7 @@ from farms.models import Farm
 
 User = get_user_model()
 
+
 class SecurityIDORTests(TestCase):
     def setUp(self):
         self.client = Client()
@@ -18,22 +19,22 @@ class SecurityIDORTests(TestCase):
             email="manager_a@example.com",
             password="secure",
             farm=self.farm_a,
-            role="farm_manager",  
+            role="farm_manager",
         )
 
         self.volunteer_a = User.objects.create_user(
-            username="vol_a", 
+            username="vol_a",
             email="vol_a@example.com",
-            password="secure", 
+            password="secure",
             farm=self.farm_a
         )
 
         # 2. Build Farm B (The Rivals)
         self.farm_b = Farm.objects.create(name="Rival Valley Farms")
         self.volunteer_b = User.objects.create_user(
-            username="vol_b", 
+            username="vol_b",
             email="vol_b@example.com",
-            password="secure", 
+            password="secure",
             farm=self.farm_b
         )
 

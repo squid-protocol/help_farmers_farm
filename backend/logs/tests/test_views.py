@@ -7,6 +7,7 @@ from django.utils import timezone
 
 User = get_user_model()
 
+
 class LogHoursIntegrationTests(TestCase):
     def setUp(self):
         # 1. Arrange: Build the world
@@ -16,15 +17,15 @@ class LogHoursIntegrationTests(TestCase):
 
         # THE FIX: Added a fake email so the middleware bouncer lets them through
         self.user = User.objects.create_user(
-            username="test_volunteer", 
-            email="test@example.com", 
-            password="my_secure_password123", 
+            username="test_volunteer",
+            email="test@example.com",
+            password="my_secure_password123",
             farm=self.farm
         )
 
         # Force the invisible browser to log in, bypassing the security bouncer
         self.client.force_login(self.user)
-        self.log_url = reverse("log_hours") 
+        self.log_url = reverse("log_hours")
 
     def test_page_loads_for_logged_in_users(self):
         # Act: Try to visit the logging page
@@ -42,7 +43,7 @@ class LogHoursIntegrationTests(TestCase):
             {
                 "date_logged": today_str,
                 "crop": self.crop.id,
-                "activity": "T",  
+                "activity": "T",
                 "duration_hours": "4.00",
             },
         )
