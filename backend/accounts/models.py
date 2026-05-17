@@ -23,7 +23,9 @@ class CustomUser(AbstractUser):
     # Allow users to upload avatars
     avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
 
-    # In accounts/models.py
+    # NEW: Optional Phone Number
+    phone_number = models.CharField(max_length=20, null=True, blank=True)
+
     # Inside the CustomUser class:
     work_commitment = models.ForeignKey(
         "farms.WorkCommitment",

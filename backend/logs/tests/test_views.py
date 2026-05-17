@@ -20,7 +20,7 @@ class LogHoursIntegrationTests(TestCase):
             username="test_volunteer",
             email="test@example.com",
             password="my_secure_password123",
-            farm=self.farm
+            farm=self.farm,
         )
 
         # Force the invisible browser to log in, bypassing the security bouncer
