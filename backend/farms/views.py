@@ -15,7 +15,7 @@ from .forms import (
     VolunteerCreationForm,
     WorkCommitmentForm,
     FarmSettingsForm,
-    VolunteerEditForm,
+    VolunteerEditForm,  # <-- ADDED FOR INLINE EDITING
 )
 
 # --- Other App Imports ---
@@ -128,47 +128,6 @@ def volunteer_detail_view(request, volunteer_id):
     return render(request, "farms/volunteer_detail.html", context)
 
 
-# --- User & Crop Soft Deletes (Toggles) ---
-@login_required
-@require_POST
-@user_passes_test(is_manager, login_url="/log-hours/")
-def toggle_user_status_view(request, user_id):
-    user_to_toggle = get_object_or_404(User, id=user_id)
-
-    # RULE 1: Must be in the same farm
-    if not request.user.is_staff and user_to_toggle.farm != request.user.farm:
-        raise PermissionDenied("Cannot modify users outside your farm.")
-
-    # RULE 2: Farm Managers cannot modify Account Managers or other Farm Managers
-    if request.user.role == "farm_manager" and user_to_toggle.role in [
-        "account_manager",
-        "farm_manager",
-    ]:
-        raise PermissionDenied(
-            "Farm Managers do not have permission to modify other managers."
-        )
-
-    # RULE 3: You can't deactivate yourself
-    if request.user == user_to_toggle:
-        raise PermissionDenied("You cannot deactivate yourself.")
-
-    # The Soft Delete / Restore
-    user_to_toggle.is_active = not user_to_toggle.is_active
-    user_to_toggle.save()
-    return redirect("manager_dashboard")
-
-
-@login_required
-@require_POST
-@user_passes_test(is_manager, login_url="/log-hours/")
-def toggle_crop_status_view(request, crop_id):
-    crop_to_toggle = get_object_or_404(Crop, id=crop_id, farm=request.user.farm)
-
-    crop_to_toggle.is_active = not crop_to_toggle.is_active
-    crop_to_toggle.save()
-    return redirect("manager_dashboard")
-
-
 @login_required
 def farm_impact_view(request):
     farm = request.user.farm
@@ -228,6 +187,48 @@ def progress_report_view(request):
     return render(request, "farms/progress_report.html", context)
 
 
+# --- User & Crop Soft Deletes (Toggles) ---
+@login_required
+@require_POST
+@user_passes_test(is_manager, login_url="/log-hours/")
+def toggle_user_status_view(request, user_id):
+    user_to_toggle = get_object_or_404(User, id=user_id)
+
+    # RULE 1: Must be in the same farm
+    if not request.user.is_staff and user_to_toggle.farm != request.user.farm:
+        raise PermissionDenied("Cannot modify users outside your farm.")
+
+    # RULE 2: Farm Managers cannot modify Account Managers or other Farm Managers
+    if request.user.role == "farm_manager" and user_to_toggle.role in [
+        "account_manager",
+        "farm_manager",
+    ]:
+        raise PermissionDenied(
+            "Farm Managers do not have permission to modify other managers."
+        )
+
+    # RULE 3: You can't deactivate yourself
+    if request.user == user_to_toggle:
+        raise PermissionDenied("You cannot deactivate yourself.")
+
+    # The Soft Delete / Restore
+    user_to_toggle.is_active = not user_to_toggle.is_active
+    user_to_toggle.save()
+    return redirect("manager_dashboard")
+
+
+@login_required
+@require_POST
+@user_passes_test(is_manager, login_url="/log-hours/")
+def toggle_crop_status_view(request, crop_id):
+    crop_to_toggle = get_object_or_404(Crop, id=crop_id, farm=request.user.farm)
+
+    crop_to_toggle.is_active = not crop_to_toggle.is_active
+    crop_to_toggle.save()
+    return redirect("manager_dashboard")
+
+
+# --- Inline Edit Views ---
 @login_required
 @user_passes_test(is_manager, login_url="/log-hours/")
 def edit_crop_view(request, crop_id):
@@ -257,9 +258,7 @@ def edit_volunteer_view(request, volunteer_id):
         "account_manager",
         "farm_manager",
     ]:
-        if (
-            request.user != volunteer
-        ):  # They can edit themselves, but not other managers
+        if request.user != volunteer:
             raise PermissionDenied("You cannot edit other managers.")
 
     if request.method == "POST":

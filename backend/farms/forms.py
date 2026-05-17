@@ -9,7 +9,7 @@ User = get_user_model()
 class WorkCommitmentForm(forms.ModelForm):
     class Meta:
         model = WorkCommitment
-        fields = ["name", "required_hours", "symbol"]
+        fields = ["name", "required_hours"]
         widgets = {
             "name": forms.TextInput(
                 attrs={
@@ -47,36 +47,53 @@ class VolunteerCreationForm(forms.ModelForm):
 
     class Meta:
         model = User
-        # ADDED: "email"
+        fields = ["username", "first_name", "last_name", "email", "role"]
+
+    field_order = ["username", "first_name", "last_name", "email", "role", "password"]
+
+    def __init__(self, *args, **kwargs):
+        self.request_user = kwargs.pop("request_user", None)
+        super().__init__(*args, **kwargs)
+
+        if self.request_user and not self.request_user.is_staff:
+            if self.request_user.role == "farm_manager":
+                self.fields["role"].choices = [
+                    choice
+                    for choice in self.fields["role"].choices
+                    if choice[0] not in ["account_manager", "farm_manager"]
+                ]
+
+
+# --- THE MISSING FORM: For inline editing existing users ---
+class VolunteerEditForm(forms.ModelForm):
+    class Meta:
+        model = User
         fields = [
             "username",
             "first_name",
             "last_name",
             "email",
             "role",
-            "phone_number",
+            "work_commitment",
+            "is_active",
         ]
 
-    # ADDED: "email" to the forced layout order
-    field_order = [
-        "username",
-        "first_name",
-        "last_name",
-        "email",
-        "role",
-        "phone_number",
-        "password",
-    ]
-
-    # --- NEW: Intercept the form creation to check the user's role ---
     def __init__(self, *args, **kwargs):
-        # Extract the user requesting the form before Django processes it
         self.request_user = kwargs.pop("request_user", None)
         super().__init__(*args, **kwargs)
 
-        if self.request_user and not self.request_user.is_staff:
-            # If the user is only a Farm Manager, remove the Manager roles
-            if self.request_user.role == "farm_manager":
+        if self.request_user:
+            # Only show commitments that belong to this specific farm
+            if self.request_user.farm:
+                self.fields["work_commitment"].queryset = WorkCommitment.objects.filter(
+                    farm=self.request_user.farm
+                )
+
+            # Prevent farm managers from granting account_manager privileges
+            if (
+                not self.request_user.is_staff
+                and self.request_user.role == "farm_manager"
+            ):
                 self.fields["role"].choices = [
                     choice
                     for choice in self.fields["role"].choices
@@ -96,7 +113,7 @@ class FarmSettingsForm(forms.ModelForm):
             ),
             "season_start": forms.DateInput(
                 attrs={
-                    "type": "date",  # Forces the browser to render a calendar picker
+                    "type": "date",
                     "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5",
                 }
             ),
@@ -107,36 +124,3 @@ class FarmSettingsForm(forms.ModelForm):
                 }
             ),
         }
-
-
-class VolunteerEditForm(forms.ModelForm):
-    class Meta:
-        model = User
-        fields = [
-            "first_name",
-            "last_name",
-            "username",
-            "email",
-            "phone_number",
-            "role",
-            "work_commitment",
-        ]
-
-    def __init__(self, *args, **kwargs):
-        self.request_user = kwargs.pop("request_user", None)
-        super().__init__(*args, **kwargs)
-
-        # Restrict the work commitment dropdown to ONLY this farm's commitments
-        if self.request_user and self.request_user.farm:
-            self.fields["work_commitment"].queryset = WorkCommitment.objects.filter(
-                farm=self.request_user.farm
-            )
-
-        # Prevent Farm Managers from elevating people to Account Managers
-        if self.request_user and not self.request_user.is_staff:
-            if self.request_user.role == "farm_manager":
-                self.fields["role"].choices = [
-                    choice
-                    for choice in self.fields["role"].choices
-                    if choice[0] not in ["account_manager", "farm_manager"]
-                ]

@@ -21,6 +21,7 @@ class LogEntry(models.Model):
         ("O", "Off Season Work"),
         ("M", "Move Dirt"),
     ]
+    # ... leave the rest of the model exactly as it is
 
     farm = models.ForeignKey(Farm, on_delete=models.CASCADE, related_name="logs")
 

@@ -139,7 +139,7 @@
         {% for item in commitments %}
             <li class="p-4 flex justify-between items-center group transition hover:bg-gray-50">
                 <div>
-                    <strong class="text-gray-900">{{ item.name }}</strong>
+                    <strong class="text-gray-900">{% if item.symbol %}{{ item.symbol }} {% endif %}{{ item.name }}</strong>
                     <span class="bg-emerald-100 text-emerald-800 font-bold px-3 py-1.5 rounded-lg text-sm ml-2">{{ item.required_hours }} Hours</span>
                 </div>
                 <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition">
