@@ -28,11 +28,27 @@ class Crop(models.Model):
 
 
 class WorkCommitment(models.Model):
+    # The list of visual choices for the manager dropdown
+    SYMBOL_CHOICES = [
+        ("🌑", "🌑 0% / Empty Moon"),
+        ("🌒", "🌒 25% / Quarter Moon"),
+        ("🌓", "🌓 50% / Half Moon"),
+        ("🌔", "🌔 75% / Three-Quarter Moon"),
+        ("🌕", "🌕 100% / Full Moon"),
+        ("🟢", "🟢 Green Circle"),
+        ("🔵", "🔵 Blue Circle"),
+        ("🟣", "🟣 Purple Circle"),
+        ("🟠", "🟠 Orange Circle"),
+    ]
+
     farm = models.ForeignKey(
         Farm, on_delete=models.CASCADE, related_name="work_commitments"
     )
     name = models.CharField(max_length=100)  # e.g., "Full Share", "Half Share"
     required_hours = models.IntegerField(default=0)  # e.g., 80, 50
+    
+    # NEW FIELD
+    symbol = models.CharField(max_length=5, choices=SYMBOL_CHOICES, default="🌕")
 
     def __str__(self):
-        return f"{self.name} ({self.required_hours} hrs)"
+        return f"{self.symbol} {self.name} ({self.required_hours} hrs)"
