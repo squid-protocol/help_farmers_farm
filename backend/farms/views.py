@@ -11,11 +11,11 @@ from django.utils import timezone
 # --- Local App Imports (Farms) ---
 from .models import Crop, WorkCommitment
 from .forms import (
-    CropForm, 
-    VolunteerCreationForm, 
-    WorkCommitmentForm, 
+    CropForm,
+    VolunteerCreationForm,
+    WorkCommitmentForm,
     FarmSettingsForm,
-    VolunteerEditForm # <-- ADDED FOR INLINE EDITING
+    VolunteerEditForm,  # <-- ADDED FOR INLINE EDITING
 )
 
 # --- Other App Imports ---
