@@ -10,7 +10,13 @@ from django.utils import timezone
 
 # --- Local App Imports (Farms) ---
 from .models import Crop, WorkCommitment
-from .forms import CropForm, VolunteerCreationForm, WorkCommitmentForm, FarmSettingsForm, VolunteerEditForm
+from .forms import (
+    CropForm,
+    VolunteerCreationForm,
+    WorkCommitmentForm,
+    FarmSettingsForm,
+    VolunteerEditForm,
+)
 
 # --- Other App Imports ---
 from logs.models import LogEntry
@@ -220,8 +226,6 @@ def progress_report_view(request):
         "grouped_data": grouped_data,
     }
     return render(request, "farms/progress_report.html", context)
-
-
 
 
 @login_required
