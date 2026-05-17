@@ -57,21 +57,22 @@ def upload_avatar(request):
 
     return redirect("profile")
 
+
 @login_required
 def update_email_view(request):
-    if request.method == 'POST':
-        new_email = request.POST.get('email')
-        
+    if request.method == "POST":
+        new_email = request.POST.get("email")
+
         # Ensure they actually typed something
         if new_email and new_email.strip():
             # Save the new email to their CustomUser profile
             request.user.email = new_email.strip()
             request.user.save()
-            
+
             # Send them to the main dashboard now that the tollbooth is cleared
-            messages.success(request, 'Your email has been successfully updated!')
-            return redirect('/') 
+            messages.success(request, "Your email has been successfully updated!")
+            return redirect("/")
         else:
-            messages.error(request, 'Please provide a valid email address.')
-            
-    return render(request, 'accounts/update_email.html')
+            messages.error(request, "Please provide a valid email address.")
+
+    return render(request, "accounts/update_email.html")
