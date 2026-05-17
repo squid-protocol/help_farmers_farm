@@ -154,6 +154,19 @@
                     <div>{{ activity_chart|safe }}</div>
                 </div>
             </div>
+
+            {% if comparison_chart %}
+            <div class="mt-6 bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition">
+                <h3 class="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                    <span>🌍</span> Farm-Wide Crop Impact
+                </h3>
+                <p class="text-gray-500 mb-6">See how your seasonal hours contribute to the total team effort for every active crop.</p>
+                <div class="w-full overflow-x-auto">
+                    {{ comparison_chart|safe }}
+                </div>
+            </div>
+            {% endif %}
+
             {% else %}
             <div class="text-center py-12 bg-white rounded-xl border-2 border-dashed border-gray-300">
                 <p class="text-gray-500 text-lg">Your dashboard will populate once you log your first shift of the year!</p>

@@ -9,6 +9,8 @@ import plotly.graph_objects as go
 from .models import LogEntry
 from .forms import LogEntryForm
 
+from decimal import Decimal
+
 
 @login_required
 def log_hours_view(request):
@@ -74,8 +76,8 @@ def log_hours_view(request):
 
                 # Convert days to weeks (using max to prevent dividing by zero in the final days)
                 weeks_remaining = max(days_remaining / 7.0, 1.0)
-                required_pace = remaining_hours / weeks_remaining
-
+                required_pace = remaining_hours / Decimal(str(weeks_remaining))
+                
     # 5. Calculate "Fun Stats" (Based on this Season)
     activity_map = dict(LogEntry.ACTIVITY_CHOICES)
 
@@ -101,6 +103,7 @@ def log_hours_view(request):
     # 6. Build Personal Breakdowns (Plotly Charts)
     veggie_chart_html = None
     activity_chart_html = None
+    comparison_chart_html = None  # <-- NEW
 
     if season_hours > 0:
         # Veggie Chart
@@ -164,6 +167,98 @@ def log_hours_view(request):
         fig_a.update_traces(textposition="inside", textinfo="percent+label")
         activity_chart_html = fig_a.to_html(full_html=False, include_plotlyjs=False)
 
+        # --- NEW: Farm-Wide Comparison Horizontal Bar Chart ---
+
+        # 1. Grab the user's total hours per crop for this season
+        user_crop_hours = (
+            season_logs.filter(crop__is_active=True)
+            .values("crop__crop_name")
+            .annotate(total=Sum("duration_hours"))
+        )
+        user_crop_dict = {
+            item["crop__crop_name"]: float(item["total"] or 0)
+            for item in user_crop_hours
+        }
+
+        # 2. Grab the entire farm's total hours per crop for this season
+        farm_crop_hours = (
+            LogEntry.objects.filter(
+                farm=user.farm, date_logged__year=current_year, crop__is_active=True
+            )
+            .values("crop__crop_name")
+            .annotate(total=Sum("duration_hours"))
+        )
+        farm_crop_dict = {
+            item["crop__crop_name"]: float(item["total"] or 0)
+            for item in farm_crop_hours
+        }
+
+        # 3. Get all active crops, sorted reverse alphabetically so 'A' is at the top of the Plotly Y-axis
+        from farms.models import Crop
+
+        active_crops = list(
+            Crop.objects.filter(farm=user.farm, is_active=True)
+            .values_list("crop_name", flat=True)
+            .order_by("-crop_name")
+        )
+
+        if active_crops:
+            crop_names = []
+            my_hours_list = []
+            others_hours_list = []
+
+            for crop_name in active_crops:
+                my_h = user_crop_dict.get(crop_name, 0.0)
+                farm_h = farm_crop_dict.get(crop_name, 0.0)
+
+                crop_names.append(crop_name)
+                my_hours_list.append(my_h)
+                # Ensure the team's hours subtract the user's hours so the stacked bar represents the true total
+                others_hours_list.append(max(0.0, farm_h - my_h))
+
+            fig_comp = go.Figure(
+                data=[
+                    go.Bar(
+                        name="My Hours",
+                        y=crop_names,
+                        x=my_hours_list,
+                        orientation="h",
+                        marker_color="#10b981",
+                        hovertemplate="<b>%{y}</b><br>My Hours: %{x} hrs<extra></extra>",
+                    ),
+                    go.Bar(
+                        name="Team Hours",
+                        y=crop_names,
+                        x=others_hours_list,
+                        orientation="h",
+                        marker_color="#cbd5e1",
+                        hovertemplate="<b>%{y}</b><br>Team Hours: %{x} hrs<extra></extra>",
+                    ),
+                ]
+            )
+            fig_comp.update_layout(
+                barmode="stack",
+                plot_bgcolor="rgba(250,250,250,1)",
+                paper_bgcolor="white",
+                margin=dict(t=30, b=30, l=10, r=20),
+                # Dynamically scale the height of the chart based on how many crops are active
+                height=max(300, len(crop_names) * 35 + 100),
+                showlegend=True,
+                legend=dict(
+                    orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5
+                ),
+                hoverlabel=dict(bgcolor="white", font_size=13, font_color="black"),
+                xaxis=dict(
+                    title="Total Farm Hours",
+                    showgrid=True,
+                    gridcolor="rgba(200,200,200,0.3)",
+                ),
+                yaxis=dict(title="", tickfont=dict(size=12), automargin=True),
+            )
+            comparison_chart_html = fig_comp.to_html(
+                full_html=False, include_plotlyjs=False
+            )
+
     context = {
         "form": form,
         "current_year": current_year,
@@ -180,6 +275,7 @@ def log_hours_view(request):
         "top_act": top_act,
         "veggie_chart": veggie_chart_html,
         "activity_chart": activity_chart_html,
+        "comparison_chart": comparison_chart_html,
         "recent_shifts": recent_shifts,
     }
     return render(request, "logs/log_hours.html", context)
