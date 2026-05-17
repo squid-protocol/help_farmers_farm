@@ -26,7 +26,7 @@ class SecurityIDORTests(TestCase):
             username="vol_a",
             email="vol_a@example.com",
             password="secure",
-            farm=self.farm_a
+            farm=self.farm_a,
         )
 
         # 2. Build Farm B (The Rivals)
@@ -35,7 +35,7 @@ class SecurityIDORTests(TestCase):
             username="vol_b",
             email="vol_b@example.com",
             password="secure",
-            farm=self.farm_b
+            farm=self.farm_b,
         )
 
     def test_manager_can_view_own_volunteer(self):
