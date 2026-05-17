@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 from accounts.models import CustomUser
-from farms.models import Farm, Crop  # Adjust if Crop is in logs.models!
+from farms.models import Farm, Crop
 from logs.models import LogEntry
 
 
@@ -10,8 +10,13 @@ class AnalyticsViewsTest(TestCase):
     def setUp(self):
         # 1. Create a dummy farm and user
         self.farm = Farm.objects.create(name="Test Farm")
+
+        # THE FIX: Added an email to the test user
         self.user = CustomUser.objects.create_user(
-            username="testuser", password="testpass", farm=self.farm
+            username="testuser",
+            email="analytics_tester@example.com",
+            password="testpass",
+            farm=self.farm,
         )
 
         # 2. Create a dummy crop
@@ -30,16 +35,16 @@ class AnalyticsViewsTest(TestCase):
         )
 
     def test_impact_chart_loads_with_data(self):
-        self.client.force_login(self.user)  # <--- Changed this line!
+        self.client.force_login(self.user)
         response = self.client.get(reverse("get_impact_chart"))
         self.assertEqual(response.status_code, 200)
 
     def test_heatmap_loads_with_data(self):
-        self.client.force_login(self.user)  # <--- Changed this line!
+        self.client.force_login(self.user)
         response = self.client.get(reverse("get_activity_heatmap"))
         self.assertEqual(response.status_code, 200)
 
     def test_term_heatmap_loads_with_data(self):
-        self.client.force_login(self.user)  # <--- Changed this line!
+        self.client.force_login(self.user)
         response = self.client.get(reverse("get_term_heatmap"))
         self.assertEqual(response.status_code, 200)
