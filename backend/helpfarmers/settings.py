@@ -80,7 +80,7 @@ WSGI_APPLICATION = "helpfarmers.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-DATABASES = {"default": env.db("DATABASE_URL")}
+DATABASES = {"default": env.db("DATABASE_URL", default="sqlite:///db.sqlite3")}
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
