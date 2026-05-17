@@ -85,25 +85,29 @@ def update_email_view(request):
 
 # --- THE NEW CLAIM VIEWS ---
 
+
 def claim_account_search(request):
     """Step 1: Search for an unclaimed legacy account."""
     matches = None
     if request.method == "POST":
         search_name = request.POST.get("search_name", "").strip()
-        
+
         if search_name:
             # Only look for users who DO NOT have an email address yet (unclaimed)
             unclaimed_users = User.objects.filter(email="")
-            
+
             # Try to match their search against first name, last name, or the raw username
             matches = unclaimed_users.filter(
-                Q(first_name__icontains=search_name) | 
-                Q(last_name__icontains=search_name) |
-                Q(username__icontains=search_name)
+                Q(first_name__icontains=search_name)
+                | Q(last_name__icontains=search_name)
+                | Q(username__icontains=search_name)
             )
-            
+
             if not matches.exists():
-                messages.error(request, "We couldn't find an unclaimed account matching that name. Please try again or contact a manager.")
+                messages.error(
+                    request,
+                    "We couldn't find an unclaimed account matching that name. Please try again or contact a manager.",
+                )
 
     return render(request, "accounts/claim_search.html", {"matches": matches})
 
@@ -119,15 +123,21 @@ def claim_account_setup(request, user_id):
             user = form.save(commit=False)
             user.set_password(form.cleaned_data["password"])
             user.save()
-            
+
             # Log them in automatically
-            login(request, user, backend="accounts.backends.EmailOrUsernameModelBackend")
-            messages.success(request, f"Welcome to the system, {user.first_name}! Your account is securely set up.")
+            login(
+                request, user, backend="accounts.backends.EmailOrUsernameModelBackend"
+            )
+            messages.success(
+                request,
+                f"Welcome to the system, {user.first_name}! Your account is securely set up.",
+            )
             return redirect("log_hours")
     else:
         form = AccountClaimForm(instance=user_to_claim)
 
-    return render(request, "accounts/claim_setup.html", {
-        "form": form, 
-        "claim_user": user_to_claim
-    })
+    return render(
+        request,
+        "accounts/claim_setup.html",
+        {"form": form, "claim_user": user_to_claim},
+    )
