@@ -90,7 +90,10 @@ class VolunteerEditForm(forms.ModelForm):
                 )
 
             # Prevent farm managers from granting account_manager privileges
-            if not self.request_user.is_staff and self.request_user.role == "farm_manager":
+            if (
+                not self.request_user.is_staff
+                and self.request_user.role == "farm_manager"
+            ):
                 self.fields["role"].choices = [
                     choice
                     for choice in self.fields["role"].choices

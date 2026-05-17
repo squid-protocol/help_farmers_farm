@@ -23,8 +23,8 @@ class LogEntryForm(forms.ModelForm):
 
         # 1. Change the default '---------' to 'None/Generic'
         self.fields["crop"].empty_label = "None/Generic"
-        
-        # 2. Make it completely optional at the base form level 
+
+        # 2. Make it completely optional at the base form level
         # so our custom clean() method below can handle the strict logic
         self.fields["crop"].required = False
 
@@ -37,8 +37,13 @@ class LogEntryForm(forms.ModelForm):
         if activity in ["O", "M"]:  # Off Season Work, Move Dirt
             # If they accidentally selected a crop, silently clear it out for them
             cleaned_data["crop"] = None
-            
-        elif activity in ["P", "T", "H", "C"]:  # Planting, Tending, Harvesting, Cultivating
+
+        elif activity in [
+            "P",
+            "T",
+            "H",
+            "C",
+        ]:  # Planting, Tending, Harvesting, Cultivating
             # If they didn't select a crop, throw an error
             if not crop:
                 self.add_error("crop", "A specific crop is required for this activity.")
