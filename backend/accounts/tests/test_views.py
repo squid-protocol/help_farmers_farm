@@ -10,8 +10,13 @@ class LoginActionTests(TestCase):
     def setUp(self):
         self.client = Client()
         self.farm = Farm.objects.create(name="Schuler Test Farm")
+
+        # THE FIX: Added an email to the test user
         self.user = User.objects.create_user(
-            username="test_volunteer", password="my_secure_password123", farm=self.farm
+            username="test_volunteer",
+            email="test_vol@example.com",
+            password="my_secure_password123",
+            farm=self.farm,
         )
         self.login_url = reverse("login")
 
@@ -30,13 +35,17 @@ class LoginActionTests(TestCase):
         self.assertContains(response, "Your username and password didn't match")
 
 
-# --- ADDED: Tests for accounts/views.py ---
 class ProfileViewsTests(TestCase):
     def setUp(self):
         self.client = Client()
         self.farm = Farm.objects.create(name="Test Farm")
+
+        # THE FIX: Added an email here too
         self.user = User.objects.create_user(
-            username="profile_tester", password="testpass123", farm=self.farm
+            username="profile_tester",
+            email="profile_tester@example.com",
+            password="testpass123",
+            farm=self.farm,
         )
         # Force the test client to log in, bypassing Django Axes security checks
         self.client.force_login(self.user)
@@ -49,8 +58,6 @@ class ProfileViewsTests(TestCase):
 
     def test_profile_view_post_valid(self):
         """Tests submitting a valid profile update."""
-        # We need to send ALL required fields for the form.
-        # Adding username, as it's almost always required by User forms!
         post_data = {
             "username": self.user.username,
             "first_name": "Updated",
@@ -60,8 +67,6 @@ class ProfileViewsTests(TestCase):
 
         response = self.client.post(reverse("profile"), post_data)
 
-        # DEBUG TRICK: If the form fails validation and returns 200,
-        # print the exact form errors to the terminal so we can see them!
         if response.status_code == 200:
             print("\n--- FORM VALIDATION FAILED ---")
             print(response.context["form"].errors)
