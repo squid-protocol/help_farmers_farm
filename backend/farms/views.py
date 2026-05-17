@@ -10,7 +10,7 @@ from django.utils import timezone
 
 # --- Local App Imports (Farms) ---
 from .models import Crop, WorkCommitment
-from .forms import CropForm, VolunteerCreationForm, WorkCommitmentForm, FarmSettingsForm
+from .forms import CropForm, VolunteerCreationForm, WorkCommitmentForm, FarmSettingsForm, VolunteerEditForm
 
 # --- Other App Imports ---
 from logs.models import LogEntry
@@ -222,7 +222,6 @@ def progress_report_view(request):
     return render(request, "farms/progress_report.html", context)
 
 
-from .forms import VolunteerEditForm
 
 
 @login_required
