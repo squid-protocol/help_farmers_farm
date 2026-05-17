@@ -6,10 +6,23 @@ from farms.models import Crop
 class LogEntryForm(forms.ModelForm):
     class Meta:
         model = LogEntry
-        fields = ["date_logged", "crop", "activity", "duration_hours"]
+        fields = [
+            "date_logged",
+            "crop",
+            "activity",
+            "duration_hours",
+            "notes",
+        ]  # <-- ADDED 'notes'
         widgets = {
             "date_logged": forms.DateInput(attrs={"type": "date"}),
             "duration_hours": forms.NumberInput(attrs={"step": "0.25", "min": "0.25"}),
+            # NEW: Make the text box 3 rows tall and add a helpful placeholder
+            "notes": forms.Textarea(
+                attrs={
+                    "rows": 3,
+                    "placeholder": "Optional: Any observations, pest reports, or notes about your shift?",
+                }
+            ),
         }
 
     def __init__(self, *args, **kwargs):
