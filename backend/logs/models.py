@@ -21,7 +21,6 @@ class LogEntry(models.Model):
         ("O", "Off Season Work"),
         ("M", "Move Dirt"),
     ]
-    # ... leave the rest of the model exactly as it is
 
     farm = models.ForeignKey(Farm, on_delete=models.CASCADE, related_name="logs")
 
@@ -51,6 +50,9 @@ class LogEntry(models.Model):
             ),
         ],
     )
+
+    # NEW: Qualitative Shift Notes
+    notes = models.TextField(max_length=2000, blank=True, null=True)
 
     # Attached the time-machine blocker here
     date_logged = models.DateField(validators=[validate_not_in_future])

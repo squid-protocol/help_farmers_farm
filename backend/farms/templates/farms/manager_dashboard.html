@@ -58,6 +58,52 @@
     </div>
 </div>
 
+<div class="mb-8">
+    <div class="flex items-center gap-2 mb-4">
+        <h3 class="text-xl font-bold text-gray-800">📝 Volunteer Field Notes</h3>
+    </div>
+    
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden w-full">
+        {% regroup recent_notes by date_logged|date:"o - \W\e\e\k W" as weekly_notes %}
+        
+        {% if weekly_notes %}
+            <div class="divide-y divide-gray-100">
+                {% for week in weekly_notes %}
+                    <div class="bg-slate-50 px-6 py-3 border-b border-gray-100">
+                        <h4 class="text-sm font-bold text-slate-700 uppercase tracking-widest">{{ week.grouper }}</h4>
+                    </div>
+                    
+                    <div class="divide-y divide-gray-50">
+                        {% for log in week.list %}
+                            <div class="p-6 hover:bg-gray-50 transition">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <a href="{% url 'volunteer_detail' log.volunteer.id %}" class="font-bold text-blue-600 hover:text-blue-800">
+                                            {{ log.volunteer.first_name|default:log.volunteer.username }} {{ log.volunteer.last_name }}
+                                        </a>
+                                        <span class="text-gray-400 mx-2">|</span>
+                                        <span class="text-sm font-medium text-gray-600">
+                                            {{ log.date_logged|date:"l, M j" }}
+                                        </span>
+                                    </div>
+                                    <span class="bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-md border border-emerald-100">
+                                        {{ log.get_activity_display }} - {{ log.crop.crop_name|default:"General" }}
+                                    </span>
+                                </div>
+                                <p class="text-gray-700 whitespace-pre-wrap text-sm leading-relaxed">{{ log.notes }}</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="p-8 text-center text-gray-500 italic">
+                No field notes have been submitted yet.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
     
     <div>

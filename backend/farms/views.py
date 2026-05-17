@@ -106,6 +106,17 @@ def manager_dashboard(request):
     # Count the folks who don't have a specific commitment tier yet
     standard_vol_count = active_vols.filter(work_commitment__isnull=True).count()
 
+    # --- NEW: Fetch Volunteer Notes ---
+    # Grab all logs for this farm that have notes, newest first.
+    # select_related optimizes the database hits for the template.
+    recent_notes = (
+        LogEntry.objects.filter(farm=my_farm)
+        .exclude(notes__isnull=True)
+        .exclude(notes__exact="")
+        .select_related("volunteer", "crop")
+        .order_by("-date_logged")
+    )
+
     context = {
         "farm": my_farm,
         "farm_form": farm_form,
@@ -115,9 +126,10 @@ def manager_dashboard(request):
         "crops": crops,
         "volunteers": volunteers,
         "commitments": commitments,
-        "active_crop_count": active_crop_count,  # <-- NEW
-        "commitment_summary": commitment_summary,  # <-- NEW
-        "standard_vol_count": standard_vol_count,  # <-- NEW
+        "active_crop_count": active_crop_count,
+        "commitment_summary": commitment_summary,
+        "standard_vol_count": standard_vol_count,
+        "recent_notes": recent_notes,  # <-- NEW
     }
     return render(request, "farms/manager_dashboard.html", context)
 
