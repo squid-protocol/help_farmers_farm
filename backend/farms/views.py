@@ -6,11 +6,17 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import Sum
 from django.views.decorators.http import require_POST
 from django.contrib import messages
-from django.utils import timezone  # <-- NEW: Required for the progress report
+from django.utils import timezone
 
 # --- Local App Imports (Farms) ---
 from .models import Crop, WorkCommitment
-from .forms import CropForm, VolunteerCreationForm, WorkCommitmentForm, FarmSettingsForm
+from .forms import (
+    CropForm,
+    VolunteerCreationForm,
+    WorkCommitmentForm,
+    FarmSettingsForm,
+    VolunteerEditForm,
+)
 
 # --- Other App Imports ---
 from logs.models import LogEntry
@@ -33,7 +39,7 @@ def manager_dashboard(request):
     volunteer_form = VolunteerCreationForm(request_user=request.user)
     commitment_form = WorkCommitmentForm()
 
-    # NEW: The Farm Settings form (pre-filled with the current farm's data)
+    # The Farm Settings form (pre-filled with the current farm's data)
     farm_form = FarmSettingsForm(instance=my_farm)
 
     if request.method == "POST":
@@ -67,7 +73,6 @@ def manager_dashboard(request):
                 messages.success(request, "Work commitment added successfully!")
                 return redirect("manager_dashboard")
 
-        # <-- NEW: Handle Farm Settings Submission -->
         elif "submit_farm_settings" in request.POST:
             farm_form = FarmSettingsForm(request.POST, instance=my_farm)
             if farm_form.is_valid():
@@ -82,7 +87,7 @@ def manager_dashboard(request):
 
     context = {
         "farm": my_farm,
-        "farm_form": farm_form,  # <-- NEW
+        "farm_form": farm_form,
         "crop_form": crop_form,
         "volunteer_form": volunteer_form,
         "commitment_form": commitment_form,
@@ -123,31 +128,44 @@ def volunteer_detail_view(request, volunteer_id):
     return render(request, "farms/volunteer_detail.html", context)
 
 
+# --- User & Crop Soft Deletes (Toggles) ---
 @login_required
 @require_POST
 @user_passes_test(is_manager, login_url="/log-hours/")
-def remove_user_view(request, user_id):
-    user_to_remove = get_object_or_404(User, id=user_id)
+def toggle_user_status_view(request, user_id):
+    user_to_toggle = get_object_or_404(User, id=user_id)
 
     # RULE 1: Must be in the same farm
-    if not request.user.is_staff and user_to_remove.farm != request.user.farm:
-        raise PermissionDenied("Cannot remove users outside your farm.")
+    if not request.user.is_staff and user_to_toggle.farm != request.user.farm:
+        raise PermissionDenied("Cannot modify users outside your farm.")
 
-    # RULE 2: Farm Managers cannot delete Account Managers or other Farm Managers
-    if request.user.role == "farm_manager" and user_to_remove.role in [
+    # RULE 2: Farm Managers cannot modify Account Managers or other Farm Managers
+    if request.user.role == "farm_manager" and user_to_toggle.role in [
         "account_manager",
         "farm_manager",
     ]:
         raise PermissionDenied(
-            "Farm Managers do not have permission to remove other managers."
+            "Farm Managers do not have permission to modify other managers."
         )
 
-    # RULE 3: You can't delete yourself
-    if request.user == user_to_remove:
-        raise PermissionDenied("You cannot remove yourself.")
+    # RULE 3: You can't deactivate yourself
+    if request.user == user_to_toggle:
+        raise PermissionDenied("You cannot deactivate yourself.")
 
-    # If they pass all security checks, delete the user and reload the dashboard
-    user_to_remove.delete()
+    # The Soft Delete / Restore
+    user_to_toggle.is_active = not user_to_toggle.is_active
+    user_to_toggle.save()
+    return redirect("manager_dashboard")
+
+
+@login_required
+@require_POST
+@user_passes_test(is_manager, login_url="/log-hours/")
+def toggle_crop_status_view(request, crop_id):
+    crop_to_toggle = get_object_or_404(Crop, id=crop_id, farm=request.user.farm)
+
+    crop_to_toggle.is_active = not crop_to_toggle.is_active
+    crop_to_toggle.save()
     return redirect("manager_dashboard")
 
 
@@ -160,7 +178,7 @@ def farm_impact_view(request):
     return render(request, "farms/farm_impact.html", {"farm": farm, "crops": crops})
 
 
-# --- NEW: Volunteer Progress Report ---
+# --- Volunteer Progress Report ---
 @login_required
 @user_passes_test(is_manager, login_url="/log-hours/")
 def progress_report_view(request):
@@ -208,3 +226,75 @@ def progress_report_view(request):
         "grouped_data": grouped_data,
     }
     return render(request, "farms/progress_report.html", context)
+
+
+@login_required
+@user_passes_test(is_manager, login_url="/log-hours/")
+def edit_crop_view(request, crop_id):
+    crop = get_object_or_404(Crop, id=crop_id, farm=request.user.farm)
+    if request.method == "POST":
+        form = CropForm(request.POST, instance=crop)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"{crop.crop_name} updated successfully!")
+            return redirect("manager_dashboard")
+    else:
+        form = CropForm(instance=crop)
+    return render(
+        request,
+        "farms/edit_item.html",
+        {"form": form, "title": f"Edit Crop: {crop.crop_name}"},
+    )
+
+
+@login_required
+@user_passes_test(is_manager, login_url="/log-hours/")
+def edit_volunteer_view(request, volunteer_id):
+    volunteer = get_object_or_404(User, id=volunteer_id, farm=request.user.farm)
+
+    # Prevent editing of higher-tier admins
+    if request.user.role == "farm_manager" and volunteer.role in [
+        "account_manager",
+        "farm_manager",
+    ]:
+        if (
+            request.user != volunteer
+        ):  # They can edit themselves, but not other managers
+            raise PermissionDenied("You cannot edit other managers.")
+
+    if request.method == "POST":
+        form = VolunteerEditForm(
+            request.POST, instance=volunteer, request_user=request.user
+        )
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"{volunteer.username} updated successfully!")
+            return redirect("manager_dashboard")
+    else:
+        form = VolunteerEditForm(instance=volunteer, request_user=request.user)
+    return render(
+        request,
+        "farms/edit_item.html",
+        {"form": form, "title": f"Edit Volunteer: {volunteer.username}"},
+    )
+
+
+@login_required
+@user_passes_test(is_manager, login_url="/log-hours/")
+def edit_commitment_view(request, commitment_id):
+    commitment = get_object_or_404(
+        WorkCommitment, id=commitment_id, farm=request.user.farm
+    )
+    if request.method == "POST":
+        form = WorkCommitmentForm(request.POST, instance=commitment)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Work commitment updated successfully!")
+            return redirect("manager_dashboard")
+    else:
+        form = WorkCommitmentForm(instance=commitment)
+    return render(
+        request,
+        "farms/edit_item.html",
+        {"form": form, "title": f"Edit Commitment: {commitment.name}"},
+    )

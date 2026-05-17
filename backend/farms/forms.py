@@ -9,7 +9,7 @@ User = get_user_model()
 class WorkCommitmentForm(forms.ModelForm):
     class Meta:
         model = WorkCommitment
-        fields = ["name", "required_hours"]
+        fields = ["name", "required_hours", "symbol"]
         widgets = {
             "name": forms.TextInput(
                 attrs={
@@ -47,7 +47,7 @@ class VolunteerCreationForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ["username", "first_name", "last_name", "role"]
+        fields = ["username", "first_name", "last_name", "role", "phone_number"]
 
     # --- NEW: Intercept the form creation to check the user's role ---
     def __init__(self, *args, **kwargs):
@@ -88,3 +88,36 @@ class FarmSettingsForm(forms.ModelForm):
                 }
             ),
         }
+
+
+class VolunteerEditForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = [
+            "first_name",
+            "last_name",
+            "username",
+            "email",
+            "phone_number",
+            "role",
+            "work_commitment",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        self.request_user = kwargs.pop("request_user", None)
+        super().__init__(*args, **kwargs)
+
+        # Restrict the work commitment dropdown to ONLY this farm's commitments
+        if self.request_user and self.request_user.farm:
+            self.fields["work_commitment"].queryset = WorkCommitment.objects.filter(
+                farm=self.request_user.farm
+            )
+
+        # Prevent Farm Managers from elevating people to Account Managers
+        if self.request_user and not self.request_user.is_staff:
+            if self.request_user.role == "farm_manager":
+                self.fields["role"].choices = [
+                    choice
+                    for choice in self.fields["role"].choices
+                    if choice[0] not in ["account_manager", "farm_manager"]
+                ]

@@ -26,7 +26,7 @@ class SecurityIDORTests(TestCase):
             username="vol_a",
             email="vol_a@example.com",
             password="secure",
-            farm=self.farm_a
+            farm=self.farm_a,
         )
 
         # 2. Build Farm B (The Rivals)
@@ -35,7 +35,7 @@ class SecurityIDORTests(TestCase):
             username="vol_b",
             email="vol_b@example.com",
             password="secure",
-            farm=self.farm_b
+            farm=self.farm_b,
         )
 
     def test_manager_can_view_own_volunteer(self):
@@ -50,14 +50,17 @@ class SecurityIDORTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
-    def test_manager_cannot_delete_rival_volunteer(self):
+    def test_manager_cannot_toggle_rival_volunteer(self):
         self.client.force_login(self.manager_a)
-        url = reverse("remove_user", args=[self.volunteer_b.id])
+        url = reverse("toggle_user_status", args=[self.volunteer_b.id])
         response = self.client.post(url)
         self.assertEqual(response.status_code, 403)
-        self.assertTrue(User.objects.filter(id=self.volunteer_b.id).exists())
 
-    def test_manager_cannot_delete_another_manager(self):
+        # Ensure the rival volunteer is still active
+        self.volunteer_b.refresh_from_db()
+        self.assertTrue(self.volunteer_b.is_active)
+
+    def test_manager_cannot_toggle_another_manager(self):
         # THE FIX: Added email here too
         manager_a2 = User.objects.create_user(
             username="manager_a2",
@@ -68,13 +71,20 @@ class SecurityIDORTests(TestCase):
         )
 
         self.client.force_login(self.manager_a)
-        url = reverse("remove_user", args=[manager_a2.id])
+        url = reverse("toggle_user_status", args=[manager_a2.id])
         response = self.client.post(url)
         self.assertEqual(response.status_code, 403)
 
-    def test_manager_can_delete_own_volunteer(self):
+        # Ensure the manager is still active
+        manager_a2.refresh_from_db()
+        self.assertTrue(manager_a2.is_active)
+
+    def test_manager_can_toggle_own_volunteer(self):
         self.client.force_login(self.manager_a)
-        url = reverse("remove_user", args=[self.volunteer_a.id])
+        url = reverse("toggle_user_status", args=[self.volunteer_a.id])
         response = self.client.post(url)
         self.assertEqual(response.status_code, 302)
-        self.assertFalse(User.objects.filter(id=self.volunteer_a.id).exists())
+
+        # Ensure the volunteer was successfully soft-deleted (archived)
+        self.volunteer_a.refresh_from_db()
+        self.assertFalse(self.volunteer_a.is_active)
