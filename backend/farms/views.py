@@ -85,6 +85,27 @@ def manager_dashboard(request):
     volunteers = User.objects.filter(farm=my_farm).order_by("role", "username")
     commitments = WorkCommitment.objects.filter(farm=my_farm)
 
+    # --- NEW: Summary Statistics ---
+    active_crop_count = crops.filter(is_active=True).count()
+
+    # Filter to only count active workers (exclude legacy 'friend' accounts)
+    active_vols = volunteers.filter(is_active=True).exclude(role="friend")
+
+    commitment_summary = []
+    for c in commitments:
+        commitment_summary.append(
+            {
+                "name": c.name,
+                "symbol": getattr(
+                    c, "symbol", "⏱️"
+                ),  # Safely grab the symbol if it exists
+                "count": active_vols.filter(work_commitment=c).count(),
+            }
+        )
+
+    # Count the folks who don't have a specific commitment tier yet
+    standard_vol_count = active_vols.filter(work_commitment__isnull=True).count()
+
     context = {
         "farm": my_farm,
         "farm_form": farm_form,
@@ -94,6 +115,9 @@ def manager_dashboard(request):
         "crops": crops,
         "volunteers": volunteers,
         "commitments": commitments,
+        "active_crop_count": active_crop_count,  # <-- NEW
+        "commitment_summary": commitment_summary,  # <-- NEW
+        "standard_vol_count": standard_vol_count,  # <-- NEW
     }
     return render(request, "farms/manager_dashboard.html", context)
 

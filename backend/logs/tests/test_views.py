@@ -27,6 +27,16 @@ class LogHoursIntegrationTests(TestCase):
         self.client.force_login(self.user)
         self.log_url = reverse("log_hours")
 
+        # THE FIX: Give the test user 1 shift so the massive Plotly chart logic executes!
+        LogEntry.objects.create(
+            farm=self.farm,
+            volunteer=self.user,
+            crop=self.crop,
+            activity="T",
+            duration_hours=2.00,
+            date_logged=timezone.now().date(),
+        )
+
     def test_page_loads_for_logged_in_users(self):
         # Act: Try to visit the logging page
         response = self.client.get(self.log_url)
@@ -56,9 +66,9 @@ class LogHoursIntegrationTests(TestCase):
         self.assertEqual(response.status_code, 302)
 
         # Assert Part 2: The ultimate proof. Is it actually in the database?
-        self.assertEqual(LogEntry.objects.count(), 1)
+        self.assertEqual(LogEntry.objects.count(), 2)  # <-- Change 1 to 2
 
         # Assert Part 3: Did it save the data correctly?
-        saved_log = LogEntry.objects.first()
+        saved_log = LogEntry.objects.last()  # <-- Change .first() to .last()
         self.assertEqual(saved_log.duration_hours, 4.00)
         self.assertEqual(saved_log.activity, "T")

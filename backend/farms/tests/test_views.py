@@ -88,3 +88,11 @@ class SecurityIDORTests(TestCase):
         # Ensure the volunteer was successfully soft-deleted (archived)
         self.volunteer_a.refresh_from_db()
         self.assertFalse(self.volunteer_a.is_active)
+
+    def test_manager_dashboard_loads_successfully(self):
+        # This will execute all the summary stat logic and form instantiations!
+        self.client.force_login(self.manager_a)
+        url = reverse("manager_dashboard")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "farms/manager_dashboard.html")
