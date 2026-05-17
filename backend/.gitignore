@@ -30,4 +30,5 @@ theme/static_src/node_modules/
 # --- OS & IDE Files ---
 .DS_Store
 Thumbs.db
-.vscode/
+.vscode/final_schuler_data.json
+pristine_schuler_data.json
