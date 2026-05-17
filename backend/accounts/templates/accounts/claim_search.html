@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-md mx-auto mt-16 mb-20">
+    <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-lg text-center">
+        <span class="text-5xl">👋</span>
+        <h2 class="text-3xl font-extrabold text-gray-900 mt-4 tracking-tight">Schuler Farm Volunteer?</h2>
+        <p class="text-gray-500 mt-2 mb-6">Let's find your imported account so you can set up your login.</p>
+
+        <form method="POST" class="mb-6">
+            {% csrf_token %}
+            <input type="text" name="search_name" required class="appearance-none rounded-lg relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-lg mb-4" placeholder="Enter your First or Last Name">
+            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow transition">Search for my Account</button>
+        </form>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200 mb-4">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        {% if matches %}
+            <div class="text-left border-t border-gray-100 pt-6">
+                <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">Are you one of these folks?</h3>
+                <div class="space-y-3">
+                    {% for match in matches %}
+                    <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl flex justify-between items-center">
+                        <span class="font-bold text-gray-800 text-lg">{{ match.first_name }} {{ match.last_name }}</span>
+                        <a href="{% url 'claim_setup' match.id %}" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 font-bold py-1.5 px-4 rounded-lg shadow-sm transition">Yes, that's me!</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
