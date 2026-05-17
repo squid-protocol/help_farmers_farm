@@ -6,4 +6,5 @@ urlpatterns = [
     path("profile/", views.profile_view, name="profile"),
     # THE MISSING LINK: This tells Django exactly where 'upload_avatar' lives
     path("upload-avatar/", views.upload_avatar, name="upload_avatar"),
+    path('update-email/', views.update_email_view, name='update_email'),
 ]
