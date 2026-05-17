@@ -77,7 +77,7 @@ def log_hours_view(request):
                 # Convert days to weeks (using max to prevent dividing by zero in the final days)
                 weeks_remaining = max(days_remaining / 7.0, 1.0)
                 required_pace = remaining_hours / Decimal(str(weeks_remaining))
-                
+
     # 5. Calculate "Fun Stats" (Based on this Season)
     activity_map = dict(LogEntry.ACTIVITY_CHOICES)
 
