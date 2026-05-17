@@ -6,7 +6,7 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import Sum
 from django.views.decorators.http import require_POST
 from django.contrib import messages
-from django.utils import timezone  # <-- NEW: Required for the progress report
+from django.utils import timezone
 
 # --- Local App Imports (Farms) ---
 from .models import Crop, WorkCommitment
@@ -39,7 +39,7 @@ def manager_dashboard(request):
     volunteer_form = VolunteerCreationForm(request_user=request.user)
     commitment_form = WorkCommitmentForm()
 
-    # NEW: The Farm Settings form (pre-filled with the current farm's data)
+    # The Farm Settings form (pre-filled with the current farm's data)
     farm_form = FarmSettingsForm(instance=my_farm)
 
     if request.method == "POST":
@@ -73,7 +73,6 @@ def manager_dashboard(request):
                 messages.success(request, "Work commitment added successfully!")
                 return redirect("manager_dashboard")
 
-        # <-- NEW: Handle Farm Settings Submission -->
         elif "submit_farm_settings" in request.POST:
             farm_form = FarmSettingsForm(request.POST, instance=my_farm)
             if farm_form.is_valid():
@@ -88,7 +87,7 @@ def manager_dashboard(request):
 
     context = {
         "farm": my_farm,
-        "farm_form": farm_form,  # <-- NEW
+        "farm_form": farm_form,
         "crop_form": crop_form,
         "volunteer_form": volunteer_form,
         "commitment_form": commitment_form,
@@ -138,7 +137,7 @@ def farm_impact_view(request):
     return render(request, "farms/farm_impact.html", {"farm": farm, "crops": crops})
 
 
-# --- NEW: Volunteer Progress Report ---
+# --- Volunteer Progress Report ---
 @login_required
 @user_passes_test(is_manager, login_url="/log-hours/")
 def progress_report_view(request):

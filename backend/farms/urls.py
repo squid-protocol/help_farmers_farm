@@ -8,8 +8,10 @@ urlpatterns = [
         views.volunteer_detail_view,
         name="volunteer_detail",
     ),
+    
     # The Farm Impact Dashboard
     path("impact/", views.farm_impact_view, name="farm_impact"),
+    
     # The Manager Progress Report
     path("progress-report/", views.progress_report_view, name="progress_report"),
 
