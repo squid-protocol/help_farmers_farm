@@ -113,7 +113,7 @@ def get_impact_chart(request):
         return render(request, "analytics/partials/chart.html", {"chart": empty_html})
 
     crops = sorted(list(set([item["crop__crop_name"] for item in aggregated_data])))
-    activity_colors = {"P": "#10b981", "T": "#f59e0b", "H": "#ef4444", "O": "#94a3b8"}
+    activity_colors = {"P": "#10b981", "T": "#f59e0b", "H": "#ef4444", "C": "#8b5cf6", "O": "#94a3b8", "M": "#78350f"}
     activity_labels = dict(LogEntry.ACTIVITY_CHOICES)
 
     fig = go.Figure()

@@ -163,4 +163,34 @@
         </div>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const activitySelect = document.getElementById('id_activity');
+        const cropSelect = document.getElementById('id_crop');
+
+        function toggleCropField() {
+            if (!activitySelect || !cropSelect) return;
+            
+            const selectedActivity = activitySelect.value;
+            
+            // If Off Season ('O') or Move Dirt ('M') is selected
+            if (selectedActivity === 'O' || selectedActivity === 'M') {
+                cropSelect.value = ''; // Force it to "None/Generic"
+                cropSelect.style.pointerEvents = 'none'; // Prevent clicking
+                cropSelect.classList.add('bg-gray-200', 'opacity-60'); // Make it look disabled
+            } else {
+                cropSelect.style.pointerEvents = 'auto'; // Re-enable clicking
+                cropSelect.classList.remove('bg-gray-200', 'opacity-60'); // Restore normal look
+            }
+        }
+
+        // Run immediately on page load
+        toggleCropField();
+        
+        // Run every time the activity dropdown changes
+        if (activitySelect) {
+            activitySelect.addEventListener('change', toggleCropField);
+        }
+    });
+</script>
 {% endblock %}

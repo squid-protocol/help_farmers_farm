@@ -14,11 +14,14 @@ def validate_not_in_future(value):
 
 class LogEntry(models.Model):
     ACTIVITY_CHOICES = [
-        ("P", "Plant"),
-        ("T", "Tend"),
-        ("H", "Harvest"),
-        ("O", "Off-Season/Other"),
+        ("P", "Planting"),
+        ("T", "Tending"),
+        ("H", "Harvesting"),
+        ("C", "Cultivating (Weeding)"),
+        ("O", "Off Season Work"),
+        ("M", "Move Dirt"),
     ]
+    # ... leave the rest of the model exactly as it is
 
     farm = models.ForeignKey(Farm, on_delete=models.CASCADE, related_name="logs")
 

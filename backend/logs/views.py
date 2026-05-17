@@ -147,7 +147,7 @@ def log_hours_view(request):
                     labels=a_labels,
                     values=a_values,
                     hole=0.5,
-                    marker_colors=["#10b981", "#f59e0b", "#ef4444", "#94a3b8"],
+                    marker_colors=["#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#94a3b8", "#78350f"],
                 )
             ]
         )

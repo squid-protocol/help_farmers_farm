@@ -8,9 +8,17 @@ urlpatterns = [
         views.volunteer_detail_view,
         name="volunteer_detail",
     ),
-    path("remove-user/<int:user_id>/", views.remove_user_view, name="remove_user"),
     # The Farm Impact Dashboard
     path("impact/", views.farm_impact_view, name="farm_impact"),
-    # NEW: The Manager Progress Report
+    # The Manager Progress Report
     path("progress-report/", views.progress_report_view, name="progress_report"),
+
+    # --- THE MISSING LINKS: Edit & Toggle Workflows ---
+    path("crop/<int:crop_id>/edit/", views.edit_crop_view, name="edit_crop"),
+    path("crop/<int:crop_id>/toggle/", views.toggle_crop_status_view, name="toggle_crop_status"),
+    
+    path("volunteer/<int:volunteer_id>/edit/", views.edit_volunteer_view, name="edit_volunteer"),
+    path("volunteer/<int:user_id>/toggle/", views.toggle_user_status_view, name="toggle_user_status"),
+    
+    path("commitment/<int:commitment_id>/edit/", views.edit_commitment_view, name="edit_commitment"),
 ]
