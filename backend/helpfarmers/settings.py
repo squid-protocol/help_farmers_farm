@@ -122,6 +122,7 @@ CRISPY_TEMPLATE_PACK = "tailwind"
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesBackend",  # Axes checks for lockouts first
     "django.contrib.auth.backends.ModelBackend",  # Then Django checks the password
+    "accounts.backends.EmailOrUsernameModelBackend",  # <-- THE FIX: Our new dual-login backend
 ]
 
 AXES_FAILURE_LIMIT = 5  # 5 failed attempts allowed
