@@ -27,7 +27,7 @@ IGNORE_FILES = {
 
 
 def generate_context():
-    print(f"🔍 Scanning directory...")
+    print("🔍 Scanning directory...")
     files_added = 0
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as outfile:
