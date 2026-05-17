@@ -47,7 +47,26 @@ class VolunteerCreationForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ["username", "first_name", "last_name", "role", "phone_number"]
+        # ADDED: "email"
+        fields = [
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "role",
+            "phone_number",
+        ]
+
+    # ADDED: "email" to the forced layout order
+    field_order = [
+        "username",
+        "first_name",
+        "last_name",
+        "email",
+        "role",
+        "phone_number",
+        "password",
+    ]
 
     # --- NEW: Intercept the form creation to check the user's role ---
     def __init__(self, *args, **kwargs):
