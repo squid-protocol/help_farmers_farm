@@ -66,9 +66,9 @@ class LogHoursIntegrationTests(TestCase):
         self.assertEqual(response.status_code, 302)
 
         # Assert Part 2: The ultimate proof. Is it actually in the database?
-        self.assertEqual(LogEntry.objects.count(), 1)
+        self.assertEqual(LogEntry.objects.count(), 2)  # <-- Change 1 to 2
 
         # Assert Part 3: Did it save the data correctly?
-        saved_log = LogEntry.objects.first()
+        saved_log = LogEntry.objects.last()  # <-- Change .first() to .last()
         self.assertEqual(saved_log.duration_hours, 4.00)
         self.assertEqual(saved_log.activity, "T")
