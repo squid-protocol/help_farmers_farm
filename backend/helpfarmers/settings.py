@@ -192,10 +192,8 @@ if not DEBUG and not TESTING:
 
 sentry_sdk.init(
     dsn="https://6fe60ceecc320e972d9561523f35dc8d@o4511152203759616.ingest.us.sentry.io/4511411108511744",
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
+    # NEW: Dynamically tag the environment
+    environment="development" if DEBUG else "production",
     traces_sample_rate=1.0,
-    # Set profiles_sample_rate to 1.0 to profile 100%
-    # of sampled transactions.
     profiles_sample_rate=1.0,
 )
