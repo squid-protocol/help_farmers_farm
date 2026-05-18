@@ -45,8 +45,19 @@
                             </div>
                             
                             {% if item.target > 0 %}
-                                <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-                                    <div class="bg-emerald-500 h-2.5 rounded-full" style="width: {{ item.pct }}%"></div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5 relative mt-3 mb-2">
+                                    
+                                    <div class="absolute top-0 left-0 h-2.5 rounded-full bg-emerald-500 transition-all duration-500 z-0" 
+                                         style="width: {{ item.pct }}%"></div>
+                                    
+                                    {% if expected_pct > 0 and expected_pct < 100 %}
+                                        <div class="absolute top-1/2 -translate-y-1/2 z-10 text-base drop-shadow-md cursor-help"
+                                             style="left: calc({{ expected_pct }}% - 10px);"
+                                             title="Expected pacing: {{ expected_pct|floatformat:0 }}%">
+                                            🎯
+                                        </div>
+                                    {% endif %}
+                                    
                                 </div>
                             {% endif %}
                         </div>

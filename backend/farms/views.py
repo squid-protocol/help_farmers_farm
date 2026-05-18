@@ -174,16 +174,37 @@ def farm_impact_view(request):
 
 
 # --- Volunteer Progress Report ---
+# --- Volunteer Progress Report ---
 @login_required
 @user_passes_test(is_manager, login_url="/log-hours/")
 def progress_report_view(request):
     farm = request.user.farm
-    current_year = timezone.now().year
+    today = timezone.now().date()
+
+    # Check if they are passing a specific year in the URL (future proofing), otherwise default to current
+    try:
+        current_year = int(request.GET.get("year", today.year))
+    except ValueError:
+        current_year = today.year
+
+    # --- NEW: The Global Pacing Engine ---
+    expected_pct = 0.0
+    if farm.season_start and farm.season_end:
+        if current_year < today.year:
+            # Looking at a past year? The season is 100% over.
+            expected_pct = 100.0
+        elif current_year == today.year:
+            # Current year: Calculate how many days into the season we are
+            total_season_days = (farm.season_end - farm.season_start).days
+
+            if total_season_days > 0:
+                days_elapsed = (today - farm.season_start).days
+                # Clamp it: 0 if before season starts, total_season_days if after it ends
+                days_elapsed = max(0, min(days_elapsed, total_season_days))
+                expected_pct = (days_elapsed / total_season_days) * 100.0
 
     # Grab all active volunteers on this farm
     volunteers = User.objects.filter(farm=farm).exclude(role="friend")
-
-    # We will build a dictionary to group users by their commitment tier
     grouped_data = {}
 
     for vol in volunteers:
@@ -194,11 +215,15 @@ def progress_report_view(request):
         target = vol.work_commitment.required_hours if vol.work_commitment else 0
         pct = min((total_hours / target) * 100, 100) if target > 0 else 0
 
+        # Determine if they are behind pace (used for coloring the UI)
+        is_behind = pct < expected_pct if target > 0 else False
+
         vol_data = {
             "user": vol,
             "total_hours": round(total_hours, 1),
             "target": target,
             "pct": round(pct, 0),
+            "is_behind": is_behind,  # Pass this flag to the template!
         }
 
         # Use the commitment name as the group key, or 'Standard Volunteers'
@@ -219,6 +244,7 @@ def progress_report_view(request):
         "farm": farm,
         "current_year": current_year,
         "grouped_data": grouped_data,
+        "expected_pct": expected_pct,  # Pass the global pacing to the template
     }
     return render(request, "farms/progress_report.html", context)
 
