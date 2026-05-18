@@ -153,18 +153,29 @@ LOGGING = {
         },
     },
     "handlers": {
-        "file": {
+        "file_errors": {
             "level": "ERROR",
             "class": "logging.FileHandler",
             "filename": BASE_DIR / "django_errors.log",
             "formatter": "verbose",
         },
+        "file_audit": {
+            "level": "INFO",
+            "class": "logging.FileHandler",
+            "filename": BASE_DIR / "django_audit.log",
+            "formatter": "verbose",
+        },
     },
     "loggers": {
         "django": {
-            "handlers": ["file"],
+            "handlers": ["file_errors"],
             "level": "ERROR",
             "propagate": True,
+        },
+        "audit": {
+            "handlers": ["file_audit"],
+            "level": "INFO",
+            "propagate": False,
         },
     },
 }
