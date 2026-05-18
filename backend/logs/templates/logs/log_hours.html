@@ -51,14 +51,46 @@
                 </div>
             {% endif %}
 
-            <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <span>🕒</span> Recent Shifts
-                </h2>
-                {% if recent_shifts %}
-                    <div class="space-y-3">
-                        {% for shift in recent_shifts %}
-                        <div class="p-3 bg-gray-50 rounded-lg border border-gray-100 flex justify-between items-center text-sm">
+            <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm" id="shift-history-container">
+                
+                <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
+                    <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        <span>🕒</span> Shift History
+                    </h2>
+                    
+                    <div class="flex items-center gap-3 bg-gray-50 rounded-lg p-1 border border-gray-200">
+                        {% if prev_year %}
+                            <button hx-get="{% url 'log_hours' %}?history_year={{ prev_year }}" 
+                                    hx-select="#shift-history-container" 
+                                    hx-target="#shift-history-container" 
+                                    hx-swap="outerHTML"
+                                    class="p-1 rounded text-gray-500 hover:bg-white hover:text-emerald-600 hover:shadow-sm transition"
+                                    title="Previous Year">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                            </button>
+                        {% else %}
+                            <div class="p-1 w-7 opacity-0 pointer-events-none"></div> {% endif %}
+                        
+                        <span class="font-bold text-gray-800 tracking-wide">{{ history_year }}</span>
+                        
+                        {% if next_year %}
+                            <button hx-get="{% url 'log_hours' %}?history_year={{ next_year }}" 
+                                    hx-select="#shift-history-container" 
+                                    hx-target="#shift-history-container" 
+                                    hx-swap="outerHTML"
+                                    class="p-1 rounded text-gray-500 hover:bg-white hover:text-emerald-600 hover:shadow-sm transition"
+                                    title="Next Year">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+                        {% else %}
+                            <div class="p-1 w-7 opacity-0 pointer-events-none"></div> {% endif %}
+                    </div>
+                </div>
+                
+                {% if history_shifts %}
+                    <div class="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                        {% for shift in history_shifts %}
+                        <div class="p-3 bg-gray-50 rounded-lg border border-gray-100 flex justify-between items-center text-sm hover:bg-white hover:shadow-sm transition">
                             <div>
                                 <p class="font-bold text-gray-800">{{ shift.date_logged|date:"M j, Y" }}</p>
                                 <p class="text-gray-500">{{ shift.get_activity_display }} - {{ shift.crop.crop_name|default:"General" }}</p>
@@ -68,10 +100,10 @@
                         {% endfor %}
                     </div>
                 {% else %}
-                    <p class="text-gray-500 text-sm italic">No shifts logged yet.</p>
+                    <p class="text-gray-500 text-sm italic text-center py-6">No shifts logged in {{ history_year }}.</p>
                 {% endif %}
             </div>
-        </div>
+            </div>
 
         <div class="lg:col-span-8 bg-gray-50 rounded-3xl p-6 md:p-8 border border-gray-200 shadow-inner h-fit">
             
@@ -184,23 +216,26 @@
 
         function toggleCropField() {
             if (!activitySelect || !cropSelect) return;
-            
             const selectedActivity = activitySelect.value;
             
             // If Off Season ('O') or Move Dirt ('M') is selected
             if (selectedActivity === 'O' || selectedActivity === 'M') {
-                cropSelect.value = ''; // Force it to "None/Generic"
-                cropSelect.style.pointerEvents = 'none'; // Prevent clicking
-                cropSelect.classList.add('bg-gray-200', 'opacity-60'); // Make it look disabled
+                cropSelect.value = '';
+                // Force it to "None/Generic"
+                cropSelect.style.pointerEvents = 'none';
+                // Prevent clicking
+                cropSelect.classList.add('bg-gray-200', 'opacity-60');
+                // Make it look disabled
             } else {
-                cropSelect.style.pointerEvents = 'auto'; // Re-enable clicking
-                cropSelect.classList.remove('bg-gray-200', 'opacity-60'); // Restore normal look
+                cropSelect.style.pointerEvents = 'auto';
+                // Re-enable clicking
+                cropSelect.classList.remove('bg-gray-200', 'opacity-60');
+                // Restore normal look
             }
         }
 
         // Run immediately on page load
         toggleCropField();
-        
         // Run every time the activity dropdown changes
         if (activitySelect) {
             activitySelect.addEventListener('change', toggleCropField);
