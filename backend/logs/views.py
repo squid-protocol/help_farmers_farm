@@ -24,9 +24,21 @@ def log_hours_view(request):
             new_log = form.save(commit=False)
             new_log.volunteer = user
             new_log.farm = user.farm
-            new_log.save()
-            messages.success(request, "Shift logged successfully!")
-            return redirect("log_hours")
+
+            # Wrap the database hit in a try/except for stability
+            try:
+                new_log.save()
+                messages.success(request, "Shift logged successfully!")
+                return redirect("log_hours")
+            except Exception as e:
+                # Log the real error to Sentry/Console in the background, but show a clean message
+                import logging
+
+                logging.getLogger("django").error(f"Database error logging shift: {e}")
+                messages.error(
+                    request,
+                    "There was a network issue saving your shift. Please try again.",
+                )
     else:
         form = LogEntryForm(user=request.user)
 
