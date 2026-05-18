@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 import environ
-
+import sentry_sdk
 import sys
 
 TESTING = "test" in sys.argv
@@ -189,3 +189,13 @@ if not DEBUG and not TESTING:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+
+sentry_sdk.init(
+    dsn="https://6fe60ceecc320e972d9561523f35dc8d@o4511152203759616.ingest.us.sentry.io/4511411108511744",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    profiles_sample_rate=1.0,
+)
