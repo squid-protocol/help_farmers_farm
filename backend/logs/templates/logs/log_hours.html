@@ -69,7 +69,8 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                             </button>
                         {% else %}
-                            <div class="p-1 w-7 opacity-0 pointer-events-none"></div> {% endif %}
+                            <div class="p-1 w-7 opacity-0 pointer-events-none"></div>
+                        {% endif %}
                         
                         <span class="font-bold text-gray-800 tracking-wide">{{ history_year }}</span>
                         
@@ -83,7 +84,8 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                             </button>
                         {% else %}
-                            <div class="p-1 w-7 opacity-0 pointer-events-none"></div> {% endif %}
+                            <div class="p-1 w-7 opacity-0 pointer-events-none"></div>
+                        {% endif %}
                     </div>
                 </div>
                 
@@ -204,8 +206,19 @@
                 <p class="text-gray-500 text-lg">Your dashboard will populate once you log your first shift of the year!</p>
             </div>
             {% endif %}
-
-        </div>
+            
+            {% if lifetime_crop_chart %}
+            <div class="mt-6 bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition">
+                <h3 class="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                    <span>🏆</span> Total Crop Experience
+                </h3>
+                <p class="text-gray-500 mb-6">Your all-time total hours dedicated to each crop across all seasons.</p>
+                <div class="w-full overflow-x-auto">
+                    {{ lifetime_crop_chart|safe }}
+                </div>
+            </div>
+            {% endif %}
+            </div>
     </div>
 </div>
 
