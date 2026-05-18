@@ -1,11 +1,13 @@
 import sqlite3
 import os
+import logging
 from django.core.management.base import BaseCommand
 from farms.models import Farm, Crop
 from logs.models import LogEntry
 from django.contrib.auth import get_user_model
 
 CustomUser = get_user_model()
+logger = logging.getLogger("audit")  # Hook into the new audit logger we just built
 
 
 class Command(BaseCommand):
@@ -125,11 +127,9 @@ class Command(BaseCommand):
         # Fire them into PostgreSQL all at once
         LogEntry.objects.bulk_create(logs_to_create, ignore_conflicts=True)
 
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"Successfully imported {len(logs_to_create)} log entries!"
-            )
-        )
+        success_msg = f"Successfully imported {len(logs_to_create)} log entries!"
+        self.stdout.write(self.style.SUCCESS(success_msg))
+        logger.info(f"ETL Script: {success_msg}")  # Save to the permanent audit file
         if skipped_logs > 0:
             self.stdout.write(
                 self.style.ERROR(
