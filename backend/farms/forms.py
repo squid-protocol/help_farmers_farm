@@ -43,36 +43,36 @@ class CropForm(forms.ModelForm):
 class VolunteerCreationForm(forms.ModelForm):
     password = forms.CharField(
         # 'new-password' forces the browser to treat this as a completely new registration, stopping auto-fill
-        widget=forms.PasswordInput(attrs={'autocomplete': 'new-password'}), 
-        help_text="Provide a temporary password."
+        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+        help_text="Provide a temporary password.",
     )
 
     class Meta:
         model = User
         fields = [
-            "username", 
-            "first_name", 
-            "last_name", 
-            "email", 
+            "username",
+            "first_name",
+            "last_name",
+            "email",
             "phone_number",
             "work_commitment",
-            "role"
+            "role",
         ]
         # Inject 'off' to stop the browser from jamming your admin username into the form
         widgets = {
-            'username': forms.TextInput(attrs={'autocomplete': 'off'}),
-            'email': forms.EmailInput(attrs={'autocomplete': 'off'}),
+            "username": forms.TextInput(attrs={"autocomplete": "off"}),
+            "email": forms.EmailInput(attrs={"autocomplete": "off"}),
         }
 
     field_order = [
-        "username", 
-        "first_name", 
-        "last_name", 
-        "email", 
-        "phone_number", 
-        "work_commitment", 
-        "role", 
-        "password"
+        "username",
+        "first_name",
+        "last_name",
+        "email",
+        "phone_number",
+        "work_commitment",
+        "role",
+        "password",
     ]
 
     def __init__(self, *args, **kwargs):
@@ -87,13 +87,17 @@ class VolunteerCreationForm(forms.ModelForm):
                 )
 
             # Prevent farm managers from granting higher privileges
-            if not self.request_user.is_staff and self.request_user.role == "farm_manager":
+            if (
+                not self.request_user.is_staff
+                and self.request_user.role == "farm_manager"
+            ):
                 self.fields["role"].choices = [
                     choice
                     for choice in self.fields["role"].choices
                     if choice[0] not in ["account_manager", "farm_manager"]
                 ]
-                           
+
+
 # --- THE MISSING FORM: For inline editing existing users ---
 class VolunteerEditForm(forms.ModelForm):
     class Meta:
