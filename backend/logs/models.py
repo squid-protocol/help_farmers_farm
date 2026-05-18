@@ -59,15 +59,9 @@ class LogEntry(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        # PROTECTION 3: The "Double-Click" Blocker
-        # If a user clicks 'Submit' twice really fast, the database will reject the second exact duplicate.
-        unique_together = [
-            "volunteer",
-            "crop",
-            "activity",
-            "date_logged",
-            "duration_hours",
-        ]
+        # Removed unique_together so volunteers can log multiple shifts
+        # of the exact same activity on the same day.
+        pass
 
     def __str__(self):
         # Added quick checks in case volunteer or crop was deleted (SET_NULL)
