@@ -30,18 +30,42 @@ def log_hours_view(request):
     else:
         form = LogEntryForm(user=request.user)
 
-    # 2. Fetch User's Data
-    all_logs = LogEntry.objects.filter(volunteer=user)
+    # 2. Fetch User's Data & Handle Pagination
+    all_logs = LogEntry.objects.filter(volunteer=user).order_by("-date_logged")
     season_logs = all_logs.filter(date_logged__year=current_year)
-    recent_shifts = all_logs.order_by("-date_logged")[:5]
+
+    # --- Year-Based Paginator Logic ---
+    try:
+        history_year = int(request.GET.get("history_year", current_year))
+    except ValueError:
+        history_year = current_year
+
+    # Get all distinct years this user has logged hours
+    user_log_dates = all_logs.dates("date_logged", "year")
+    available_years = sorted(list(set([d.year for d in user_log_dates])))
+
+    # Always ensure the current year is in the list so they can navigate back to "today"
+    if current_year not in available_years:
+        available_years.append(current_year)
+        available_years.sort()
+
+    prev_year = None
+    next_year = None
+
+    if history_year in available_years:
+        idx = available_years.index(history_year)
+        if idx > 0:
+            prev_year = available_years[idx - 1]
+        if idx < len(available_years) - 1:
+            next_year = available_years[idx + 1]
+
+    history_shifts = all_logs.filter(date_logged__year=history_year)
 
     # 3. Calculate Core Stats & Emoji Badges
     lifetime_hours = all_logs.aggregate(total=Sum("duration_hours"))["total"] or 0
     season_hours = season_logs.aggregate(total=Sum("duration_hours"))["total"] or 0
 
-    # Count distinct years they have logged hours in
     seasons_volunteered = all_logs.dates("date_logged", "year").count() or 1
-    # Generate one 🌱 emoji per season
     season_badges = "🌱" * seasons_volunteered
 
     # 4. Calculate Commitment Progress & Pacing
@@ -60,21 +84,18 @@ def log_hours_view(request):
         progress_pct = min((season_hours / target_hours) * 100, 100)
         remaining_hours = max(target_hours - season_hours, 0)
 
-        # NEW: The Pacing Engine
+        # The Pacing Engine
         if user.farm.season_start and user.farm.season_end and remaining_hours > 0:
             today = timezone.now().date()
             season_end = user.farm.season_end
             season_start = user.farm.season_start
 
-            # Only calculate if the season isn't over yet
             if today < season_end:
-                # If the season hasn't started yet, use the total season length
                 if today < season_start:
                     days_remaining = (season_end - season_start).days
                 else:
                     days_remaining = (season_end - today).days
 
-                # Convert days to weeks (using max to prevent dividing by zero in the final days)
                 weeks_remaining = max(days_remaining / 7.0, 1.0)
                 required_pace = remaining_hours / Decimal(str(weeks_remaining))
 
@@ -103,7 +124,7 @@ def log_hours_view(request):
     # 6. Build Personal Breakdowns (Plotly Charts)
     veggie_chart_html = None
     activity_chart_html = None
-    comparison_chart_html = None  # <-- NEW
+    comparison_chart_html = None
 
     if season_hours > 0:
         # Veggie Chart
@@ -167,9 +188,7 @@ def log_hours_view(request):
         fig_a.update_traces(textposition="inside", textinfo="percent+label")
         activity_chart_html = fig_a.to_html(full_html=False, include_plotlyjs=False)
 
-        # --- NEW: Farm-Wide Comparison Horizontal Bar Chart ---
-
-        # 1. Grab the user's total hours per crop for this season
+        # Farm-Wide Comparison Horizontal Bar Chart
         user_crop_hours = (
             season_logs.filter(crop__is_active=True)
             .values("crop__crop_name")
@@ -180,7 +199,6 @@ def log_hours_view(request):
             for item in user_crop_hours
         }
 
-        # 2. Grab the entire farm's total hours per crop for this season
         farm_crop_hours = (
             LogEntry.objects.filter(
                 farm=user.farm, date_logged__year=current_year, crop__is_active=True
@@ -193,7 +211,6 @@ def log_hours_view(request):
             for item in farm_crop_hours
         }
 
-        # 3. Get all active crops, sorted reverse alphabetically so 'A' is at the top of the Plotly Y-axis
         from farms.models import Crop
 
         active_crops = list(
@@ -213,7 +230,6 @@ def log_hours_view(request):
 
                 crop_names.append(crop_name)
                 my_hours_list.append(my_h)
-                # Ensure the team's hours subtract the user's hours so the stacked bar represents the true total
                 others_hours_list.append(max(0.0, farm_h - my_h))
 
             fig_comp = go.Figure(
@@ -241,7 +257,6 @@ def log_hours_view(request):
                 plot_bgcolor="rgba(250,250,250,1)",
                 paper_bgcolor="white",
                 margin=dict(t=30, b=30, l=10, r=20),
-                # Dynamically scale the height of the chart based on how many crops are active
                 height=max(300, len(crop_names) * 35 + 100),
                 showlegend=True,
                 legend=dict(
@@ -276,6 +291,9 @@ def log_hours_view(request):
         "veggie_chart": veggie_chart_html,
         "activity_chart": activity_chart_html,
         "comparison_chart": comparison_chart_html,
-        "recent_shifts": recent_shifts,
+        "history_year": history_year,
+        "prev_year": prev_year,
+        "next_year": next_year,
+        "history_shifts": history_shifts,
     }
     return render(request, "logs/log_hours.html", context)
