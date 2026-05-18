@@ -42,28 +42,58 @@ class CropForm(forms.ModelForm):
 
 class VolunteerCreationForm(forms.ModelForm):
     password = forms.CharField(
-        widget=forms.PasswordInput(), help_text="Provide a temporary password."
+        # 'new-password' forces the browser to treat this as a completely new registration, stopping auto-fill
+        widget=forms.PasswordInput(attrs={'autocomplete': 'new-password'}), 
+        help_text="Provide a temporary password."
     )
 
     class Meta:
         model = User
-        fields = ["username", "first_name", "last_name", "email", "role"]
+        fields = [
+            "username", 
+            "first_name", 
+            "last_name", 
+            "email", 
+            "phone_number",
+            "work_commitment",
+            "role"
+        ]
+        # Inject 'off' to stop the browser from jamming your admin username into the form
+        widgets = {
+            'username': forms.TextInput(attrs={'autocomplete': 'off'}),
+            'email': forms.EmailInput(attrs={'autocomplete': 'off'}),
+        }
 
-    field_order = ["username", "first_name", "last_name", "email", "role", "password"]
+    field_order = [
+        "username", 
+        "first_name", 
+        "last_name", 
+        "email", 
+        "phone_number", 
+        "work_commitment", 
+        "role", 
+        "password"
+    ]
 
     def __init__(self, *args, **kwargs):
         self.request_user = kwargs.pop("request_user", None)
         super().__init__(*args, **kwargs)
 
-        if self.request_user and not self.request_user.is_staff:
-            if self.request_user.role == "farm_manager":
+        if self.request_user:
+            # Ensure the manager only sees work commitments belonging to their own farm
+            if self.request_user.farm:
+                self.fields["work_commitment"].queryset = WorkCommitment.objects.filter(
+                    farm=self.request_user.farm
+                )
+
+            # Prevent farm managers from granting higher privileges
+            if not self.request_user.is_staff and self.request_user.role == "farm_manager":
                 self.fields["role"].choices = [
                     choice
                     for choice in self.fields["role"].choices
                     if choice[0] not in ["account_manager", "farm_manager"]
                 ]
-
-
+                           
 # --- THE MISSING FORM: For inline editing existing users ---
 class VolunteerEditForm(forms.ModelForm):
     class Meta:
