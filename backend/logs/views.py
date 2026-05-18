@@ -65,8 +65,17 @@ def log_hours_view(request):
     lifetime_hours = all_logs.aggregate(total=Sum("duration_hours"))["total"] or 0
     season_hours = season_logs.aggregate(total=Sum("duration_hours"))["total"] or 0
 
-    seasons_volunteered = all_logs.dates("date_logged", "year").count() or 1
-    season_badges = "🌱" * seasons_volunteered
+    # Count distinct years they have logged hours in the database
+    active_seasons = all_logs.dates("date_logged", "year").count()
+
+    # Calculate Total Seasons = Legacy Offset + Active Database Seasons
+    total_seasons = max(user.legacy_years_volunteered + active_seasons, 1)
+
+    # Generate the Star Badges with Overflow Protection
+    if total_seasons <= 5:
+        season_badges = "⭐" * total_seasons
+    else:
+        season_badges = f"{total_seasons}x ⭐"
 
     # 4. Calculate Commitment Progress & Pacing
     if user.work_commitment:
@@ -325,7 +334,7 @@ def log_hours_view(request):
         "current_year": current_year,
         "lifetime_hours": round(lifetime_hours, 1),
         "season_hours": round(season_hours, 1),
-        "seasons_volunteered": seasons_volunteered,
+        "seasons_volunteered": total_seasons,
         "season_badges": season_badges,
         "target_hours": target_hours,
         "tier_name": tier_name,

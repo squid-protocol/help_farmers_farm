@@ -23,10 +23,14 @@ class CustomUser(AbstractUser):
     # Allow users to upload avatars
     avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
 
-    # NEW: Optional Phone Number
+    # Optional Phone Number
     phone_number = models.CharField(max_length=20, null=True, blank=True)
 
-    # Inside the CustomUser class:
+    # --- NEW: The Permanent Offset ---
+    legacy_years_volunteered = models.IntegerField(
+        default=0, help_text="Number of years volunteered prior to using this system."
+    )
+
     work_commitment = models.ForeignKey(
         "farms.WorkCommitment",
         on_delete=models.SET_NULL,

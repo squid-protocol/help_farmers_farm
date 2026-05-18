@@ -42,7 +42,6 @@ class CropForm(forms.ModelForm):
 
 class VolunteerCreationForm(forms.ModelForm):
     password = forms.CharField(
-        # 'new-password' forces the browser to treat this as a completely new registration, stopping auto-fill
         widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
         help_text="Provide a temporary password.",
     )
@@ -55,13 +54,17 @@ class VolunteerCreationForm(forms.ModelForm):
             "last_name",
             "email",
             "phone_number",
+            "legacy_years_volunteered",  # <-- ADDED
             "work_commitment",
             "role",
         ]
-        # Inject 'off' to stop the browser from jamming your admin username into the form
         widgets = {
             "username": forms.TextInput(attrs={"autocomplete": "off"}),
             "email": forms.EmailInput(attrs={"autocomplete": "off"}),
+            # Add a nice placeholder so managers know what this is
+            "legacy_years_volunteered": forms.NumberInput(
+                attrs={"placeholder": "e.g., 5"}
+            ),
         }
 
     field_order = [
@@ -70,6 +73,7 @@ class VolunteerCreationForm(forms.ModelForm):
         "last_name",
         "email",
         "phone_number",
+        "legacy_years_volunteered",  # <-- ADDED
         "work_commitment",
         "role",
         "password",
@@ -80,13 +84,11 @@ class VolunteerCreationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         if self.request_user:
-            # Ensure the manager only sees work commitments belonging to their own farm
             if self.request_user.farm:
                 self.fields["work_commitment"].queryset = WorkCommitment.objects.filter(
                     farm=self.request_user.farm
                 )
 
-            # Prevent farm managers from granting higher privileges
             if (
                 not self.request_user.is_staff
                 and self.request_user.role == "farm_manager"
