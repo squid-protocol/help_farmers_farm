@@ -1,5 +1,6 @@
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.conf import settings  # <-- ADD THIS IMPORT
 
 
 class RequireEmailMiddleware:
@@ -12,6 +13,12 @@ class RequireEmailMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        # --- NEW: Let static CSS and images pass through freely ---
+        if request.path.startswith(settings.STATIC_URL) or request.path.startswith(
+            settings.MEDIA_URL
+        ):
+            return self.get_response(request)
+
         # Only bother checking if the user is actually logged in
         if request.user.is_authenticated and not request.user.email:
 
