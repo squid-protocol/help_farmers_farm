@@ -41,7 +41,7 @@ mdurl==0.1.2
 more-itertools==11.0.2
 murmurhash==1.0.15
 mypy_extensions==1.1.0
-narwhals==2.21.0
+narwhals==2.21.2
 nodeenv==1.10.0
 numpy==2.4.4
 packaging==26.2
