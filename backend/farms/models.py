@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 
+
 class Farm(models.Model):
     name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -14,7 +15,7 @@ class Farm(models.Model):
     liability_waiver_text = models.TextField(blank=True, null=True)
     onboarding_schema = models.JSONField(default=list, blank=True)
 
-# --- BILLING & SUBSCRIPTIONS ---
+    # --- BILLING & SUBSCRIPTIONS ---
     is_paid = models.BooleanField(default=False)
     subscription_tier = models.CharField(max_length=50, blank=True, null=True)
     stripe_customer_id = models.CharField(max_length=255, blank=True, null=True)
@@ -35,6 +36,7 @@ class Farm(models.Model):
     def __str__(self):
         return self.name
 
+
 class Crop(models.Model):
     # The Row-Level Multi-Tenancy link
     farm = models.ForeignKey(Farm, on_delete=models.CASCADE, related_name="crops")
@@ -47,6 +49,7 @@ class Crop(models.Model):
 
     def __str__(self):
         return f"{self.crop_name} - {self.variety}" if self.variety else self.crop_name
+
 
 class WorkCommitment(models.Model):
     # The list of visual choices for the manager dropdown
