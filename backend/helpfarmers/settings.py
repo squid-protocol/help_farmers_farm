@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     "analytics",
     "tailwind",
     "theme",
+    "cookbooks",  # <-- Add this!
+    "billing",  # <-- Add this!
 ]
 
 MIDDLEWARE = [
@@ -213,3 +215,8 @@ sentry_sdk.init(
     # of sampled transactions.
     profiles_sample_rate=1.0,
 )
+
+# --- STRIPE BILLING ---
+STRIPE_PUBLISHABLE_KEY = env("STRIPE_PUBLISHABLE_KEY", default="")
+STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
+STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
