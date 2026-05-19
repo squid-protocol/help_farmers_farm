@@ -9,9 +9,14 @@ class Farm(models.Model):
     season_start = models.DateField(null=True, blank=True)
     season_end = models.DateField(null=True, blank=True)
 
-    # --- NEW: Custom Onboarding Data ---
+    # --- Custom Onboarding Data ---
     liability_waiver_text = models.TextField(blank=True, null=True)
     onboarding_schema = models.JSONField(default=list, blank=True)
+
+    # --- NEW: BILLING & SUBSCRIPTIONS ---
+    is_paid = models.BooleanField(default=False)
+    subscription_tier = models.CharField(max_length=50, blank=True, null=True)
+    stripe_customer_id = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return self.name
