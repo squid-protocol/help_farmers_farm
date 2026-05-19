@@ -34,4 +34,5 @@ urlpatterns = [
         views.edit_commitment_view,
         name="edit_commitment",
     ),
+    path("switch-workspace/", views.switch_active_farm, name="switch_active_farm"),
 ]

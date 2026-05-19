@@ -56,6 +56,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "axes.middleware.AxesMiddleware",
     "accounts.middleware.RequireEmailMiddleware",
+    "farms.middleware.ActiveFarmMiddleware",
 ]
 
 ROOT_URLCONF = "helpfarmers.urls"

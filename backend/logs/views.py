@@ -23,7 +23,7 @@ def log_hours_view(request):
         if form.is_valid():
             new_log = form.save(commit=False)
             new_log.volunteer = user
-            new_log.farm = user.farm
+            new_log.farm = request.active_farm
 
             # Wrap the database hit in a try/except for stability
             try:
@@ -106,10 +106,14 @@ def log_hours_view(request):
         remaining_hours = max(target_hours - season_hours, 0)
 
         # The Pacing Engine
-        if user.farm.season_start and user.farm.season_end and remaining_hours > 0:
+        if (
+            request.active_farm.season_start
+            and request.active_farm.season_end
+            and remaining_hours > 0
+        ):
             today = timezone.now().date()
-            season_end = user.farm.season_end
-            season_start = user.farm.season_start
+            season_end = request.active_farm.season_end
+            season_start = request.active_farm.season_start
 
             if today < season_end:
                 if today < season_start:
@@ -223,7 +227,9 @@ def log_hours_view(request):
 
         farm_crop_hours = (
             LogEntry.objects.filter(
-                farm=user.farm, date_logged__year=current_year, crop__is_active=True
+                farm=request.active_farm,
+                date_logged__year=current_year,
+                crop__is_active=True,
             )
             .values("crop__crop_name")
             .annotate(total=Sum("duration_hours"))
@@ -236,7 +242,7 @@ def log_hours_view(request):
         from farms.models import Crop
 
         active_crops = list(
-            Crop.objects.filter(farm=user.farm, is_active=True)
+            Crop.objects.filter(farm=request.active_farm, is_active=True)
             .values_list("crop_name", flat=True)
             .order_by("-crop_name")
         )

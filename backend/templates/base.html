@@ -14,9 +14,34 @@
     <nav class="bg-white border-b border-gray-200 shadow-sm">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
-                <div class="flex-shrink-0 flex items-center gap-2">
-                    <span class="text-2xl">🌾</span>
-                    <a href="/" class="text-xl font-bold text-green-700 tracking-tight hover:text-green-800">HelpFarmers</a>
+                
+                <div class="flex-shrink-0 flex items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl">🌾</span>
+                        <a href="/" class="text-xl font-bold text-green-700 tracking-tight hover:text-green-800">HelpFarmers</a>
+                    </div>
+
+                    {% if request.user.is_authenticated and request.user_farms %}
+                        <div class="hidden sm:block border-l border-gray-300 pl-4">
+                            {% if request.user_farms|length > 1 %}
+                                <form action="{% url 'switch_active_farm' %}" method="POST" class="m-0">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.path }}">
+                                    <select name="farm_id" onchange="this.form.submit()" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm font-bold rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2 py-1.5 cursor-pointer shadow-sm">
+                                        {% for farm in request.user_farms %}
+                                            <option value="{{ farm.id }}" {% if farm.id == request.active_farm.id %}selected{% endif %}>
+                                                {{ farm.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </form>
+                            {% else %}
+                                <span class="text-sm font-bold text-gray-600 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm">
+                                    {{ request.active_farm.name }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 </div>
 
                 <div class="flex items-center space-x-6">
@@ -56,20 +81,20 @@
     </main>
 
     <footer class="bg-gray-50 border-t border-gray-200 mt-auto py-8">
-    <div class="max-w-6xl mx-auto px-4 text-center">
-        
-        <div class="flex flex-wrap justify-center gap-6 mb-4">
-            <a href="{% url 'about' %}" class="text-gray-500 hover:text-emerald-600 font-medium transition">About Us</a>
-            <a href="{% url 'faq' %}" class="text-gray-500 hover:text-emerald-600 font-medium transition">FAQ</a>
-            <a href="{% url 'contact' %}" class="text-gray-500 hover:text-emerald-600 font-medium transition">Contact Us</a>
-            <a href="#" class="text-gray-500 hover:text-emerald-600 font-medium transition">Privacy Policy</a>
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            
+            <div class="flex flex-wrap justify-center gap-6 mb-4">
+                <a href="{% url 'about' %}" class="text-gray-500 hover:text-emerald-600 font-medium transition">About Us</a>
+                <a href="{% url 'faq' %}" class="text-gray-500 hover:text-emerald-600 font-medium transition">FAQ</a>
+                <a href="{% url 'contact' %}" class="text-gray-500 hover:text-emerald-600 font-medium transition">Contact Us</a>
+                <a href="#" class="text-gray-500 hover:text-emerald-600 font-medium transition">Privacy Policy</a>
+            </div>
+            
+            <p class="text-gray-400 text-sm">
+                &copy; {% now "Y" %} <span class="font-bold">helpingfarmersfarm.com</span>. All rights reserved.
+            </p>
         </div>
-        
-        <p class="text-gray-400 text-sm">
-            &copy; {% now "Y" %} <span class="font-bold">helpingfarmersfarm.com</span>. All rights reserved.
-        </p>
-    </div>
-</footer>
+    </footer>
 
 </body>
 </html>
