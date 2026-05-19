@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from farms.models import Farm, Crop
 from logs.models import LogEntry
 from django.utils import timezone
+from accounts.models import FarmMembership
 
 User = get_user_model()
 
@@ -15,19 +16,17 @@ class LogHoursIntegrationTests(TestCase):
         self.farm = Farm.objects.create(name="Schuler Test Farm")
         self.crop = Crop.objects.create(farm=self.farm, crop_name="Heirloom Tomatoes")
 
-        # THE FIX: Added a fake email so the middleware bouncer lets them through
         self.user = User.objects.create_user(
             username="test_volunteer",
             email="test@example.com",
             password="my_secure_password123",
-            farm=self.farm,
         )
+        FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True)
 
         # Force the invisible browser to log in, bypassing the security bouncer
         self.client.force_login(self.user)
         self.log_url = reverse("log_hours")
 
-        # THE FIX: Give the test user 1 shift so the massive Plotly chart logic executes!
         LogEntry.objects.create(
             farm=self.farm,
             volunteer=self.user,

@@ -2,6 +2,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from farms.models import Farm
+from accounts.models import FarmMembership
 
 User = get_user_model()
 
@@ -13,21 +14,20 @@ class SecurityIDORTests(TestCase):
         # 1. Build Farm A (The Good Guys)
         self.farm_a = Farm.objects.create(name="Schuler Test Farm")
 
-        # THE FIX: Added emails to all users
         self.manager_a = User.objects.create_user(
             username="manager_a",
             email="manager_a@example.com",
             password="secure",
-            farm=self.farm_a,
             role="farm_manager",
         )
+        FarmMembership.objects.create(user=self.manager_a, farm=self.farm_a, is_approved=True)
 
         self.volunteer_a = User.objects.create_user(
             username="vol_a",
             email="vol_a@example.com",
             password="secure",
-            farm=self.farm_a,
         )
+        FarmMembership.objects.create(user=self.volunteer_a, farm=self.farm_a, is_approved=True)
 
         # 2. Build Farm B (The Rivals)
         self.farm_b = Farm.objects.create(name="Rival Valley Farms")
@@ -35,8 +35,8 @@ class SecurityIDORTests(TestCase):
             username="vol_b",
             email="vol_b@example.com",
             password="secure",
-            farm=self.farm_b,
         )
+        FarmMembership.objects.create(user=self.volunteer_b, farm=self.farm_b, is_approved=True)
 
     def test_manager_can_view_own_volunteer(self):
         self.client.force_login(self.manager_a)
@@ -48,7 +48,9 @@ class SecurityIDORTests(TestCase):
         self.client.force_login(self.manager_a)
         url = reverse("volunteer_detail", args=[self.volunteer_b.id])
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 404)
+        
+        # THE FIX: Expect a 403 Forbidden instead of a 404 Not Found
+        self.assertEqual(response.status_code, 403)
 
     def test_manager_cannot_toggle_rival_volunteer(self):
         self.client.force_login(self.manager_a)
@@ -61,14 +63,13 @@ class SecurityIDORTests(TestCase):
         self.assertTrue(self.volunteer_b.is_active)
 
     def test_manager_cannot_toggle_another_manager(self):
-        # THE FIX: Added email here too
         manager_a2 = User.objects.create_user(
             username="manager_a2",
             email="manager_a2@example.com",
             password="secure",
-            farm=self.farm_a,
             role="farm_manager",
         )
+        FarmMembership.objects.create(user=manager_a2, farm=self.farm_a, is_approved=True)
 
         self.client.force_login(self.manager_a)
         url = reverse("toggle_user_status", args=[manager_a2.id])
@@ -90,7 +91,6 @@ class SecurityIDORTests(TestCase):
         self.assertFalse(self.volunteer_a.is_active)
 
     def test_manager_dashboard_loads_successfully(self):
-        # This will execute all the summary stat logic and form instantiations!
         self.client.force_login(self.manager_a)
         url = reverse("manager_dashboard")
         response = self.client.get(url)

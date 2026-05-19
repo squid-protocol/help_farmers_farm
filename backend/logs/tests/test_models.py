@@ -5,6 +5,7 @@ from datetime import timedelta
 from farms.models import Farm, Crop
 from django.contrib.auth import get_user_model
 from logs.models import LogEntry
+from accounts.models import FarmMembership
 
 User = get_user_model()
 
@@ -14,8 +15,10 @@ class LogEntryModelTests(TestCase):
         # 1. Set up the baseline "controlled environment"
         self.farm = Farm.objects.create(name="Test Farm")
         self.user = User.objects.create_user(
-            username="testvol", password="password", farm=self.farm
+            username="testvol", password="password"
         )
+        FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True)
+        
         self.crop = Crop.objects.create(farm=self.farm, crop_name="Test Tomatoes")
 
     def test_future_date_rejected(self):
