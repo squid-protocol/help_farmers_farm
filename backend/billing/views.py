@@ -34,8 +34,10 @@ def create_checkout_session(request):
                 ],
                 mode="subscription",
                 client_reference_id=str(request.user.farm.id),
-                success_url=request.build_absolute_uri(reverse("billing_success"))
-                + "?session_id={CHECKOUT_SESSION_ID}",
+                success_url=(
+                    request.build_absolute_uri(reverse("billing_success"))
+                    + "?session_id={CHECKOUT_SESSION_ID}"
+                ),
                 cancel_url=request.build_absolute_uri(reverse("pricing")),
             )
             return redirect(checkout_session.url, code=303)
@@ -52,6 +54,35 @@ def create_checkout_session(request):
 @login_required
 def billing_success(request):
     return render(request, "billing/success.html")
+
+
+@login_required
+def customer_portal(request):
+    if request.method == "POST":
+        # Grab the farm securely assigned by your ActiveFarmMiddleware
+        farm = request.active_farm
+
+        # Safety check: Do they actually have a Stripe ID?
+        if not farm.stripe_customer_id:
+            messages.error(
+                request, "We couldn't find an active billing account for this farm."
+            )
+            return redirect("manager_dashboard")
+
+        try:
+            # Generate the secure, temporary portal link
+            portal_session = stripe.billing_portal.Session.create(
+                customer=farm.stripe_customer_id,
+                # Where Stripe should send them when they click "Return to App"
+                return_url=request.build_absolute_uri(reverse("manager_dashboard")),
+            )
+            return redirect(portal_session.url, code=303)
+
+        except Exception as e:
+            messages.error(request, f"Error connecting to billing portal: {str(e)}")
+            return redirect("manager_dashboard")
+
+    return redirect("manager_dashboard")
 
 
 @csrf_exempt

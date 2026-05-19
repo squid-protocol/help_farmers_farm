@@ -44,8 +44,8 @@ INSTALLED_APPS = [
     "analytics",
     "tailwind",
     "theme",
-    "cookbooks",  # <-- Add this!
-    "billing",  # <-- Add this!
+    "cookbooks",
+    "billing",
 ]
 
 MIDDLEWARE = [

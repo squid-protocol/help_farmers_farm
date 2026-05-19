@@ -14,12 +14,10 @@ urlpatterns = [
     path(
         "contact/", TemplateView.as_view(template_name="contact.html"), name="contact"
     ),
-    # --- ADD THESE TWO NEW LINES ---
     path(
         "pricing/", TemplateView.as_view(template_name="pricing.html"), name="pricing"
     ),
     path("billing/", include("billing.urls")),
-    # -------------------------------
     path("", include("logs.urls")),
     path("farm/", include("farms.urls")),
     path("analytics/", include("analytics.urls")),
