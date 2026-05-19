@@ -14,12 +14,20 @@ urlpatterns = [
     path(
         "contact/", TemplateView.as_view(template_name="contact.html"), name="contact"
     ),
-    # --- CHECK THAT THESE TWO LINES EXIST ---
+urlpatterns = [
+    path("admin/", admin.site.urls),
+    path("accounts/", include("django.contrib.auth.urls")),
+    path("accounts/", include("accounts.urls")),
+    path("", TemplateView.as_view(template_name="landing.html"), name="home"),
+    path("about/", TemplateView.as_view(template_name="about.html"), name="about"),
+    path("faq/", TemplateView.as_view(template_name="faq.html"), name="faq"),
+    path(
+        "contact/", TemplateView.as_view(template_name="contact.html"), name="contact"
+    ),
     path(
         "pricing/", TemplateView.as_view(template_name="pricing.html"), name="pricing"
     ),
     path("billing/", include("billing.urls")),
-    # ----------------------------------------
     path("", include("logs.urls")),
     path("farm/", include("farms.urls")),
     path("analytics/", include("analytics.urls")),

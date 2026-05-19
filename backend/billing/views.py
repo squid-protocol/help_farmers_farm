@@ -34,10 +34,15 @@ def create_checkout_session(request):
                 ],
                 mode="subscription",
                 client_reference_id=str(request.user.farm.id),
+<<<<<<< HEAD
                 success_url=(
                     request.build_absolute_uri(reverse("billing_success"))
                     + "?session_id={CHECKOUT_SESSION_ID}"
                 ),
+=======
+                success_url=request.build_absolute_uri(reverse("billing_success"))
+                + "?session_id={CHECKOUT_SESSION_ID}",
+>>>>>>> main
                 cancel_url=request.build_absolute_uri(reverse("pricing")),
             )
             return redirect(checkout_session.url, code=303)
@@ -56,6 +61,7 @@ def billing_success(request):
     return render(request, "billing/success.html")
 
 
+<<<<<<< HEAD
 @login_required
 def customer_portal(request):
     if request.method == "POST":
@@ -85,6 +91,8 @@ def customer_portal(request):
     return redirect("manager_dashboard")
 
 
+=======
+>>>>>>> main
 @csrf_exempt
 def stripe_webhook(request):
     payload = request.body
@@ -108,6 +116,10 @@ def stripe_webhook(request):
         session = event["data"]["object"]
 
         # We grab the Farm ID that we passed into client_reference_id during checkout
+<<<<<<< HEAD
+=======
+        # NOTE: We use dot notation here because the new Stripe SDK returns an object, not a dict!
+>>>>>>> main
         farm_id = session.client_reference_id
 
         if farm_id:

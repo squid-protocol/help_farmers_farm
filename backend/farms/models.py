@@ -14,7 +14,7 @@ class Farm(models.Model):
     liability_waiver_text = models.TextField(blank=True, null=True)
     onboarding_schema = models.JSONField(default=list, blank=True)
 
-    # --- BILLING & SUBSCRIPTIONS ---
+# --- BILLING & SUBSCRIPTIONS ---
     is_paid = models.BooleanField(default=False)
     subscription_tier = models.CharField(max_length=50, blank=True, null=True)
     stripe_customer_id = models.CharField(max_length=255, blank=True, null=True)
