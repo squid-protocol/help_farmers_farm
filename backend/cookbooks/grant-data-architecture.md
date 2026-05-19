@@ -4,22 +4,22 @@ For grant-funded community gardens, institutional farms, and large-scale coopera
 
 Saying, "We grew a lot of food and had great community involvement," will not secure your next round of funding. You need hard numbers, compliant liability records, and professional visual data. 
 
-**HelpFarmers** is built specifically to turn your daily volunteer labor into audit-ready grant reports. Here is exactly how to use the platform to prove your impact.
+**Helping Farmers Farm** is built specifically to turn your daily volunteer labor into audit-ready grant reports. Here is exactly how to use the platform to prove your impact.
 
 ## Step 1: Bulletproof Legal Compliance
 Institutional funding requires strict liability management. Before you can report on your labor, you must prove that your labor force is compliant. 
 
-**How it works in HelpFarmers:**
-Instead of managing physical clipboards and filing cabinets full of paper waivers, HelpFarmers uses a "Digital Tollbooth." Before a new volunteer can ever log a single hour, the system requires them to digitally review and sign your specific farm safety waivers and liability forms. You instantly have a permanent, digital record of compliance for every single person in the field.
+**How it works in Helping Farmers Farm:**
+Instead of managing physical clipboards and filing cabinets full of paper waivers, Helping Farmers Farm uses a "Digital Tollbooth." Before a new volunteer can ever log a single hour, the system requires them to digitally review and sign your specific farm safety waivers and liability forms. You instantly have a permanent, digital record of compliance for every single person in the field.
 
 ## Step 2: Effortless Data Collection
-To get perfect reports out of the system, you need perfect data going in. HelpFarmers makes it impossible for volunteers to mess up your spreadsheets.
+To get perfect reports out of the system, you need perfect data going in. Helping Farmers Farm makes it impossible for volunteers to mess up your spreadsheets.
 
-**How it works in HelpFarmers:**
+**How it works in Helping Farmers Farm:**
 At the end of a shift, a volunteer opens the app on their phone. They simply select their task (e.g., "Harvesting"), select the crop ("Heirloom Tomatoes"), and type in their hours. The system automatically prevents duplicate entries and blocks them from logging hours in the future. Clean data goes in, ensuring your grant reports are 100% accurate.
 
 ## Step 3: Generating Your Grant Reports (Step-by-Step)
-When it is time to write your grant proposal or present to your board, you don't need to spend hours doing spreadsheet math. HelpFarmers generates professional, interactive reports instantly.
+When it is time to write your grant proposal or present to your board, you don't need to spend hours doing spreadsheet math. Helping Farmers Farm generates professional, interactive reports instantly.
 
 ### Action A: Download the Farm Impact View (The "What")
 Grant committees want to know exactly where your labor resources are going. 
