@@ -6,11 +6,23 @@ from .models import LogEntry
 class LogEntryAdmin(admin.ModelAdmin):
     list_display = (
         "volunteer",
-        "crop",
-        "activity",
-        "duration_hours",
         "date_logged",
+        "duration_hours",
+        "activity",
+        "crop",
         "farm",
+        "created_at",  # Shows when the form was actually submitted
     )
     list_filter = ("farm", "activity", "date_logged")
-    search_fields = ("volunteer__username", "crop__crop_name")
+
+    # NEW: Allow searching by volunteer's real name AND their shift notes
+    search_fields = (
+        "volunteer__username",
+        "volunteer__first_name",
+        "volunteer__last_name",
+        "crop__crop_name",
+        "notes",
+    )
+
+    # NEW: Expose the auto-generated timestamp
+    readonly_fields = ("created_at",)
