@@ -20,7 +20,7 @@ class LoginActionTests(TestCase):
         )
         # Create the bridge!
         FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True)
-        
+
         self.login_url = reverse("login")
 
     def test_successful_login_redirects(self):
@@ -49,7 +49,7 @@ class ProfileViewsTests(TestCase):
             password="testpass123",
         )
         FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True)
-        
+
         # Force the test client to log in
         self.client.force_login(self.user)
 

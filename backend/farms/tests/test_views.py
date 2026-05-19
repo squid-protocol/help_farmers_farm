@@ -20,14 +20,18 @@ class SecurityIDORTests(TestCase):
             password="secure",
             role="farm_manager",
         )
-        FarmMembership.objects.create(user=self.manager_a, farm=self.farm_a, is_approved=True)
+        FarmMembership.objects.create(
+            user=self.manager_a, farm=self.farm_a, is_approved=True
+        )
 
         self.volunteer_a = User.objects.create_user(
             username="vol_a",
             email="vol_a@example.com",
             password="secure",
         )
-        FarmMembership.objects.create(user=self.volunteer_a, farm=self.farm_a, is_approved=True)
+        FarmMembership.objects.create(
+            user=self.volunteer_a, farm=self.farm_a, is_approved=True
+        )
 
         # 2. Build Farm B (The Rivals)
         self.farm_b = Farm.objects.create(name="Rival Valley Farms")
@@ -36,7 +40,9 @@ class SecurityIDORTests(TestCase):
             email="vol_b@example.com",
             password="secure",
         )
-        FarmMembership.objects.create(user=self.volunteer_b, farm=self.farm_b, is_approved=True)
+        FarmMembership.objects.create(
+            user=self.volunteer_b, farm=self.farm_b, is_approved=True
+        )
 
     def test_manager_can_view_own_volunteer(self):
         self.client.force_login(self.manager_a)
@@ -48,7 +54,7 @@ class SecurityIDORTests(TestCase):
         self.client.force_login(self.manager_a)
         url = reverse("volunteer_detail", args=[self.volunteer_b.id])
         response = self.client.get(url)
-        
+
         # THE FIX: Expect a 403 Forbidden instead of a 404 Not Found
         self.assertEqual(response.status_code, 403)
 
@@ -69,7 +75,9 @@ class SecurityIDORTests(TestCase):
             password="secure",
             role="farm_manager",
         )
-        FarmMembership.objects.create(user=manager_a2, farm=self.farm_a, is_approved=True)
+        FarmMembership.objects.create(
+            user=manager_a2, farm=self.farm_a, is_approved=True
+        )
 
         self.client.force_login(self.manager_a)
         url = reverse("toggle_user_status", args=[manager_a2.id])

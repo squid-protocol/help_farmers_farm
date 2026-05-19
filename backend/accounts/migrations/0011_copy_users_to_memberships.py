@@ -2,11 +2,12 @@
 
 from django.db import migrations
 
+
 def move_users_to_memberships(apps, schema_editor):
-    # We use 'apps.get_model' to get the exact historical version of the models 
+    # We use 'apps.get_model' to get the exact historical version of the models
     # as they exist at this exact moment in the migration timeline.
-    CustomUser = apps.get_model('accounts', 'CustomUser')
-    FarmMembership = apps.get_model('accounts', 'FarmMembership')
+    CustomUser = apps.get_model("accounts", "CustomUser")
+    FarmMembership = apps.get_model("accounts", "FarmMembership")
 
     # Find all users who are currently attached to a farm
     users_with_farms = CustomUser.objects.filter(farm__isnull=False)
@@ -16,9 +17,10 @@ def move_users_to_memberships(apps, schema_editor):
         FarmMembership.objects.create(
             user=user,
             farm=user.farm,
-            is_approved=True, # Since they are already active, pre-approve them!
-            agreed_to_waiver=True # Grandfather them in so they don't get blocked
+            is_approved=True,  # Since they are already active, pre-approve them!
+            agreed_to_waiver=True,  # Grandfather them in so they don't get blocked
         )
+
 
 class Migration(migrations.Migration):
 

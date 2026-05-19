@@ -32,6 +32,7 @@ class CustomUser(AbstractUser):
         """Returns the work commitment from their first approved membership."""
         membership = self.memberships.filter(is_approved=True).first()
         return membership.work_commitment if membership else None
+
     # -----------------------------------------------------------------------------
 
     def __str__(self):
@@ -39,9 +40,11 @@ class CustomUser(AbstractUser):
 
 
 class FarmMembership(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="memberships")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="memberships"
+    )
     farm = models.ForeignKey(Farm, on_delete=models.CASCADE, related_name="memberships")
-    
+
     # NEW: Moved work_commitment to the bridge table!
     work_commitment = models.ForeignKey(
         "farms.WorkCommitment",
@@ -50,15 +53,15 @@ class FarmMembership(models.Model):
         blank=True,
         related_name="memberships",
     )
-    
+
     custom_answers = models.JSONField(default=dict, blank=True)
     agreed_to_waiver = models.BooleanField(default=False)
     digital_signature = models.CharField(max_length=255, null=True, blank=True)
     signed_at = models.DateTimeField(null=True, blank=True)
     is_approved = models.BooleanField(default=False)
-    
+
     class Meta:
-        unique_together = ('user', 'farm')
+        unique_together = ("user", "farm")
 
     def __str__(self):
         return f"{self.user.username} - {self.farm.name} Onboarding"
