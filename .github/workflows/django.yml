@@ -14,11 +14,12 @@ jobs:
     # 2. THE DATABASE: Spin up a temporary PostgreSQL server just for this test run
     services:
       postgres:
-        image: postgres:15
+        image: postgres:14 # (or whatever version you are using)
         env:
           POSTGRES_DB: farm_logs
-          POSTGRES_USER: farm_admin
-          POSTGRES_PASSWORD: your_secure_password
+          POSTGRES_USER: farm_user
+          # THE FIX: Hardcode a fake password just for the temporary test container
+          POSTGRES_PASSWORD: super_secret_test_password
         ports:
           - 5432:5432
         options: >-
