@@ -12,12 +12,11 @@ jobs:
 
     services:
       postgres:
-        image: postgres:15
+        image: postgres:14
         env:
           POSTGRES_DB: farm_logs
-          POSTGRES_USER: farm_admin
-          # THE FIX: Pull the password securely from GitHub Secrets
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_USER: farm_user
+          POSTGRES_PASSWORD: super_secret_test_password
         ports:
           - 5432:5432
         options: >-
@@ -28,10 +27,10 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Set up Python 3.12
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: "3.12"
         cache: 'pip'
@@ -49,10 +48,10 @@ jobs:
         flake8 .
 
     - name: Run Tests
-      # THE FIX: Pass the secrets into the testing environment so Django can boot
       env:
-        SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
-        DATABASE_URL: postgres://farm_admin:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/farm_logs
+        # Hardcoded testing values so CI can run perfectly without needing Secrets
+        SECRET_KEY: fake_testing_secret_key_123
+        DATABASE_URL: postgres://farm_user:super_secret_test_password@localhost:5432/farm_logs
         DEBUG: "False"
       run: |
         cd backend
