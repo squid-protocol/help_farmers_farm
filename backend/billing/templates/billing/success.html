@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-3xl mx-auto py-20 text-center">
+    <div class="text-7xl mb-6">🎉</div>
+    <h1 class="text-4xl font-extrabold text-gray-900 mb-4">Payment Successful!</h1>
+    <p class="text-xl text-gray-600 mb-8">Thank you for subscribing to HelpFarmers. Your farm's account has been upgraded, and your receipt is on its way to your inbox.</p>
+    <a href="{% url 'manager_dashboard' %}" class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-8 rounded-xl shadow transition">Go to Manager Command Center</a>
+</div>
+{% endblock %}
