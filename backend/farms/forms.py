@@ -54,14 +54,12 @@ class VolunteerCreationForm(forms.ModelForm):
             "last_name",
             "email",
             "phone_number",
-            "legacy_years_volunteered",  # <-- ADDED
-            "work_commitment",
+            "legacy_years_volunteered",
             "role",
         ]
         widgets = {
             "username": forms.TextInput(attrs={"autocomplete": "off"}),
             "email": forms.EmailInput(attrs={"autocomplete": "off"}),
-            # Add a nice placeholder so managers know what this is
             "legacy_years_volunteered": forms.NumberInput(
                 attrs={"placeholder": "e.g., 5"}
             ),
@@ -73,8 +71,7 @@ class VolunteerCreationForm(forms.ModelForm):
         "last_name",
         "email",
         "phone_number",
-        "legacy_years_volunteered",  # <-- ADDED
-        "work_commitment",
+        "legacy_years_volunteered",
         "role",
         "password",
     ]
@@ -84,11 +81,6 @@ class VolunteerCreationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         if self.request_user:
-            if self.request_user.farm:
-                self.fields["work_commitment"].queryset = WorkCommitment.objects.filter(
-                    farm=self.request_user.farm
-                )
-
             if (
                 not self.request_user.is_staff
                 and self.request_user.role == "farm_manager"
@@ -100,7 +92,6 @@ class VolunteerCreationForm(forms.ModelForm):
                 ]
 
 
-# --- THE MISSING FORM: For inline editing existing users ---
 class VolunteerEditForm(forms.ModelForm):
     class Meta:
         model = User
@@ -110,7 +101,6 @@ class VolunteerEditForm(forms.ModelForm):
             "last_name",
             "email",
             "role",
-            "work_commitment",
             "is_active",
         ]
 
@@ -119,12 +109,6 @@ class VolunteerEditForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         if self.request_user:
-            # Only show commitments that belong to this specific farm
-            if self.request_user.farm:
-                self.fields["work_commitment"].queryset = WorkCommitment.objects.filter(
-                    farm=self.request_user.farm
-                )
-
             # Prevent farm managers from granting account_manager privileges
             if (
                 not self.request_user.is_staff
