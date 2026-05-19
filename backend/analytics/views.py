@@ -9,7 +9,7 @@ from logs.models import LogEntry
 
 @login_required
 def get_impact_chart(request):
-    farm = request.user.farm
+    farm = request.active_farm
     year = request.GET.get("year", "all")
 
     # --- PART 1: THE GLOBAL PROGRESS BAR DATA ---
@@ -164,7 +164,7 @@ def get_impact_chart(request):
 
 @login_required
 def get_activity_heatmap(request):
-    farm = request.user.farm
+    farm = request.active_farm
     year = request.GET.get("year", "all")
 
     # 1. FETCH DATA
@@ -333,7 +333,7 @@ def get_activity_heatmap(request):
 
 @login_required
 def get_term_heatmap(request):
-    farm = request.user.farm
+    farm = request.active_farm
     year = request.GET.get("year", "all")
 
     # 1. FETCH DATA
@@ -479,7 +479,7 @@ def get_term_heatmap(request):
 
 @login_required
 def get_seasonal_timeline(request):
-    farm = request.user.farm
+    farm = request.active_farm
     year = request.GET.get("year", "all")
 
     # 1. FETCH DATA

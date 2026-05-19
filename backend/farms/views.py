@@ -32,7 +32,7 @@ def is_manager(user):
 @login_required
 @user_passes_test(is_manager, login_url="/log-hours/")
 def manager_dashboard(request):
-    my_farm = request.user.farm
+    my_farm = request.active_farm
 
     crop_form = CropForm()
     volunteer_form = VolunteerCreationForm(request_user=request.user)
@@ -149,14 +149,14 @@ def volunteer_detail_view(request, volunteer_id):
 
     # Check if they have a membership to the manager's farm
     if not FarmMembership.objects.filter(
-        user=volunteer, farm=request.user.farm
+        user=volunteer, farm=request.active_farm
     ).exists():
         if not request.user.is_staff:
             raise PermissionDenied(
                 "You do not have permission to view volunteers outside your farm."
             )
 
-    user_logs = LogEntry.objects.filter(volunteer=volunteer, farm=request.user.farm)
+    user_logs = LogEntry.objects.filter(volunteer=volunteer, farm=request.active_farm)
     total_hours = (
         user_logs.aggregate(Sum("duration_hours"))["duration_hours__sum"] or 0.0
     )
@@ -172,7 +172,7 @@ def volunteer_detail_view(request, volunteer_id):
 
 @login_required
 def farm_impact_view(request):
-    farm = request.user.farm
+    farm = request.active_farm
     crops = Crop.objects.filter(farm=farm, is_active=True).order_by("crop_name")
     return render(request, "farms/farm_impact.html", {"farm": farm, "crops": crops})
 
@@ -180,7 +180,7 @@ def farm_impact_view(request):
 @login_required
 @user_passes_test(is_manager, login_url="/log-hours/")
 def progress_report_view(request):
-    farm = request.user.farm
+    farm = request.active_farm
     today = timezone.now().date()
 
     try:
@@ -252,7 +252,7 @@ def toggle_user_status_view(request, user_id):
     user_to_toggle = get_object_or_404(User, id=user_id)
 
     if not FarmMembership.objects.filter(
-        user=user_to_toggle, farm=request.user.farm
+        user=user_to_toggle, farm=request.active_farm
     ).exists():
         if not request.user.is_staff:
             raise PermissionDenied("Cannot modify users outside your farm.")
@@ -277,7 +277,7 @@ def toggle_user_status_view(request, user_id):
 @require_POST
 @user_passes_test(is_manager, login_url="/log-hours/")
 def toggle_crop_status_view(request, crop_id):
-    crop_to_toggle = get_object_or_404(Crop, id=crop_id, farm=request.user.farm)
+    crop_to_toggle = get_object_or_404(Crop, id=crop_id, farm=request.active_farm)
     crop_to_toggle.is_active = not crop_to_toggle.is_active
     crop_to_toggle.save()
     return redirect("manager_dashboard")
@@ -286,7 +286,7 @@ def toggle_crop_status_view(request, crop_id):
 @login_required
 @user_passes_test(is_manager, login_url="/log-hours/")
 def edit_crop_view(request, crop_id):
-    crop = get_object_or_404(Crop, id=crop_id, farm=request.user.farm)
+    crop = get_object_or_404(Crop, id=crop_id, farm=request.active_farm)
     if request.method == "POST":
         form = CropForm(request.POST, instance=crop)
         if form.is_valid():
@@ -308,7 +308,7 @@ def edit_volunteer_view(request, volunteer_id):
     volunteer = get_object_or_404(User, id=volunteer_id)
 
     if not FarmMembership.objects.filter(
-        user=volunteer, farm=request.user.farm
+        user=volunteer, farm=request.active_farm
     ).exists():
         if not request.user.is_staff:
             raise PermissionDenied("Cannot edit users outside your farm.")
@@ -341,7 +341,7 @@ def edit_volunteer_view(request, volunteer_id):
 @user_passes_test(is_manager, login_url="/log-hours/")
 def edit_commitment_view(request, commitment_id):
     commitment = get_object_or_404(
-        WorkCommitment, id=commitment_id, farm=request.user.farm
+        WorkCommitment, id=commitment_id, farm=request.active_farm
     )
     if request.method == "POST":
         form = WorkCommitmentForm(request.POST, instance=commitment)
@@ -356,3 +356,24 @@ def edit_commitment_view(request, commitment_id):
         "farms/edit_item.html",
         {"form": form, "title": f"Edit Commitment: {commitment.name}"},
     )
+
+
+@login_required
+@require_POST
+def switch_active_farm(request):
+    farm_id = request.POST.get("farm_id")
+    if farm_id:
+        # Security check: Prove they are actually a member before switching
+        from accounts.models import FarmMembership
+
+        is_member = FarmMembership.objects.filter(
+            user=request.user, farm_id=farm_id, is_approved=True
+        ).exists()
+
+        if is_member:
+            request.session["active_farm_id"] = int(farm_id)
+            messages.success(request, "Switched workspaces successfully.")
+
+    # Send them back to the exact page they were just looking at
+    next_url = request.POST.get("next", "/log-hours/")
+    return redirect(next_url)
