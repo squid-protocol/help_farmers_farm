@@ -94,7 +94,6 @@ def manager_dashboard(request):
     commitments = WorkCommitment.objects.filter(farm=my_farm)
 
     active_crop_count = crops.filter(is_active=True).count()
-    active_vols = [v for v in volunteers if v.is_active and v.role != "friend"]
 
     commitment_summary = []
     for c in commitments:
