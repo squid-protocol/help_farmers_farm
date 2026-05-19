@@ -15,16 +15,16 @@ from .forms import (
     VolunteerCreationForm,
     WorkCommitmentForm,
     FarmSettingsForm,
-    VolunteerEditForm,  # <-- ADDED FOR INLINE EDITING
+    VolunteerEditForm,
 )
 
 # --- Other App Imports ---
 from logs.models import LogEntry
+from accounts.models import FarmMembership  # <-- ADDED IMPORT
 
 User = get_user_model()
 
 
-# --- Security Check ---
 def is_manager(user):
     return user.is_staff or user.role in ["account_manager", "farm_manager"]
 
@@ -34,12 +34,9 @@ def is_manager(user):
 def manager_dashboard(request):
     my_farm = request.user.farm
 
-    # Instantiate all forms
     crop_form = CropForm()
     volunteer_form = VolunteerCreationForm(request_user=request.user)
     commitment_form = WorkCommitmentForm()
-
-    # The Farm Settings form (pre-filled with the current farm's data)
     farm_form = FarmSettingsForm(instance=my_farm)
 
     if request.method == "POST":
@@ -58,9 +55,14 @@ def manager_dashboard(request):
             )
             if volunteer_form.is_valid():
                 new_user = volunteer_form.save(commit=False)
-                new_user.farm = my_farm
                 new_user.set_password(volunteer_form.cleaned_data["password"])
                 new_user.save()
+
+                # --- NEW: Create the Bridge Record! ---
+                FarmMembership.objects.create(
+                    user=new_user, farm=my_farm, is_approved=True, agreed_to_waiver=True
+                )
+
                 messages.success(request, "Volunteer created successfully!")
                 return redirect("manager_dashboard")
 
@@ -80,35 +82,41 @@ def manager_dashboard(request):
                 messages.success(request, "Farm settings updated successfully!")
                 return redirect("manager_dashboard")
 
-    # Fetch all the data to display in the lists
+    # Fetch data using the membership bridge
     crops = Crop.objects.filter(farm=my_farm).order_by("-is_active", "crop_name")
-    volunteers = User.objects.filter(farm=my_farm).order_by("role", "username")
+
+    # We now get volunteers by looking through the FarmMembership bridge
+    memberships = FarmMembership.objects.filter(farm=my_farm).select_related(
+        "user", "work_commitment"
+    )
+    volunteers = [m.user for m in memberships]
+
     commitments = WorkCommitment.objects.filter(farm=my_farm)
 
-    # --- NEW: Summary Statistics ---
     active_crop_count = crops.filter(is_active=True).count()
-
-    # Filter to only count active workers (exclude legacy 'friend' accounts)
-    active_vols = volunteers.filter(is_active=True).exclude(role="friend")
 
     commitment_summary = []
     for c in commitments:
         commitment_summary.append(
             {
                 "name": c.name,
-                "symbol": getattr(
-                    c, "symbol", "⏱️"
-                ),  # Safely grab the symbol if it exists
-                "count": active_vols.filter(work_commitment=c).count(),
+                "symbol": getattr(c, "symbol", "⏱️"),
+                "count": sum(
+                    1
+                    for m in memberships
+                    if m.work_commitment == c
+                    and m.user.is_active
+                    and m.user.role != "friend"
+                ),
             }
         )
 
-    # Count the folks who don't have a specific commitment tier yet
-    standard_vol_count = active_vols.filter(work_commitment__isnull=True).count()
+    standard_vol_count = sum(
+        1
+        for m in memberships
+        if m.work_commitment is None and m.user.is_active and m.user.role != "friend"
+    )
 
-    # --- NEW: Fetch Volunteer Notes ---
-    # Grab all logs for this farm that have notes, newest first.
-    # select_related optimizes the database hits for the template.
     recent_notes = (
         LogEntry.objects.filter(farm=my_farm)
         .exclude(notes__isnull=True)
@@ -129,31 +137,29 @@ def manager_dashboard(request):
         "active_crop_count": active_crop_count,
         "commitment_summary": commitment_summary,
         "standard_vol_count": standard_vol_count,
-        "recent_notes": recent_notes,  # <-- NEW
+        "recent_notes": recent_notes,
     }
     return render(request, "farms/manager_dashboard.html", context)
 
 
-# --- The Volunteer Detail View ---
 @login_required
 @user_passes_test(is_manager, login_url="/log-hours/")
 def volunteer_detail_view(request, volunteer_id):
-    # SECURE: Forces the requested user to belong to the manager's farm
-    volunteer = get_object_or_404(User, id=volunteer_id, farm=request.user.farm)
+    volunteer = get_object_or_404(User, id=volunteer_id)
 
-    # SECURITY: Ensure the manager is looking at a volunteer from their OWN farm
-    if not request.user.is_staff and volunteer.farm != request.user.farm:
-        raise PermissionDenied(
-            "You do not have permission to view volunteers outside your farm."
-        )
+    # Check if they have a membership to the manager's farm
+    if not FarmMembership.objects.filter(
+        user=volunteer, farm=request.user.farm
+    ).exists():
+        if not request.user.is_staff:
+            raise PermissionDenied(
+                "You do not have permission to view volunteers outside your farm."
+            )
 
-    # Fetch logs and crunch the numbers
-    user_logs = LogEntry.objects.filter(volunteer=volunteer)
+    user_logs = LogEntry.objects.filter(volunteer=volunteer, farm=request.user.farm)
     total_hours = (
         user_logs.aggregate(Sum("duration_hours"))["duration_hours__sum"] or 0.0
     )
-
-    # Grab their 15 most recent shifts so the manager has good visibility
     recent_logs = user_logs.order_by("-date_logged")[:15]
 
     context = {
@@ -167,55 +173,48 @@ def volunteer_detail_view(request, volunteer_id):
 @login_required
 def farm_impact_view(request):
     farm = request.user.farm
-    # Just grab the active crops so we can populate the dropdown menu
     crops = Crop.objects.filter(farm=farm, is_active=True).order_by("crop_name")
-
     return render(request, "farms/farm_impact.html", {"farm": farm, "crops": crops})
 
 
-# --- Volunteer Progress Report ---
-# --- Volunteer Progress Report ---
 @login_required
 @user_passes_test(is_manager, login_url="/log-hours/")
 def progress_report_view(request):
     farm = request.user.farm
     today = timezone.now().date()
 
-    # Check if they are passing a specific year in the URL (future proofing), otherwise default to current
     try:
         current_year = int(request.GET.get("year", today.year))
     except ValueError:
         current_year = today.year
 
-    # --- NEW: The Global Pacing Engine ---
     expected_pct = 0.0
     if farm.season_start and farm.season_end:
         if current_year < today.year:
-            # Looking at a past year? The season is 100% over.
             expected_pct = 100.0
         elif current_year == today.year:
-            # Current year: Calculate how many days into the season we are
             total_season_days = (farm.season_end - farm.season_start).days
-
             if total_season_days > 0:
                 days_elapsed = (today - farm.season_start).days
-                # Clamp it: 0 if before season starts, total_season_days if after it ends
                 days_elapsed = max(0, min(days_elapsed, total_season_days))
                 expected_pct = (days_elapsed / total_season_days) * 100.0
 
-    # Grab all active volunteers on this farm
-    volunteers = User.objects.filter(farm=farm).exclude(role="friend")
+    memberships = (
+        FarmMembership.objects.filter(farm=farm, user__is_active=True)
+        .exclude(user__role="friend")
+        .select_related("user", "work_commitment")
+    )
     grouped_data = {}
 
-    for vol in volunteers:
-        # Calculate their total hours for the year
-        logs = LogEntry.objects.filter(volunteer=vol, date_logged__year=current_year)
+    for mem in memberships:
+        vol = mem.user
+        logs = LogEntry.objects.filter(
+            volunteer=vol, date_logged__year=current_year, farm=farm
+        )
         total_hours = logs.aggregate(total=Sum("duration_hours"))["total"] or 0.0
 
-        target = vol.work_commitment.required_hours if vol.work_commitment else 0
+        target = mem.work_commitment.required_hours if mem.work_commitment else 0
         pct = min((total_hours / target) * 100, 100) if target > 0 else 0
-
-        # Determine if they are behind pace (used for coloring the UI)
         is_behind = pct < expected_pct if target > 0 else False
 
         vol_data = {
@@ -223,20 +222,17 @@ def progress_report_view(request):
             "total_hours": round(total_hours, 1),
             "target": target,
             "pct": round(pct, 0),
-            "is_behind": is_behind,  # Pass this flag to the template!
+            "is_behind": is_behind,
         }
 
-        # Use the commitment name as the group key, or 'Standard Volunteers'
         group_key = (
-            vol.work_commitment.name if vol.work_commitment else "Standard Volunteers"
+            mem.work_commitment.name if mem.work_commitment else "Standard Volunteers"
         )
 
         if group_key not in grouped_data:
             grouped_data[group_key] = []
-
         grouped_data[group_key].append(vol_data)
 
-    # Sort each group so the volunteers with the LOWEST progress are at the top
     for key in grouped_data:
         grouped_data[key].sort(key=lambda x: x["total_hours"])
 
@@ -244,23 +240,23 @@ def progress_report_view(request):
         "farm": farm,
         "current_year": current_year,
         "grouped_data": grouped_data,
-        "expected_pct": expected_pct,  # Pass the global pacing to the template
+        "expected_pct": expected_pct,
     }
     return render(request, "farms/progress_report.html", context)
 
 
-# --- User & Crop Soft Deletes (Toggles) ---
 @login_required
 @require_POST
 @user_passes_test(is_manager, login_url="/log-hours/")
 def toggle_user_status_view(request, user_id):
     user_to_toggle = get_object_or_404(User, id=user_id)
 
-    # RULE 1: Must be in the same farm
-    if not request.user.is_staff and user_to_toggle.farm != request.user.farm:
-        raise PermissionDenied("Cannot modify users outside your farm.")
+    if not FarmMembership.objects.filter(
+        user=user_to_toggle, farm=request.user.farm
+    ).exists():
+        if not request.user.is_staff:
+            raise PermissionDenied("Cannot modify users outside your farm.")
 
-    # RULE 2: Farm Managers cannot modify Account Managers or other Farm Managers
     if request.user.role == "farm_manager" and user_to_toggle.role in [
         "account_manager",
         "farm_manager",
@@ -269,11 +265,9 @@ def toggle_user_status_view(request, user_id):
             "Farm Managers do not have permission to modify other managers."
         )
 
-    # RULE 3: You can't deactivate yourself
     if request.user == user_to_toggle:
         raise PermissionDenied("You cannot deactivate yourself.")
 
-    # The Soft Delete / Restore
     user_to_toggle.is_active = not user_to_toggle.is_active
     user_to_toggle.save()
     return redirect("manager_dashboard")
@@ -284,13 +278,11 @@ def toggle_user_status_view(request, user_id):
 @user_passes_test(is_manager, login_url="/log-hours/")
 def toggle_crop_status_view(request, crop_id):
     crop_to_toggle = get_object_or_404(Crop, id=crop_id, farm=request.user.farm)
-
     crop_to_toggle.is_active = not crop_to_toggle.is_active
     crop_to_toggle.save()
     return redirect("manager_dashboard")
 
 
-# --- Inline Edit Views ---
 @login_required
 @user_passes_test(is_manager, login_url="/log-hours/")
 def edit_crop_view(request, crop_id):
@@ -313,9 +305,14 @@ def edit_crop_view(request, crop_id):
 @login_required
 @user_passes_test(is_manager, login_url="/log-hours/")
 def edit_volunteer_view(request, volunteer_id):
-    volunteer = get_object_or_404(User, id=volunteer_id, farm=request.user.farm)
+    volunteer = get_object_or_404(User, id=volunteer_id)
 
-    # Prevent editing of higher-tier admins
+    if not FarmMembership.objects.filter(
+        user=volunteer, farm=request.user.farm
+    ).exists():
+        if not request.user.is_staff:
+            raise PermissionDenied("Cannot edit users outside your farm.")
+
     if request.user.role == "farm_manager" and volunteer.role in [
         "account_manager",
         "farm_manager",

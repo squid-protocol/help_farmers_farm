@@ -2,6 +2,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from farms.models import Farm
+from accounts.models import FarmMembership
 
 User = get_user_model()
 
@@ -11,13 +12,15 @@ class LoginActionTests(TestCase):
         self.client = Client()
         self.farm = Farm.objects.create(name="Schuler Test Farm")
 
-        # THE FIX: Added an email to the test user
+        # Create user WITHOUT the farm keyword
         self.user = User.objects.create_user(
             username="test_volunteer",
             email="test_vol@example.com",
             password="my_secure_password123",
-            farm=self.farm,
         )
+        # Create the bridge!
+        FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True)
+
         self.login_url = reverse("login")
 
     def test_successful_login_redirects(self):
@@ -40,14 +43,14 @@ class ProfileViewsTests(TestCase):
         self.client = Client()
         self.farm = Farm.objects.create(name="Test Farm")
 
-        # THE FIX: Added an email here too
         self.user = User.objects.create_user(
             username="profile_tester",
             email="profile_tester@example.com",
             password="testpass123",
-            farm=self.farm,
         )
-        # Force the test client to log in, bypassing Django Axes security checks
+        FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True)
+
+        # Force the test client to log in
         self.client.force_login(self.user)
 
     def test_profile_view_get(self):

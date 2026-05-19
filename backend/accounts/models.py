@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.conf import settings
 from farms.models import Farm
 
 
@@ -12,32 +13,55 @@ class CustomUser(AbstractUser):
         ("friend", "Friend (Read-Only/Legacy)"),
     ]
 
-    # Assign the role field. Defaults to 'volunteer' when a new person signs up.
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="volunteer")
-
-    # The existing multi-tenant link
-    farm = models.ForeignKey(
-        Farm, on_delete=models.CASCADE, null=True, blank=True, related_name="volunteers"
-    )
-
-    # Allow users to upload avatars
     avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
-
-    # Optional Phone Number
     phone_number = models.CharField(max_length=20, null=True, blank=True)
-
-    # --- NEW: The Permanent Offset ---
     legacy_years_volunteered = models.IntegerField(
         default=0, help_text="Number of years volunteered prior to using this system."
     )
 
+    # --- THE SHIMS (Tricks the app into working without rewriting all templates) ---
+    @property
+    def farm(self):
+        """Returns the farm from their first approved membership."""
+        membership = self.memberships.filter(is_approved=True).first()
+        return membership.farm if membership else None
+
+    @property
+    def work_commitment(self):
+        """Returns the work commitment from their first approved membership."""
+        membership = self.memberships.filter(is_approved=True).first()
+        return membership.work_commitment if membership else None
+
+    # -----------------------------------------------------------------------------
+
+    def __str__(self):
+        return f"{self.username} ({self.get_role_display()})"
+
+
+class FarmMembership(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="memberships"
+    )
+    farm = models.ForeignKey(Farm, on_delete=models.CASCADE, related_name="memberships")
+
+    # NEW: Moved work_commitment to the bridge table!
     work_commitment = models.ForeignKey(
         "farms.WorkCommitment",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="volunteers",
+        related_name="memberships",
     )
 
+    custom_answers = models.JSONField(default=dict, blank=True)
+    agreed_to_waiver = models.BooleanField(default=False)
+    digital_signature = models.CharField(max_length=255, null=True, blank=True)
+    signed_at = models.DateTimeField(null=True, blank=True)
+    is_approved = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ("user", "farm")
+
     def __str__(self):
-        return f"{self.username} ({self.get_role_display()})"
+        return f"{self.user.username} - {self.farm.name} Onboarding"

@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
-from accounts.models import CustomUser
+from accounts.models import CustomUser, FarmMembership
 from farms.models import Farm, Crop
 from logs.models import LogEntry
 
@@ -11,13 +11,12 @@ class AnalyticsViewsTest(TestCase):
         # 1. Create a dummy farm and user
         self.farm = Farm.objects.create(name="Test Farm")
 
-        # THE FIX: Added an email to the test user
         self.user = CustomUser.objects.create_user(
             username="testuser",
             email="analytics_tester@example.com",
             password="testpass",
-            farm=self.farm,
         )
+        FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True)
 
         # 2. Create a dummy crop
         self.crop = Crop.objects.create(
