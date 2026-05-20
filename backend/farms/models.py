@@ -17,21 +17,24 @@ class Farm(models.Model):
 
     # --- BILLING & SUBSCRIPTIONS ---
     is_paid = models.BooleanField(default=False)
+    is_comped = models.BooleanField(
+        default=False, help_text="Grants lifetime free access"
+    )
     subscription_tier = models.CharField(max_length=50, blank=True, null=True)
     stripe_customer_id = models.CharField(max_length=255, blank=True, null=True)
 
     # --- TRIAL LOGIC ---
     @property
     def trial_days_remaining(self):
-        """Calculates days left in the 60-day trial."""
-        expiration_date = self.created_at + timedelta(days=60)
+        """Calculates days left in the 90-day trial."""
+        expiration_date = self.created_at + timedelta(days=90)
         remaining = (expiration_date - timezone.now()).days
         return max(0, remaining)
 
     @property
     def is_active_account(self):
-        """Returns True if they paid OR if they are still in the 60-day trial."""
-        return self.is_paid or self.trial_days_remaining > 0
+        """Returns True if they paid, are comped, or are still in the 90-day trial."""
+        return self.is_paid or self.is_comped or self.trial_days_remaining > 0
 
     def __str__(self):
         return self.name

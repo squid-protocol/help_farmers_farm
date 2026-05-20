@@ -33,6 +33,7 @@ def create_checkout_session(request):
                     },
                 ],
                 mode="subscription",
+                allow_promotion_codes=True,
                 client_reference_id=str(request.user.farm.id),
                 success_url=(
                     request.build_absolute_uri(reverse("billing_success"))
