@@ -78,7 +78,7 @@ def manager_dashboard(request):
                     request,
                     f"🛑 Limit Reached: The {tier.title()} plan allows a maximum of {limit} "
                     "active volunteers. Please archive old volunteers or upgrade your "
-                    "plan in the Billing portal."
+                    "plan in the Billing portal.",
                 )
                 return redirect("manager_dashboard")
 
