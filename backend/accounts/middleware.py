@@ -81,9 +81,16 @@ class RequireWaiverMiddleware:
 
                 # 3. If they are missing any signatures, drop the gate!
                 if len(signed_form_ids) < valid_forms.count():
-                    allowed_paths = [reverse("sign_waiver"), reverse("logout")]
+                    # We MUST let them access their profile to fill out missing legal info,
+                    # and allow the cryptographic email verification link to pass through!
+                    allowed_paths = [
+                        reverse("sign_waiver"), 
+                        reverse("logout"),
+                        reverse("profile"),
+                        reverse("upload_avatar"),
+                    ]
 
-                    if request.path not in allowed_paths:
+                    if request.path not in allowed_paths and not request.path.startswith('/accounts/verify-email/'):
                         return redirect("sign_waiver")
 
         return self.get_response(request)

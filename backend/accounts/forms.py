@@ -8,12 +8,14 @@ User = get_user_model()
 class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "email", "phone_number", "username"]
+        fields = ["first_name", "last_name", "email", "phone_number", "address", "username"]
         widgets = {
             "phone_number": forms.TextInput(attrs={"placeholder": "(555) 123-4567"}),
+            "address": forms.Textarea(attrs={"rows": 2, "placeholder": "123 Harvest Lane\nFarmingville, MI 48103"}),
         }
         help_texts = {
             "phone_number": "Format: (555) 123-4567 or +15551234567",
+            "address": "We require a physical address to legally validate your electronic signature.",
         }
 
 
