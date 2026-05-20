@@ -2,14 +2,7 @@ import os
 
 # Configuration
 # The 6 distinct SaaS subsystems we want to generate separate markdown files for.
-SUBSYSTEMS = {
-    "accounts",
-    "analytics",
-    "billing",
-    "farms",
-    "helpfarmers",
-    "logs"
-}
+SUBSYSTEMS = {"accounts", "analytics", "billing", "farms", "helpfarmers", "logs"}
 
 # Folders we want to completely skip
 IGNORE_DIRS = {
@@ -33,40 +26,43 @@ IGNORE_FILES = {
     "final_schuler_data.json",
 }
 
+
 def get_language(filename):
     """Maps file extensions to markdown code block languages."""
-    ext = filename.split('.')[-1] if '.' in filename else ''
+    ext = filename.split(".")[-1] if "." in filename else ""
     mapping = {
-        'py': 'python',
-        'html': 'html',
-        'js': 'javascript',
-        'css': 'css',
-        'md': 'markdown',
-        'sh': 'bash'
+        "py": "python",
+        "html": "html",
+        "js": "javascript",
+        "css": "css",
+        "md": "markdown",
+        "sh": "bash",
     }
-    return mapping.get(ext, 'text')
+    return mapping.get(ext, "text")
+
 
 def get_subsystem_name(root_path):
     """Extracts the top-level folder name to determine the subsystem routing."""
     # Strip the leading './' from os.walk paths
-    clean_path = root_path.removeprefix('.').removeprefix(os.sep)
-    
+    clean_path = root_path.removeprefix(".").removeprefix(os.sep)
+
     if not clean_path:
-        return "core" # Files sitting in the very root directory
-    
+        return "core"  # Files sitting in the very root directory
+
     top_folder = clean_path.split(os.sep)[0]
     if top_folder in SUBSYSTEMS:
         return top_folder
-        
-    return "core" # Catch-all for anything outside the 6 main apps
+
+    return "core"  # Catch-all for anything outside the 6 main apps
+
 
 def generate_context():
     print("🔍 Scanning directory and splitting into subsystems...")
-    
+
     # Dictionary to store file contents grouped by subsystem
     subsystem_contents = {subsystem: [] for subsystem in SUBSYSTEMS}
     subsystem_contents["core"] = []
-    
+
     files_added = 0
 
     # Walk through the directory tree
@@ -79,7 +75,7 @@ def generate_context():
             if (
                 any(file.endswith(ext) for ext in IGNORE_EXTS)
                 or file in IGNORE_FILES
-                or file.endswith("_context.md") 
+                or file.endswith("_context.md")
             ):
                 continue
 
@@ -92,7 +88,13 @@ def generate_context():
                     content = infile.read()
 
                 # Format as clean Markdown
-                formatted_content = f"## FILE: `{file_path.removeprefix('./')}`\n\n```{language}\n{content}\n```\n\n---\n\n"
+                # Format as clean Markdown
+                formatted_content = (
+                    f"## FILE: `{file_path.removeprefix('./')}`\n\n"
+                    f"```{language}\n"
+                    f"{content}\n"
+                    f"```\n\n---\n\n"
+                )
                 subsystem_contents[subsystem].append(formatted_content)
 
                 files_added += 1
@@ -102,16 +104,17 @@ def generate_context():
     # Write out the separated markdown files
     for subsystem, contents in subsystem_contents.items():
         if not contents:
-            continue # Skip creating empty files
-        
+            continue  # Skip creating empty files
+
         output_filename = f"{subsystem}_context.md"
         with open(output_filename, "w", encoding="utf-8") as outfile:
             outfile.write(f"# Subsystem: {subsystem.title()}\n\n")
             outfile.writelines(contents)
-        
+
         print(f"📄 Created {output_filename} with {len(contents)} files.")
 
     print(f"\n✅ Success! Bundled {files_added} total files.")
+
 
 if __name__ == "__main__":
     generate_context()
