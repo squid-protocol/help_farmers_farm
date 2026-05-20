@@ -84,9 +84,20 @@ class FormSignature(models.Model):
     digital_signature = models.CharField(max_length=255)
     signed_at = models.DateTimeField(auto_now_add=True)
 
+    # --- NEW: Guardian Signature Support ---
+    is_guardian_signature = models.BooleanField(default=False)
+    guardian_relationship = models.CharField(
+        max_length=100, 
+        null=True, 
+        blank=True,
+        help_text="e.g., Parent, Legal Guardian"
+    )
+
     class Meta:
         # Prevents a user from signing the exact same form twice
         unique_together = ("user", "form")
 
     def __str__(self):
+        if self.is_guardian_signature:
+            return f"{self.digital_signature} (Guardian) signed {self.form.name} for {self.user.username}"
         return f"{self.user.username} signed {self.form.name}"
