@@ -284,6 +284,7 @@ class ManagerDashboardActionTests(TestCase):
         )
 
     def test_manager_can_update_farm_settings(self):
+        """Ensure settings save, and phone numbers are normalized."""
         self.client.force_login(self.manager)
 
         response = self.client.post(
@@ -291,14 +292,36 @@ class ManagerDashboardActionTests(TestCase):
             {
                 "submit_farm_settings": "true",
                 "name": "Updated Farm Name",
+                "phone_number": "(201) 555-0123",  # A structurally valid US number
                 "season_start": "2026-05-01",
                 "season_end": "2026-10-31",
             },
         )
 
+        # The form should succeed and redirect (302)
         self.assertEqual(response.status_code, 302)
         self.farm.refresh_from_db()
         self.assertEqual(self.farm.name, "Updated Farm Name")
+        # Prove the library converted it to the standard E.164 format!
+        self.assertEqual(str(self.farm.phone_number), "+12015550123")
+
+    def test_manager_cannot_save_invalid_phone_number(self):
+        """Ensure the form rejects garbage data in the phone field."""
+        self.client.force_login(self.manager)
+
+        response = self.client.post(
+            self.dashboard_url,
+            {
+                "submit_farm_settings": "true",
+                "name": "Updated Farm Name",
+                "phone_number": "Call me later!",  # Complete garbage
+            },
+        )
+
+        # The form should fail validation and re-render the page (HTTP 200), NOT redirect (HTTP 302)
+        self.assertEqual(response.status_code, 200)
+        # Bulletproof check: Ask the form itself if it rejected the phone number
+        self.assertIn("phone_number", response.context["farm_form"].errors)
 
     def test_farm_manager_role_choices_are_restricted(self):
         """Ensure Farm Managers cannot elevate privileges to admin levels."""

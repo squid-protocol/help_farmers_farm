@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.conf import settings
 import uuid
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 class Farm(models.Model):
@@ -15,7 +16,7 @@ class Farm(models.Model):
 
     # --- NEW: General Farm Info ---
     address = models.TextField(blank=True, null=True)
-    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    phone_number = PhoneNumberField(blank=True, null=True)
     contact_email = models.EmailField(blank=True, null=True)
 
     # --- Season Boundaries ---

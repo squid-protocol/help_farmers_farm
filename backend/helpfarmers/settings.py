@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "phonenumber_field",  # <-- Add this!
     "accounts",  # <-- Our custom user app
     "farms",
     "logs",
@@ -221,3 +222,6 @@ sentry_sdk.init(
 STRIPE_PUBLISHABLE_KEY = env("STRIPE_PUBLISHABLE_KEY", default="")
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
 STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
+
+# --- PHONE NUMBER FORMATTING ---
+PHONENUMBER_DEFAULT_REGION = "US"
