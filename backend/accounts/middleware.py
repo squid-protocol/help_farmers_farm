@@ -2,7 +2,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.conf import settings
 from django.utils import timezone
-from django.db.models import Q  # <-- Added the Q import here!
+from django.db.models import Q
 from accounts.models import FormSignature
 from farms.models import ComplianceForm
 
@@ -59,27 +59,35 @@ class RequireWaiverMiddleware:
             request.user.is_authenticated
             and hasattr(request, "active_farm")
             and request.active_farm
-            and request.user.role
-            != "friend"  # Legacy friends don't need to sign new waivers
         ):
+            farm = request.active_farm
+
+            # 1. Master Switch: Bypass the strict waiver engine for grandfathered/joint accounts
+            if farm.allows_joint_accounts:
+                return self.get_response(request)
+
+            # 2. Legacy friends don't need to sign new waivers
+            if request.user.role == "friend":
+                return self.get_response(request)
+
             today = timezone.now().date()
 
-            # 1. Fetch all unexpired, active forms for this farm
+            # 3. Fetch all unexpired, active forms for this farm
             # AND ensure it applies to THIS user (either 'all' or they are specifically targeted)
             valid_forms = (
-                ComplianceForm.objects.filter(farm=request.active_farm, is_active=True)
+                ComplianceForm.objects.filter(farm=farm, is_active=True)
                 .filter(Q(assignment_type="all") | Q(assigned_users=request.user))
                 .exclude(does_expire=True, expiration_date__lt=today)
                 .distinct()
             )
 
             if valid_forms.exists():
-                # 2. Find which ones the user has ALREADY signed
+                # 4. Find which ones the user has ALREADY signed
                 signed_form_ids = FormSignature.objects.filter(
                     user=request.user, form__in=valid_forms
                 ).values_list("form_id", flat=True)
 
-                # 3. If they are missing any signatures, drop the gate!
+                # 5. If they are missing any signatures, drop the gate!
                 if len(signed_form_ids) < valid_forms.count():
                     # We MUST let them access their profile to fill out missing legal info,
                     # and allow the cryptographic email verification link to pass through!

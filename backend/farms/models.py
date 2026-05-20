@@ -25,6 +25,12 @@ class Farm(models.Model):
 
     onboarding_schema = models.JSONField(default=list, blank=True)
 
+    # --- COMPLIANCE & LEGAL ---
+    allows_joint_accounts = models.BooleanField(
+        default=False,
+        help_text="Bypasses strict legal waiver enforcement to allow families to share a single login. Use with caution."
+    )
+
     # --- BILLING & SUBSCRIPTIONS ---
     is_paid = models.BooleanField(default=False)
     is_comped = models.BooleanField(
