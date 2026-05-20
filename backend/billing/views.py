@@ -40,7 +40,11 @@ def create_checkout_session(request):
                 ),
                 cancel_url=request.build_absolute_uri(reverse("pricing")),
             )
-            return redirect(checkout_session.url, code=303)
+
+            # The exact 303 redirect Stripe requires to safely route to their hosted checkout
+            response = redirect(checkout_session.url)
+            response.status_code = 303
+            return response
 
         except Exception as e:
             messages.error(
@@ -76,12 +80,17 @@ def customer_portal(request):
                 # Where Stripe should send them when they click "Return to App"
                 return_url=request.build_absolute_uri(reverse("manager_dashboard")),
             )
-            return redirect(portal_session.url, code=303)
+
+            # The exact 303 redirect Stripe requires
+            response = redirect(portal_session.url)
+            response.status_code = 303
+            return response
 
         except Exception as e:
             messages.error(request, f"Error connecting to billing portal: {str(e)}")
             return redirect("manager_dashboard")
 
+    # Fallback if someone tries to GET this URL directly instead of POSTing
     return redirect("manager_dashboard")
 
 
