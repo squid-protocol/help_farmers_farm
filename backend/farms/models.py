@@ -28,7 +28,10 @@ class Farm(models.Model):
     # --- COMPLIANCE & LEGAL ---
     allows_joint_accounts = models.BooleanField(
         default=False,
-        help_text="Bypasses strict legal waiver enforcement to allow families to share a single login. Use with caution."
+        help_text=(
+            "Bypasses strict legal waiver enforcement to allow families "
+            "to share a single login. Use with caution."
+        ),
     )
 
     # --- BILLING & SUBSCRIPTIONS ---

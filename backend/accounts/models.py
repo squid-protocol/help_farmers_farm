@@ -19,9 +19,11 @@ class CustomUser(AbstractUser):
 
     # THE FIX: Upgraded to strict E.164 validation
     phone_number = PhoneNumberField(blank=True, null=True)
-    
+
     # --- NEW: Physical Address for Legal Identity ---
-    address = models.TextField(blank=True, null=True, help_text="Required for legal waivers.")
+    address = models.TextField(
+        blank=True, null=True, help_text="Required for legal waivers."
+    )
 
     # --- NEW: Legal Verification ---
     is_email_verified = models.BooleanField(default=False)
@@ -90,15 +92,14 @@ class FormSignature(models.Model):
 
     is_guardian_signature = models.BooleanField(default=False)
     guardian_relationship = models.CharField(
-        max_length=100, 
-        null=True, 
-        blank=True,
-        help_text="e.g., Parent, Legal Guardian"
+        max_length=100, null=True, blank=True, help_text="e.g., Parent, Legal Guardian"
     )
-    
+
     # --- NEW: Immutable WORM Data ---
     signer_ip_address = models.GenericIPAddressField(null=True, blank=True)
-    document_hash = models.CharField(max_length=64, null=True, blank=True, help_text="SHA-256 Cryptographic Hash")
+    document_hash = models.CharField(
+        max_length=64, null=True, blank=True, help_text="SHA-256 Cryptographic Hash"
+    )
     pdf_receipt = models.FileField(upload_to="waivers/vault/", null=True, blank=True)
 
     class Meta:
