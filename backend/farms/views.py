@@ -38,8 +38,8 @@ def manager_dashboard(request):
     # --- FIX: Catch managers/admins who aren't linked to a farm yet ---
     if not my_farm:
         messages.error(
-            request, 
-            "You are not linked to a farm. Please assign yourself to a farm via a FarmMembership in the Admin panel."
+            request,
+            "You are not linked to a farm. Please assign yourself to a farm via a FarmMembership in the Admin panel.",
         )
         return redirect("admin:index" if request.user.is_staff else "/")
 

@@ -213,20 +213,29 @@ class ComplianceFormSetup(forms.ModelForm):
         widgets = {
             "name": forms.TextInput(
                 attrs={
-                    "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5",
+                    "class": (
+                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm "
+                        "rounded-lg block w-full p-2.5"
+                    ),
                     "placeholder": "e.g., Tractor Operation Waiver",
                 }
             ),
             "body_text": forms.Textarea(
                 attrs={
                     "rows": 6,
-                    "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 custom-scrollbar",
+                    "class": (
+                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm "
+                        "rounded-lg block w-full p-2.5 custom-scrollbar"
+                    ),
                     "placeholder": "Paste the legal text here...",
                 }
             ),
             "assignment_type": forms.Select(
                 attrs={
-                    "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5",
+                    "class": (
+                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm "
+                        "rounded-lg block w-full p-2.5"
+                    ),
                 }
             ),
             "assigned_users": forms.CheckboxSelectMultiple(

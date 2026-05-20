@@ -501,27 +501,33 @@ class FarmReportingViewsTests(TestCase):
         from farms.models import ComplianceForm
         from accounts.models import FormSignature
 
-        form = ComplianceForm.objects.create(farm=self.farm, name="Audit Test Form", body_text="text")
-        FormSignature.objects.create(user=self.manager, form=form, digital_signature="Report Manager")
+        form = ComplianceForm.objects.create(
+            farm=self.farm, name="Audit Test Form", body_text="text"
+        )
+        FormSignature.objects.create(
+            user=self.manager, form=form, digital_signature="Report Manager"
+        )
 
         url = reverse("compliance_audit", args=[form.id])
         response = self.client.get(url)
-        
+
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "farms/compliance_audit.html")
         self.assertIn("signatures", response.context)
         self.assertEqual(response.context["signatures"].count(), 1)
-        
+
     def test_compliance_audit_idor_protection(self):
         """Phase 4: Ensure a manager cannot view another farm's audit trail."""
         from farms.models import ComplianceForm
-        
+
         other_farm = Farm.objects.create(name="Other Farm")
-        other_form = ComplianceForm.objects.create(farm=other_farm, name="Other Form", body_text="text")
-        
+        other_form = ComplianceForm.objects.create(
+            farm=other_farm, name="Other Form", body_text="text"
+        )
+
         url = reverse("compliance_audit", args=[other_form.id])
         response = self.client.get(url)
-        
+
         # Should return 404 because get_object_or_404 enforces farm=request.active_farm
         self.assertEqual(response.status_code, 404)
 
