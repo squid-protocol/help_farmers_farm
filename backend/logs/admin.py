@@ -1,5 +1,4 @@
 from django.contrib import admin
-from .models import FarmLog  # (Or LogEntry, make sure this matches your actual model import!)
 from .models import LogEntry
 
 
@@ -42,22 +41,31 @@ class LogEntryAdmin(admin.ModelAdmin):
 
     # Organize the actual detail page into beautiful, logical blocks
     fieldsets = (
-        ("Identity & Location", {
-            "fields": ("volunteer", "farm"),
-            "description": "Who worked and where."
-        }),
-        ("Shift Details", {
-            "fields": ("date_logged", "duration_hours", "activity", "crop"),
-        }),
-        ("Context", {
-            "fields": ("notes",),
-            "description": "Optional details provided by the volunteer about their shift."
-        }),
-        ("System Metadata", {
-            "fields": ("created_at",),
-            "classes": ("collapse",),
-            "description": "Immutable timestamp of when this record was physically saved to the database."
-        }),
+        (
+            "Identity & Location",
+            {"fields": ("volunteer", "farm"), "description": "Who worked and where."},
+        ),
+        (
+            "Shift Details",
+            {
+                "fields": ("date_logged", "duration_hours", "activity", "crop"),
+            },
+        ),
+        (
+            "Context",
+            {
+                "fields": ("notes",),
+                "description": "Optional details provided by the volunteer about their shift.",
+            },
+        ),
+        (
+            "System Metadata",
+            {
+                "fields": ("created_at",),
+                "classes": ("collapse",),
+                "description": "Immutable timestamp of when this record was physically saved to the database.",
+            },
+        ),
     )
 
     # -------------------------------------------------------------------------
@@ -68,4 +76,5 @@ class LogEntryAdmin(admin.ModelAdmin):
         if obj.notes:
             return f"{obj.notes[:45]}..." if len(obj.notes) > 45 else obj.notes
         return "-"
+
     get_notes_snippet.short_description = "Notes"
