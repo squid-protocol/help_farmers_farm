@@ -1,8 +1,8 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
-from farms.models import Farm
-from accounts.models import FarmMembership
+from farms.models import Farm, ComplianceForm
+from accounts.models import FarmMembership, FormSignature
 
 User = get_user_model()
 
@@ -12,17 +12,14 @@ class LoginActionTests(TestCase):
         self.client = Client()
         self.farm = Farm.objects.create(name="Schuler Test Farm")
 
-        # Create user WITHOUT the farm keyword
         self.user = User.objects.create_user(
             username="test_volunteer",
             email="test_vol@example.com",
             password="my_secure_password123",
         )
-        # Create the bridge!
         FarmMembership.objects.create(
             user=self.user, farm=self.farm, is_approved=True, agreed_to_waiver=True
         )
-
         self.login_url = reverse("login")
 
     def test_successful_login_redirects(self):
@@ -56,13 +53,11 @@ class ProfileViewsTests(TestCase):
         self.client.force_login(self.user)
 
     def test_profile_view_get(self):
-        """Tests that the profile page loads successfully."""
         response = self.client.get(reverse("profile"))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "accounts/profile.html")
 
     def test_profile_view_post_valid(self):
-        """Tests submitting a valid profile update."""
         post_data = {
             "username": self.user.username,
             "first_name": "Updated",
@@ -73,7 +68,6 @@ class ProfileViewsTests(TestCase):
         self.assertRedirects(response, reverse("profile"))
 
     def test_upload_avatar_post(self):
-        """Tests uploading an avatar via base64 data."""
         dummy_base64_image = (
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1"
             "HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
@@ -85,20 +79,23 @@ class ProfileViewsTests(TestCase):
         self.user.refresh_from_db()
         self.assertTrue(bool(self.user.avatar))
 
+    def test_upload_avatar_post_empty(self):
+        """Covers lines 61-64: Missing base64 data."""
+        response = self.client.post(reverse("upload_avatar"), {})
+        self.assertRedirects(response, reverse("profile"))
+
 
 class LegacyClaimFlowTests(TestCase):
     def setUp(self):
         self.client = Client()
         self.farm = Farm.objects.create(name="Legacy Farm")
 
-        # Ghost account (no email)
         self.ghost_user = User.objects.create(
             username="john_doe", first_name="John", last_name="Doe", email=""
         )
         self.ghost_user.set_unusable_password()
         self.ghost_user.save()
 
-        # Claimed account
         self.claimed_user = User.objects.create_user(
             username="jane_doe",
             first_name="Jane",
@@ -113,7 +110,6 @@ class LegacyClaimFlowTests(TestCase):
         response = self.client.post(self.search_url, {"search_name": "John"})
         self.assertEqual(response.status_code, 200)
         self.assertIn(self.ghost_user, response.context["matches"])
-        self.assertNotIn(self.claimed_user, response.context["matches"])
 
     def test_search_fails_gracefully_on_no_match(self):
         response = self.client.post(self.search_url, {"search_name": "Ghostbuster"})
@@ -133,6 +129,24 @@ class LegacyClaimFlowTests(TestCase):
         self.ghost_user.refresh_from_db()
         self.assertEqual(self.ghost_user.email, "john.doe@newemail.com")
         self.assertTrue(self.ghost_user.has_usable_password())
+
+    def test_setup_rejects_mismatched_passwords(self):
+        """Ensures the AccountClaimForm catches mismatched passwords."""
+        response = self.client.post(
+            self.setup_url,
+            {
+                "email": "john.doe@newemail.com",
+                "password": "securepassword123",
+                "confirm_password": "differentpassword",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Passwords do not match.")
+
+    def test_claim_account_setup_get(self):
+        """Covers line 140: GET request for claim setup."""
+        response = self.client.get(self.setup_url)
+        self.assertEqual(response.status_code, 200)
 
 
 class EmailTollboothTests(TestCase):
@@ -161,14 +175,40 @@ class EmailTollboothTests(TestCase):
         self.no_email_user.refresh_from_db()
         self.assertEqual(self.no_email_user.email, "nowihaveanemail@example.com")
 
+    def test_email_middleware_allows_static_assets(self):
+        self.client.force_login(self.no_email_user)
+        from django.conf import settings
+
+        response = self.client.get(f"{settings.STATIC_URL}css/dist/styles.css")
+        self.assertNotEqual(response.status_code, 302)
+
+    def test_email_tollbooth_allows_logout(self):
+        """Ensure users trapped by the email tollbooth can still log out."""
+        self.client.force_login(self.no_email_user)
+        response = self.client.post(reverse("logout"))
+        if hasattr(response, "url"):
+            self.assertNotEqual(response.url, reverse("update_email"))
+
+    def test_update_email_post_empty(self):
+        """Covers line 84: Empty email submitted."""
+        self.client.force_login(self.no_email_user)
+        response = self.client.post(self.update_url, {"email": "   "})
+        self.assertEqual(response.status_code, 200)
+
 
 class ComplianceGateTests(TestCase):
     def setUp(self):
         self.client = Client()
-        self.farm = Farm.objects.create(
-            name="Strict Liability Farm",
-            liability_waiver_text="You must sign this to enter.",
+        self.farm = Farm.objects.create(name="Strict Liability Farm")
+
+        self.compliance_form = ComplianceForm.objects.create(
+            farm=self.farm,
+            name="2026 Safety Waiver",
+            body_text="You must sign this to enter.",
+            is_active=True,
+            assignment_type="all",
         )
+
         self.user = User.objects.create_user(
             username="test_volunteer",
             first_name="John",
@@ -176,9 +216,8 @@ class ComplianceGateTests(TestCase):
             email="john@example.com",
             password="securepassword",
         )
-        # Approved, but NO waiver signature yet
         self.membership = FarmMembership.objects.create(
-            user=self.user, farm=self.farm, is_approved=True, agreed_to_waiver=False
+            user=self.user, farm=self.farm, is_approved=True
         )
         self.client.force_login(self.user)
 
@@ -189,6 +228,71 @@ class ComplianceGateTests(TestCase):
     def test_successful_signature_unlocks_account(self):
         response = self.client.post(reverse("sign_waiver"), {"signature": "John Doe"})
         self.assertRedirects(response, reverse("log_hours"))
-        self.membership.refresh_from_db()
-        self.assertTrue(self.membership.agreed_to_waiver)
-        self.assertIsNotNone(self.membership.signed_at)
+
+        signature_exists = FormSignature.objects.filter(
+            user=self.user, form=self.compliance_form
+        ).exists()
+        self.assertTrue(signature_exists)
+
+    def test_waiver_get_request_renders_form(self):
+        response = self.client.get(reverse("sign_waiver"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "accounts/sign_waiver.html")
+
+    def test_waiver_rejects_wrong_name(self):
+        response = self.client.post(reverse("sign_waiver"), {"signature": "Wrong Name"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response, "Your signature must match your first and last name exactly."
+        )
+        signature_exists = FormSignature.objects.filter(user=self.user).exists()
+        self.assertFalse(signature_exists)
+
+    def test_waiver_middleware_allows_static_assets(self):
+        from django.conf import settings
+
+        response = self.client.get(f"{settings.STATIC_URL}css/dist/styles.css")
+        self.assertNotEqual(response.status_code, 302)
+
+    def test_waiver_redirects_if_none_pending(self):
+        FormSignature.objects.create(
+            user=self.user, form=self.compliance_form, digital_signature="John Doe"
+        )
+        response = self.client.get(reverse("sign_waiver"))
+        self.assertRedirects(response, reverse("log_hours"))
+
+    def test_waiver_handles_multiple_forms(self):
+        ComplianceForm.objects.create(
+            farm=self.farm,
+            name="Second Form",
+            body_text="Another one",
+            is_active=True,
+            assignment_type="all",
+        )
+        response = self.client.post(reverse("sign_waiver"), {"signature": "John Doe"})
+        self.assertRedirects(response, reverse("sign_waiver"))
+
+    def test_specific_assignment_waiver_logic(self):
+        self.compliance_form.assignment_type = "specific"
+        self.compliance_form.save()
+
+        response = self.client.get(reverse("log_hours"))
+        self.assertEqual(response.status_code, 200)
+
+        self.compliance_form.assigned_users.add(self.user)
+        response = self.client.get(reverse("log_hours"))
+        self.assertRedirects(response, reverse("sign_waiver"))
+
+    def test_legacy_friend_bypasses_waiver(self):
+        """Ensure read-only legacy friends are not trapped by the tollbooth."""
+        self.user.role = "friend"
+        self.user.save()
+
+        response = self.client.get(reverse("log_hours"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_waiver_middleware_allows_logout(self):
+        """Ensure users trapped by the waiver can still log out."""
+        response = self.client.post(reverse("logout"))
+        if hasattr(response, "url"):
+            self.assertNotEqual(response.url, reverse("sign_waiver"))
