@@ -131,6 +131,14 @@ def manager_dashboard(request):
                 return redirect("manager_dashboard")
 
         elif "submit_compliance_form" in request.POST:
+            # --- NEW: FEATURE FLAG TOLLBOOTH ---
+            if not my_farm.can_use_waivers:
+                messages.error(
+                    request,
+                    "🛑 Upgrade Required: Digital Liability Waivers are only available on the Growth plan or higher.",
+                )
+                return redirect("manager_dashboard")
+
             compliance_setup_form = ComplianceFormSetup(
                 request.POST, farm=my_farm
             )  # Pass farm here!
