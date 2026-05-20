@@ -309,35 +309,47 @@
             <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
                 <span>⚖️</span> Compliance Hub
             </h3>
-            <button onclick="document.getElementById('compliance_modal').showModal()" class="bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-2 px-4 rounded-lg shadow-sm transition">+ Add Form</button>
+            {% if farm.can_use_waivers %}
+                <button onclick="document.getElementById('compliance_modal').showModal()" class="bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-2 px-4 rounded-lg shadow-sm transition">+ Add Form</button>
+            {% endif %}
         </div>
-        <ul class="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100 overflow-hidden">
-            {% for form in compliance_forms %}
-                <li class="p-4 flex flex-col sm:flex-row justify-between sm:items-center group transition {% if not form.is_active %}bg-gray-50 opacity-60{% else %}hover:bg-gray-50{% endif %}">
-                    <div>
-                        <strong class="text-gray-900 text-lg">{{ form.name }}</strong>
-                        {% if not form.is_active %}
-                            <span class="ml-2 text-xs font-bold text-red-500 uppercase tracking-wider">Inactive</span>
-                        {% endif %}
-                        <p class="text-sm text-gray-500 mt-1">
-                            {% if form.does_expire and form.expiration_date %}
-                                Expires on: <strong class="text-gray-700">{{ form.expiration_date|date:"M j, Y" }}</strong>
-                            {% else %}
-                                Never expires.
+        
+        {% if not farm.can_use_waivers %}
+            <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-xl p-8 text-center shadow-inner">
+                <span class="text-5xl mb-4 block">🛡️</span>
+                <h4 class="text-xl font-bold text-emerald-900 mb-2">Automated Liability Protection</h4>
+                <p class="text-emerald-800 mb-6 max-w-lg mx-auto">Protect your organization with legally binding digital waivers, forced signature lockouts, and immutable PDF audit trails.</p>
+                <a href="{% url 'pricing' %}" class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-xl shadow-md transition transform hover:-translate-y-0.5">Upgrade to Growth Plan</a>
+            </div>
+        {% else %}
+            <ul class="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100 overflow-hidden">
+                {% for form in compliance_forms %}
+                    <li class="p-4 flex flex-col sm:flex-row justify-between sm:items-center group transition {% if not form.is_active %}bg-gray-50 opacity-60{% else %}hover:bg-gray-50{% endif %}">
+                        <div>
+                            <strong class="text-gray-900 text-lg">{{ form.name }}</strong>
+                            {% if not form.is_active %}
+                                <span class="ml-2 text-xs font-bold text-red-500 uppercase tracking-wider">Inactive</span>
                             {% endif %}
-                        </p>
-                    </div>
-                    
-                    <div class="mt-4 sm:mt-0">
-                        <a href="{% url 'compliance_audit' form.id %}" class="inline-flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-2 px-4 rounded-xl shadow-sm transition text-sm">
-                            🖨️ View Signatures
-                        </a>
-                    </div>
-                </li>
-            {% empty %}
-                <li class="p-6 text-gray-500 italic text-center text-sm">No compliance forms set up yet.</li>
-            {% endfor %}
-        </ul>
+                            <p class="text-sm text-gray-500 mt-1">
+                                {% if form.does_expire and form.expiration_date %}
+                                    Expires on: <strong class="text-gray-700">{{ form.expiration_date|date:"M j, Y" }}</strong>
+                                {% else %}
+                                    Never expires.
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="mt-4 sm:mt-0">
+                            <a href="{% url 'compliance_audit' form.id %}" class="inline-flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-2 px-4 rounded-xl shadow-sm transition text-sm">
+                                🖨️ View Signatures
+                            </a>
+                        </div>
+                    </li>
+                {% empty %}
+                    <li class="p-6 text-gray-500 italic text-center text-sm">No compliance forms set up yet.</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
     </div>
 </div>
 

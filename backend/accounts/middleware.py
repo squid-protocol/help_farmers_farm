@@ -62,8 +62,9 @@ class RequireWaiverMiddleware:
         ):
             farm = request.active_farm
 
-            # 1. Master Switch: Bypass the strict waiver engine for grandfathered/joint accounts
-            if farm.allows_joint_accounts:
+            # 1. Master Switch: Bypass the strict waiver engine for joint accounts
+            # OR if the farm lacks the feature tier
+            if farm.allows_joint_accounts or not farm.can_use_waivers:
                 return self.get_response(request)
 
             # 2. Legacy friends don't need to sign new waivers

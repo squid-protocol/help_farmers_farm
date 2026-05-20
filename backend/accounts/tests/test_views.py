@@ -331,12 +331,14 @@ class ComplianceGateTests(TestCase):
         response = self.client.get(reverse("log_hours"))
         self.assertRedirects(response, reverse("sign_waiver"))
 
-    def test_legacy_friend_bypasses_waiver(self):
-        """Ensure read-only legacy friends are not trapped by the tollbooth."""
-        self.user.role = "friend"
-        self.user.save()
+    def test_starter_tier_bypasses_waiver(self):
+        """Ensure volunteers on Starter tier farms are not blocked by the compliance gate."""
+        self.farm.subscription_tier = "starter"
+        self.farm.save()
 
         response = self.client.get(reverse("log_hours"))
+
+        # Should be a clean 200 OK, not a 302 redirect to the sign_waiver page
         self.assertEqual(response.status_code, 200)
 
     def test_waiver_middleware_allows_logout(self):
