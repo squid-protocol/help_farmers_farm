@@ -1,7 +1,8 @@
 import os
 
 # Configuration
-OUTPUT_FILE = "llm_context.txt"
+# The 6 distinct SaaS subsystems we want to generate separate markdown files for.
+SUBSYSTEMS = {"accounts", "analytics", "billing", "farms", "helpfarmers", "logs"}
 
 # Folders we want to completely skip
 IGNORE_DIRS = {
@@ -19,49 +20,100 @@ IGNORE_EXTS = {".pyc", ".sqlite3", ".log", ".json", ".png", ".jpg", ".ico"}
 
 # Specific files to skip (so it doesn't try to read its own output)
 IGNORE_FILES = {
-    OUTPUT_FILE,
+    "generate_content.py",
     "generate_context.py",
     "django_errors.log",
     "final_schuler_data.json",
 }
 
 
+def get_language(filename):
+    """Maps file extensions to markdown code block languages."""
+    ext = filename.split(".")[-1] if "." in filename else ""
+    mapping = {
+        "py": "python",
+        "html": "html",
+        "js": "javascript",
+        "css": "css",
+        "md": "markdown",
+        "sh": "bash",
+    }
+    return mapping.get(ext, "text")
+
+
+def get_subsystem_name(root_path):
+    """Extracts the top-level folder name to determine the subsystem routing."""
+    # Strip the leading './' from os.walk paths
+    clean_path = root_path.removeprefix(".").removeprefix(os.sep)
+
+    if not clean_path:
+        return "core"  # Files sitting in the very root directory
+
+    top_folder = clean_path.split(os.sep)[0]
+    if top_folder in SUBSYSTEMS:
+        return top_folder
+
+    return "core"  # Catch-all for anything outside the 6 main apps
+
+
 def generate_context():
-    print("🔍 Scanning directory...")
+    print("🔍 Scanning directory and splitting into subsystems...")
+
+    # Dictionary to store file contents grouped by subsystem
+    subsystem_contents = {subsystem: [] for subsystem in SUBSYSTEMS}
+    subsystem_contents["core"] = []
+
     files_added = 0
 
-    with open(OUTPUT_FILE, "w", encoding="utf-8") as outfile:
-        # Walk through the directory tree
-        for root, dirs, files in os.walk("."):
-            # Modify dirs in-place to tell os.walk to skip ignored directories entirely
-            dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
+    # Walk through the directory tree
+    for root, dirs, files in os.walk("."):
+        # Modify dirs in-place to tell os.walk to skip ignored directories entirely
+        dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
 
-            for file in files:
-                # Skip ignored extensions and specific files
-                if (
-                    any(file.endswith(ext) for ext in IGNORE_EXTS)
-                    or file in IGNORE_FILES
-                ):
-                    continue
+        for file in files:
+            # Skip ignored extensions, specific files, and any generated markdown files
+            if (
+                any(file.endswith(ext) for ext in IGNORE_EXTS)
+                or file in IGNORE_FILES
+                or file.endswith("_context.md")
+            ):
+                continue
 
-                file_path = os.path.join(root, file)
+            file_path = os.path.join(root, file)
+            subsystem = get_subsystem_name(root)
+            language = get_language(file)
 
-                try:
-                    with open(file_path, "r", encoding="utf-8") as infile:
-                        content = infile.read()
+            try:
+                with open(file_path, "r", encoding="utf-8") as infile:
+                    content = infile.read()
 
-                    # Write the separator, file path header, and content
-                    outfile.write(f"\n{'='*80}\n")
-                    outfile.write(f"FILE: {file_path.removeprefix('./')}\n")
-                    outfile.write(f"{'='*80}\n\n")
-                    outfile.write(content)
-                    outfile.write("\n\n")
+                # Format as clean Markdown
+                # Format as clean Markdown
+                formatted_content = (
+                    f"## FILE: `{file_path.removeprefix('./')}`\n\n"
+                    f"```{language}\n"
+                    f"{content}\n"
+                    f"```\n\n---\n\n"
+                )
+                subsystem_contents[subsystem].append(formatted_content)
 
-                    files_added += 1
-                except Exception as e:
-                    print(f"⚠️ Skipping {file_path} due to read error: {e}")
+                files_added += 1
+            except Exception as e:
+                print(f"⚠️ Skipping {file_path} due to read error: {e}")
 
-    print(f"✅ Success! Bundled {files_added} files into '{OUTPUT_FILE}'")
+    # Write out the separated markdown files
+    for subsystem, contents in subsystem_contents.items():
+        if not contents:
+            continue  # Skip creating empty files
+
+        output_filename = f"{subsystem}_context.md"
+        with open(output_filename, "w", encoding="utf-8") as outfile:
+            outfile.write(f"# Subsystem: {subsystem.title()}\n\n")
+            outfile.writelines(contents)
+
+        print(f"📄 Created {output_filename} with {len(contents)} files.")
+
+    print(f"\n✅ Success! Bundled {files_added} total files.")
 
 
 if __name__ == "__main__":

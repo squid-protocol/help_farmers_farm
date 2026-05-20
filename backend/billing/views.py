@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
+import logging
 
 # IMPORTANT: Import your Farm model so the webhook can update it!
 from farms.models import Farm
@@ -33,6 +34,7 @@ def create_checkout_session(request):
                     },
                 ],
                 mode="subscription",
+                allow_promotion_codes=True,
                 client_reference_id=str(request.user.farm.id),
                 success_url=(
                     request.build_absolute_uri(reverse("billing_success"))
@@ -40,7 +42,11 @@ def create_checkout_session(request):
                 ),
                 cancel_url=request.build_absolute_uri(reverse("pricing")),
             )
-            return redirect(checkout_session.url, code=303)
+
+            # The exact 303 redirect Stripe requires to safely route to their hosted checkout
+            response = redirect(checkout_session.url)
+            response.status_code = 303
+            return response
 
         except Exception as e:
             messages.error(
@@ -76,12 +82,17 @@ def customer_portal(request):
                 # Where Stripe should send them when they click "Return to App"
                 return_url=request.build_absolute_uri(reverse("manager_dashboard")),
             )
-            return redirect(portal_session.url, code=303)
+
+            # The exact 303 redirect Stripe requires
+            response = redirect(portal_session.url)
+            response.status_code = 303
+            return response
 
         except Exception as e:
             messages.error(request, f"Error connecting to billing portal: {str(e)}")
             return redirect("manager_dashboard")
 
+    # Fallback if someone tries to GET this URL directly instead of POSTing
     return redirect("manager_dashboard")
 
 
@@ -100,32 +111,111 @@ def stripe_webhook(request):
         # Invalid payload
         return HttpResponse(status=400)
     except stripe.error.SignatureVerificationError:
-        # Invalid signature (Someone is trying to hack your webhook!)
+        # Invalid signature
         return HttpResponse(status=400)
 
-    # Handle the successful checkout event
+    # ---------------------------------------------------------
+    # 1. Handle Successful Checkout (The "Start")
+    # ---------------------------------------------------------
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
 
-        # We grab the Farm ID that we passed into client_reference_id during checkout
-        # NOTE: We use dot notation here because the new Stripe SDK returns an object, not a dict!
-        farm_id = session.client_reference_id
+        # We grab the Farm ID that we passed into client_reference_id
+        farm_id = session.get("client_reference_id")
 
         if farm_id:
-            print(f"💰 SUCCESS! Webhook received for Farm ID {farm_id}!")
-
             try:
-                # Look up the farm in the database
                 farm = Farm.objects.get(id=farm_id)
-
-                # Update the new fields we just created!
+                # FIX: Ensure this matches the actual field in farms/models.py
                 farm.is_paid = True
-                farm.stripe_customer_id = session.customer
+                # CRITICAL: Save the Stripe Customer ID so we can look them up later if a card fails
+                farm.stripe_customer_id = session.get("customer")
+                farm.save()
+
+                print(f"✅ Farm ID {farm_id} successfully upgraded!")
+            except Farm.DoesNotExist:
+                # The farm record was deleted locally or not yet created.
+                # There is nothing to revoke, so it is safe to ignore this webhook.
+                logger = logging.getLogger("django")
+                logger.warning(
+                    f"⚠️ Checkout webhook received for unknown farm ID {farm_id}."
+                )
+
+    # ---------------------------------------------------------
+    # 2. Handle Failed Payments (Expired Cards, Insufficient Funds)
+    # ---------------------------------------------------------
+    elif event["type"] == "invoice.payment_failed":
+        invoice = event["data"]["object"]
+        customer_id = invoice.get("customer")
+
+        if customer_id:
+            try:
+                farm = Farm.objects.get(stripe_customer_id=customer_id)
+                farm.is_paid = False
+                farm.save()
+                print(f"⚠️ Farm {farm.name} payment failed. Premium access revoked.")
+            except Farm.DoesNotExist:
+                pass  # Farm doesn't exist, nothing to revoke
+
+    # ---------------------------------------------------------
+    # 3. Handle Cancelled Subscriptions (User cancels or Stripe gives up retrying)
+    # ---------------------------------------------------------
+    elif event["type"] == "customer.subscription.deleted":
+        subscription = event["data"]["object"]
+        customer_id = subscription.get("customer")
+
+        if customer_id:
+            try:
+                farm = Farm.objects.get(stripe_customer_id=customer_id)
+                farm.is_paid = False
+                farm.save()
+                print(
+                    f"⚠️ Farm {farm.name} subscription ended. Premium access revoked."
+                )
+            except Farm.DoesNotExist:
+                pass
+
+    # ---------------------------------------------------------
+    # 4. Handle Plan Upgrades/Downgrades & Past Due states
+    # ---------------------------------------------------------
+    elif event["type"] == "customer.subscription.updated":
+        subscription = event["data"]["object"]
+        customer_id = subscription.get("customer")
+        status = subscription.get("status")
+
+        # Safely extract the new Stripe Price ID they just switched to
+        try:
+            new_price_id = subscription["items"]["data"][0]["price"]["id"]
+        except (KeyError, IndexError):
+            new_price_id = None
+
+        if customer_id:
+            try:
+                farm = Farm.objects.get(stripe_customer_id=customer_id)
+
+                # Map the Stripe Price ID to your internal database tiers
+                if new_price_id == "price_1TYsDw4Q1x6w9f8FBWp82g03":
+                    farm.subscription_tier = "starter"
+                elif new_price_id == "price_1TYsF54Q1x6w9f8FaXJmkcE1":
+                    farm.subscription_tier = "growth"
+                elif (
+                    new_price_id == "price_1TYsJj4Q1x6w9f8FpRlCUh0j"
+                ):  # <-- PREMIUM ADDED
+                    farm.subscription_tier = "premium"
+
+                # Ensure their paid status matches the new subscription state
+                # 'past_due' occurs during the dunning grace period
+                if status in ["active", "trialing", "past_due"]:
+                    farm.is_paid = True
+                else:
+                    farm.is_paid = False
 
                 farm.save()
-                print(f"✅ Farm ID {farm_id} successfully upgraded in the database!")
+                print(f"🔄 Farm {farm.name} subscription updated (Status: {status}).")
+
             except Farm.DoesNotExist:
-                print(f"❌ Error: Farm ID {farm_id} not found in database.")
+                # Safely ignore webhooks for deleted farms
+                pass
 
     # Always return a 200 OK so Stripe knows we received it
     return HttpResponse(status=200)

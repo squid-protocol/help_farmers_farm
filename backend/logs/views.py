@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum
@@ -11,6 +11,10 @@ from .forms import LogEntryForm
 
 from decimal import Decimal
 
+from django.core.exceptions import PermissionDenied
+from django.core.paginator import Paginator
+from django.views.decorators.http import require_POST
+
 
 @login_required
 def log_hours_view(request):
@@ -19,6 +23,17 @@ def log_hours_view(request):
 
     # 1. Handle New Shift Submissions
     if request.method == "POST":
+
+        # --- THE READ-ONLY TOLLBOOTH ---
+        if not request.active_farm.is_active_account:
+            messages.error(
+                request,
+                "🛑 Trial Expired: Your farm's account is in Read-Only mode. "
+                "Please contact your Farm Manager to upgrade.",
+            )
+            return redirect("log_hours")
+        # --- END TOLLBOOTH ---
+
         form = LogEntryForm(request.POST, user=request.user)
         if form.is_valid():
             new_log = form.save(commit=False)
@@ -371,3 +386,94 @@ def log_hours_view(request):
         "history_shifts": history_shifts,
     }
     return render(request, "logs/log_hours.html", context)
+
+
+@login_required
+def master_log_directory(request):
+    """The Master Ledger for Farm Managers."""
+    is_manager = request.user.is_staff or request.user.role in [
+        "account_manager",
+        "farm_manager",
+    ]
+    if not is_manager:
+        raise PermissionDenied("Only managers can view the master ledger.")
+
+    # Fetch all logs for this farm, newest first, optimizing the database hit
+    all_logs = (
+        LogEntry.objects.filter(farm=request.active_farm)
+        .select_related("volunteer", "crop")
+        .order_by("-date_logged", "-created_at")
+    )
+
+    # Paginate by 50 rows per page to keep the UI lightning fast
+    paginator = Paginator(all_logs, 50)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, "logs/master_directory.html", {"page_obj": page_obj})
+
+
+@login_required
+def edit_log_view(request, log_id):
+    """Universal Edit Router: Routes Managers and Volunteers safely."""
+    # 1. Fetch the log, strictly isolated to the current active farm
+    log = get_object_or_404(LogEntry, id=log_id, farm=request.active_farm)
+
+    is_manager = request.user.is_staff or request.user.role in [
+        "account_manager",
+        "farm_manager",
+    ]
+
+    # 2. The Security Gate: Are they allowed to touch this?
+    if not is_manager and log.volunteer != request.user:
+        raise PermissionDenied("You do not have permission to edit someone else's log.")
+
+    if request.method == "POST":
+        form = LogEntryForm(request.POST, instance=log, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Shift updated successfully!")
+
+            # Smart Routing: Send managers back to the directory, volunteers back to their dashboard
+            if is_manager and log.volunteer != request.user:
+                return redirect("master_log_directory")
+            return redirect("log_hours")
+    else:
+        form = LogEntryForm(instance=log, user=request.user)
+
+    return render(
+        request,
+        "logs/edit_log.html",
+        {"form": form, "log": log, "is_manager": is_manager},
+    )
+
+
+@login_required
+@require_POST
+def delete_log_view(request, log_id):
+    """Safely destroys a log entry, routing the user back to where they came from."""
+    # 1. Fetch the log, strictly isolated to the active farm
+    log = get_object_or_404(LogEntry, id=log_id, farm=request.active_farm)
+
+    is_manager = request.user.is_staff or request.user.role in [
+        "account_manager",
+        "farm_manager",
+    ]
+
+    # 2. Security Gate: Only the owner OR a manager can delete it
+    if not is_manager and log.volunteer != request.user:
+        raise PermissionDenied(
+            "You do not have permission to delete someone else's log."
+        )
+
+    # 3. Store the owner before we destroy the object so we know where to route
+    was_my_log = log.volunteer == request.user
+
+    # 4. Annihilate the record
+    log.delete()
+    messages.success(request, "Shift deleted successfully.")
+
+    # 5. Smart Routing
+    if is_manager and not was_my_log:
+        return redirect("master_log_directory")
+    return redirect("log_hours")

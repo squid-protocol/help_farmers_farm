@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto mt-10 mb-20 px-4">
+    
+    <div class="text-center mb-8">
+        <div class="mx-auto h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        </div>
+        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Legal Action Required</h1>
+        <p class="text-gray-500 mt-2">You must review and sign this document for <strong>{{ farm.name }}</strong> before you can access the platform.</p>
+        
+        {% if remaining_count > 1 %}
+            <div class="inline-block mt-4 bg-amber-100 text-amber-800 font-bold px-4 py-1.5 rounded-full text-sm">
+                Document 1 of {{ remaining_count }}
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-8 relative">
+        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h2 class="text-sm font-bold text-gray-500 uppercase tracking-widest">{{ compliance_form.name }}</h2>
+            <span id="scroll-badge" class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded">Scroll to bottom to sign ↓</span>
+        </div>
+        
+        <div id="waiver-text-box" class="p-6 md:p-8 h-96 overflow-y-auto bg-white text-gray-700 text-sm leading-relaxed whitespace-pre-wrap font-serif border-b border-gray-200 custom-scrollbar">
+{{ compliance_form.body_text }}
+        </div>
+
+        <form method="POST" class="p-6 md:p-8 bg-gray-50">
+            {% csrf_token %}
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="text-sm {% if 'success' in message.tags %}text-emerald-700 bg-emerald-50 border-emerald-200{% else %}text-red-600 bg-red-50 border-red-200{% endif %} p-3 rounded-lg border mb-6 font-medium">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            {% if not request.user.is_email_verified %}
+                <div class="text-center py-6">
+                    <div class="mx-auto h-16 w-16 bg-amber-100 rounded-full flex items-center justify-center mb-4 text-3xl">📧</div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Inbox Verification Required</h3>
+                    <p class="text-gray-600 mb-6 text-sm max-w-md mx-auto">To ensure the legal integrity of this signature, we must verify you own the email address <strong>{{ request.user.email }}</strong>.</p>
+                    
+                    <button type="submit" name="send_verification" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl shadow transition transform hover:-translate-y-0.5">
+                        Send Verification Link
+                    </button>
+                    <p class="mt-4 text-xs text-gray-400">Need to use a different email? <a href="{% url 'profile' %}" class="text-blue-600 hover:underline">Update your profile here.</a></p>
+                </div>
+            {% else %}
+                <div class="mb-6 p-5 bg-blue-50 rounded-xl border border-blue-100 shadow-inner">
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" name="is_guardian" id="guardian-toggle" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <span class="text-sm font-bold text-blue-900">I am a parent or legal guardian signing on behalf of a minor.</span>
+                    </label>
+                    
+                    <div id="guardian-details" class="overflow-hidden transition-all duration-300 max-h-0 opacity-0 mt-0">
+                        <div class="pt-4">
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Relationship to Volunteer</label>
+                            <input type="text" name="guardian_relationship" id="relationship-input"
+                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm" 
+                                   placeholder="e.g., Mother, Father, Legal Guardian">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-gray-900 mb-2">Digital Signature</label>
+                    <p id="signature-hint" class="text-xs text-gray-500 mb-3">By typing your name below, you electronically agree to the terms outlined above. This constitutes a legally binding signature.</p>
+                    
+                    <input type="text" name="signature" id="signature-input" required disabled
+                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 font-medium text-gray-900 shadow-sm disabled:bg-gray-200 disabled:cursor-not-allowed transition" 
+                           placeholder="Type your full name (e.g. {{ request.user.first_name }} {{ request.user.last_name }})">
+                </div>
+
+                <button type="submit" name="sign_document" id="sign-button" disabled
+                        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-6 rounded-xl shadow transition transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                    I Agree & Sign
+                </button>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const textBox = document.getElementById('waiver-text-box');
+        const signatureInput = document.getElementById('signature-input');
+        const signButton = document.getElementById('sign-button');
+        const scrollBadge = document.getElementById('scroll-badge');
+        
+        // Guardian Elements
+        const guardianToggle = document.getElementById('guardian-toggle');
+        const guardianDetails = document.getElementById('guardian-details');
+        const relationshipInput = document.getElementById('relationship-input');
+        const signatureHint = document.getElementById('signature-hint');
+
+        // Scroll to unlock logic
+        function unlockForm() {
+            if (signatureInput) signatureInput.disabled = false;
+            if (signButton) signButton.disabled = false;
+            if (scrollBadge) {
+                scrollBadge.className = "bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded";
+                scrollBadge.innerText = "✓ Ready to Sign";
+            }
+        }
+
+        if (textBox) {
+            textBox.addEventListener('scroll', function() {
+                if (textBox.scrollHeight - textBox.scrollTop <= textBox.clientHeight + 5) {
+                    unlockForm();
+                }
+            });
+
+            if (textBox.scrollHeight <= textBox.clientHeight) {
+                unlockForm();
+            }
+        }
+
+        // Guardian Toggle Logic
+        if (guardianToggle) {
+            guardianToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    guardianDetails.style.maxHeight = "100px";
+                    guardianDetails.style.opacity = "1";
+                    guardianDetails.style.marginTop = "0.5rem";
+                    
+                    signatureHint.innerText = "Type your full name as the Parent/Guardian to legally agree to these terms on behalf of the minor.";
+                    signatureInput.placeholder = "Type your full legal name";
+                } else {
+                    guardianDetails.style.maxHeight = "0px";
+                    guardianDetails.style.opacity = "0";
+                    guardianDetails.style.marginTop = "0";
+                    
+                    relationshipInput.value = '';
+                    signatureHint.innerText = "By typing your name below, you electronically agree to the terms outlined above. This constitutes a legally binding signature.";
+                    signatureInput.placeholder = "Type your full name (e.g. {{ request.user.first_name }} {{ request.user.last_name }})";
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Official Signature Receipt</title>
+    <style>
+        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 12px; color: #333; line-height: 1.5; }
+        .header { text-align: center; border-bottom: 2px solid #222; padding-bottom: 20px; margin-bottom: 20px; }
+        .legal-text { font-family: 'Georgia', serif; font-size: 11px; white-space: pre-wrap; margin-bottom: 30px; }
+        .audit-box { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; border-radius: 5px; }
+        .audit-row { margin-bottom: 8px; }
+        .label { font-weight: bold; width: 150px; display: inline-block; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>{{ farm.name }}</h1>
+        <h2>OFFICIAL COMPLIANCE RECORD</h2>
+        <p>Document: {{ form.name }}</p>
+    </div>
+
+    <div class="legal-text">
+{{ form.body_text }}
+    </div>
+
+    <div class="audit-box">
+        <h3>ESIGN Audit Trail</h3>
+        <div class="audit-row"><span class="label">Volunteer Account:</span> {{ user.first_name }} {{ user.last_name }} ({{ user.username }})</div>
+        <div class="audit-row"><span class="label">Physical Address:</span> {{ user.address }}</div>
+        <div class="audit-row"><span class="label">Electronic Signature:</span> {{ signature_text }}</div>
+        
+        {% if is_guardian %}
+        <div class="audit-row"><span class="label">Guardian Status:</span> Signed on behalf of minor by {{ relationship }}</div>
+        {% endif %}
+        
+        <div class="audit-row"><span class="label">Timestamp (UTC):</span> {{ timestamp }}</div>
+        <div class="audit-row"><span class="label">Signer IP Address:</span> {{ ip_address }}</div>
+    </div>
+
+</body>
+</html>

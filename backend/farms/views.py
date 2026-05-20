@@ -9,18 +9,19 @@ from django.contrib import messages
 from django.utils import timezone
 
 # --- Local App Imports (Farms) ---
-from .models import Crop, WorkCommitment
+from .models import Crop, WorkCommitment, ComplianceForm  # <-- ADDED ComplianceForm
 from .forms import (
     CropForm,
     VolunteerCreationForm,
     WorkCommitmentForm,
     FarmSettingsForm,
     VolunteerEditForm,
+    ComplianceFormSetup,  # <-- ADDED ComplianceFormSetup
 )
 
 # --- Other App Imports ---
 from logs.models import LogEntry
-from accounts.models import FarmMembership  # <-- ADDED IMPORT
+from accounts.models import FarmMembership, FormSignature  # <-- UPDATED IMPORT
 
 User = get_user_model()
 
@@ -34,10 +35,19 @@ def is_manager(user):
 def manager_dashboard(request):
     my_farm = request.active_farm
 
+    # --- FIX: Catch managers/admins who aren't linked to a farm yet ---
+    if not my_farm:
+        messages.error(
+            request,
+            "You are not linked to a farm. Please assign yourself to a farm via a FarmMembership in the Admin panel.",
+        )
+        return redirect("admin:index" if request.user.is_staff else "/")
+
     crop_form = CropForm()
     volunteer_form = VolunteerCreationForm(request_user=request.user)
     commitment_form = WorkCommitmentForm()
     farm_form = FarmSettingsForm(instance=my_farm)
+    compliance_setup_form = ComplianceFormSetup(farm=my_farm)
 
     if request.method == "POST":
         if "submit_crop" in request.POST:
@@ -50,17 +60,55 @@ def manager_dashboard(request):
                 return redirect("manager_dashboard")
 
         elif "submit_volunteer" in request.POST:
+            # --- THE CAPACITY TOLLBOOTH ---
+            # 1. Count how many active standard volunteers this farm currently has
+            current_volunteers = User.objects.filter(
+                memberships__farm=my_farm,
+                is_active=True,
+            ).count()
+
+            # 2. Check the capacity limits based on their Stripe tier
+            tier = getattr(
+                my_farm, "subscription_tier", "starter"
+            )  # Default to starter if missing
+            capacity_reached = False
+            limit = 0
+
+            if tier == "starter" and current_volunteers >= 50:
+                capacity_reached = True
+                limit = 50
+            elif tier == "growth" and current_volunteers >= 200:
+                capacity_reached = True
+                limit = 200
+
+            # 3. Drop the gate if they are full
+            if capacity_reached:
+                messages.error(
+                    request,
+                    f"🛑 Limit Reached: The {tier.title()} plan allows a maximum of {limit} "
+                    "active volunteers. Please archive old volunteers or upgrade your "
+                    "plan in the Billing portal.",
+                )
+                return redirect("manager_dashboard")
+
+            # If they pass the tollbooth, process the form...
             volunteer_form = VolunteerCreationForm(
                 request.POST, request_user=request.user
             )
             if volunteer_form.is_valid():
                 new_user = volunteer_form.save(commit=False)
                 new_user.set_password(volunteer_form.cleaned_data["password"])
+                # Ensure they are saved as a volunteer
+                new_user.role = "volunteer"
                 new_user.save()
 
                 # --- NEW: Create the Bridge Record! ---
                 FarmMembership.objects.create(
-                    user=new_user, farm=my_farm, is_approved=True, agreed_to_waiver=True
+                    user=new_user,
+                    farm=my_farm,
+                    is_approved=True,
+                    agreed_to_waiver=True,
+                    work_commitment=volunteer_form.cleaned_data.get("work_commitment"),
                 )
 
                 messages.success(request, "Volunteer created successfully!")
@@ -82,6 +130,23 @@ def manager_dashboard(request):
                 messages.success(request, "Farm settings updated successfully!")
                 return redirect("manager_dashboard")
 
+        elif "submit_compliance_form" in request.POST:
+            compliance_setup_form = ComplianceFormSetup(
+                request.POST, farm=my_farm
+            )  # Pass farm here!
+            if compliance_setup_form.is_valid():
+                new_cform = compliance_setup_form.save(commit=False)
+                new_cform.farm = my_farm
+                new_cform.save()
+
+                # CRITICAL: Save the specific users to the database!
+                compliance_setup_form.save_m2m()
+
+                messages.success(
+                    request, f"Compliance Form '{new_cform.name}' added successfully!"
+                )
+                return redirect("manager_dashboard")
+
     # Fetch data using the membership bridge
     crops = Crop.objects.filter(farm=my_farm).order_by("-is_active", "crop_name")
 
@@ -92,6 +157,11 @@ def manager_dashboard(request):
     volunteers = [m.user for m in memberships]
 
     commitments = WorkCommitment.objects.filter(farm=my_farm)
+
+    # --- THE MISSING QUERY ---
+    compliance_forms = ComplianceForm.objects.filter(farm=my_farm).order_by(
+        "-is_active", "name"
+    )
 
     active_crop_count = crops.filter(is_active=True).count()
 
@@ -131,6 +201,8 @@ def manager_dashboard(request):
         "crop_form": crop_form,
         "volunteer_form": volunteer_form,
         "commitment_form": commitment_form,
+        "compliance_setup_form": compliance_setup_form,
+        "compliance_forms": compliance_forms,
         "crops": crops,
         "volunteers": volunteers,
         "commitments": commitments,
@@ -377,3 +449,26 @@ def switch_active_farm(request):
     # Send them back to the exact page they were just looking at
     next_url = request.POST.get("next", "/log-hours/")
     return redirect(next_url)
+
+
+@login_required
+@user_passes_test(is_manager, login_url="/log-hours/")
+def compliance_audit_view(request, form_id):
+    farm = request.active_farm
+
+    # 1. Securely fetch the form, proving it belongs to this specific farm
+    compliance_form = get_object_or_404(ComplianceForm, id=form_id, farm=farm)
+
+    # 2. Fetch every signature for this specific form, ordered by newest first
+    signatures = (
+        FormSignature.objects.filter(form=compliance_form)
+        .select_related("user")
+        .order_by("-signed_at")
+    )
+
+    context = {
+        "farm": farm,
+        "compliance_form": compliance_form,
+        "signatures": signatures,
+    }
+    return render(request, "farms/compliance_audit.html", context)

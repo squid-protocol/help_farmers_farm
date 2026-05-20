@@ -6,6 +6,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login
 from django.db.models import Q
+from django.utils import timezone
+from accounts.models import FormSignature
+from farms.models import ComplianceForm
+from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
+from django.core.mail import send_mail
+from django.conf import settings
+from django.urls import reverse
 
 from .forms import ProfileUpdateForm, AccountClaimForm
 
@@ -27,8 +34,16 @@ def profile_view(request):
     else:
         form = ProfileUpdateForm(instance=user)
 
+    # --- NEW: Fetch their signed legal documents ---
+    signatures = (
+        FormSignature.objects.filter(user=user)
+        .select_related("form")
+        .order_by("-signed_at")
+    )
+
     context = {
         "form": form,
+        "signatures": signatures,
     }
     return render(request, "accounts/profile.html", context)
 
@@ -141,3 +156,174 @@ def claim_account_setup(request, user_id):
         "accounts/claim_setup.html",
         {"form": form, "claim_user": user_to_claim},
     )
+
+
+@login_required
+def sign_waiver_view(request):
+    farm = request.active_farm
+    today = timezone.now().date()
+
+    # 1. HARD BLOCK: Enforce full profile completion before viewing legal docs
+    if (
+        not request.user.first_name
+        or not request.user.last_name
+        or not request.user.phone_number
+        or not request.user.address
+    ):
+        messages.warning(
+            request,
+            (
+                "⚠️ Legal Requirement: You must provide your First Name, Last Name, "
+                "Phone Number, and Physical Address before signing documents."
+            ),
+        )
+        return redirect("profile")
+
+    # 2. EMAIL VERIFICATION HANDLING
+    if request.method == "POST" and "send_verification" in request.POST:
+        signer = TimestampSigner()
+        token = signer.sign(request.user.id)
+        verify_url = request.build_absolute_uri(
+            reverse("verify_email_link", args=[token])
+        )
+
+        send_mail(
+            subject=f"Verify your signature account for {farm.name}",
+            message=(
+                f"Please click the following link to verify your email address "
+                f"and unlock your compliance documents: {verify_url}"
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[request.user.email],
+        )
+        messages.success(
+            request,
+            "Verification email sent! Please check your inbox and click the link.",
+        )
+        return redirect("sign_waiver")
+
+    # 3. Standard Waiver Logic
+    valid_forms = ComplianceForm.objects.filter(farm=farm, is_active=True).exclude(
+        does_expire=True, expiration_date__lt=today
+    )
+    signed_form_ids = FormSignature.objects.filter(
+        user=request.user, form__in=valid_forms
+    ).values_list("form_id", flat=True)
+
+    pending_forms = valid_forms.exclude(id__in=signed_form_ids)
+
+    if not pending_forms.exists():
+        return redirect("log_hours")
+
+    form_to_sign = pending_forms.first()
+    remaining_count = pending_forms.count()
+
+    if request.method == "POST" and "sign_document" in request.POST:
+        # Security check: don't let them hack the form if they aren't verified
+        if not request.user.is_email_verified:
+            messages.error(request, "You must verify your email before signing.")
+            return redirect("sign_waiver")
+
+        signature = request.POST.get("signature", "").strip()
+        expected_name = f"{request.user.first_name} {request.user.last_name}".strip()
+
+        is_guardian = request.POST.get("is_guardian") == "on"
+        guardian_relationship = request.POST.get("guardian_relationship", "").strip()
+
+        is_valid = False
+        error_message = ""
+
+        if is_guardian:
+            if not guardian_relationship:
+                error_message = "Please specify your relationship to the minor (e.g., Parent, Legal Guardian)."
+            elif len(signature) < 2:
+                error_message = "Please type your full legal name as the guardian."
+            else:
+                is_valid = True
+        else:
+            if (
+                signature.lower() == expected_name.lower()
+                or signature.lower() == request.user.username.lower()
+            ):
+                is_valid = True
+            else:
+                error_message = (
+                    "Your signature must match your first and last name exactly."
+                )
+
+        if is_valid:
+            x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+            if x_forwarded_for:
+                ip_address = x_forwarded_for.split(",")[0]
+            else:
+                ip_address = request.META.get("REMOTE_ADDR")
+
+            sig_record = FormSignature.objects.create(
+                user=request.user,
+                form=form_to_sign,
+                digital_signature=signature,
+                is_guardian_signature=is_guardian,
+                guardian_relationship=guardian_relationship if is_guardian else None,
+                signer_ip_address=ip_address,
+            )
+
+            from django_q.tasks import async_task
+
+            async_task(
+                "accounts.tasks.generate_pdf_receipt",
+                sig_record.id,
+                request.user.id,
+                form_to_sign.id,
+                farm.id,
+                ip_address,
+            )
+
+            if remaining_count > 1:
+                messages.success(
+                    request, f"'{form_to_sign.name}' signed and is being secured."
+                )
+                return redirect("sign_waiver")
+            else:
+                messages.success(
+                    request, f"All forms signed and secured. Welcome to {farm.name}!"
+                )
+                return redirect("log_hours")
+        else:
+            messages.error(request, error_message)
+
+    context = {
+        "farm": farm,
+        "compliance_form": form_to_sign,
+        "remaining_count": remaining_count,
+    }
+    return render(request, "accounts/sign_waiver.html", context)
+
+
+@login_required
+def verify_email_link_view(request, token):
+    """Decodes the cryptographically signed email link."""
+    signer = TimestampSigner()
+    try:
+        # Token is valid for 48 hours (172800 seconds)
+        user_id = signer.unsign(token, max_age=172800)
+
+        # Security check: Ensure they are verifying the account they are logged into
+        if int(user_id) == request.user.id:
+            request.user.is_email_verified = True
+            request.user.save()
+            messages.success(
+                request,
+                "✅ Your email is verified! You may now sign your legal documents.",
+            )
+        else:
+            messages.error(
+                request, "That verification link belongs to a different account."
+            )
+
+    except (BadSignature, SignatureExpired):
+        messages.error(
+            request,
+            "The verification link was invalid or has expired. Please request a new one.",
+        )
+
+    return redirect("sign_waiver")

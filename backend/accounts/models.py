@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
 from farms.models import Farm
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 class CustomUser(AbstractUser):
@@ -15,7 +16,18 @@ class CustomUser(AbstractUser):
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="volunteer")
     avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
-    phone_number = models.CharField(max_length=20, null=True, blank=True)
+
+    # THE FIX: Upgraded to strict E.164 validation
+    phone_number = PhoneNumberField(blank=True, null=True)
+
+    # --- NEW: Physical Address for Legal Identity ---
+    address = models.TextField(
+        blank=True, null=True, help_text="Required for legal waivers."
+    )
+
+    # --- NEW: Legal Verification ---
+    is_email_verified = models.BooleanField(default=False)
+
     legacy_years_volunteered = models.IntegerField(
         default=0, help_text="Number of years volunteered prior to using this system."
     )
@@ -65,3 +77,35 @@ class FarmMembership(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.farm.name} Onboarding"
+
+
+class FormSignature(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="signatures"
+    )
+    form = models.ForeignKey(
+        "farms.ComplianceForm", on_delete=models.CASCADE, related_name="signatures"
+    )
+
+    digital_signature = models.CharField(max_length=255)
+    signed_at = models.DateTimeField(auto_now_add=True)
+
+    is_guardian_signature = models.BooleanField(default=False)
+    guardian_relationship = models.CharField(
+        max_length=100, null=True, blank=True, help_text="e.g., Parent, Legal Guardian"
+    )
+
+    # --- NEW: Immutable WORM Data ---
+    signer_ip_address = models.GenericIPAddressField(null=True, blank=True)
+    document_hash = models.CharField(
+        max_length=64, null=True, blank=True, help_text="SHA-256 Cryptographic Hash"
+    )
+    pdf_receipt = models.FileField(upload_to="waivers/vault/", null=True, blank=True)
+
+    class Meta:
+        unique_together = ("user", "form")
+
+    def __str__(self):
+        if self.is_guardian_signature:
+            return f"{self.digital_signature} (Guardian) signed {self.form.name} for {self.user.username}"
+        return f"{self.user.username} signed {self.form.name}"

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* Magic CSS to make the page print like a professional document */
+    @media print {
+        nav, footer, .no-print { display: none !important; }
+        body { background-color: white !important; }
+        .print-container { 
+            max-width: 100% !important; 
+            margin: 0 !important; 
+            padding: 0 !important; 
+            box-shadow: none !important; 
+            border: none !important; 
+        }
+    }
+</style>
+
+<div class="max-w-5xl mx-auto mt-8 mb-20 print-container">
+    
+    <div class="mb-6 flex justify-between items-center no-print">
+        <a href="{% url 'manager_dashboard' %}" class="text-gray-500 hover:text-emerald-600 font-bold transition flex items-center gap-1">
+            ← Back to Dashboard
+        </a>
+        <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-6 rounded-lg shadow transition flex items-center gap-2">
+            🖨️ Print Report
+        </button>
+    </div>
+
+    <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm print-container">
+        
+        <div class="text-center mb-8 border-b border-gray-200 pb-6">
+            <h1 class="text-3xl font-extrabold text-gray-900 uppercase tracking-tight">{{ farm.name }}</h1>
+            <h2 class="text-xl font-bold text-gray-600 mt-2">Signature Audit Trail: {{ compliance_form.name }}</h2>
+            <p class="text-sm text-gray-500 mt-2">Generated on {% now "F j, Y, g:i a" %}</p>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-50 border-y border-gray-200">
+                        <th class="py-3 px-4 text-sm font-bold text-gray-700 uppercase">Volunteer</th>
+                        <th class="py-3 px-4 text-sm font-bold text-gray-700 uppercase">Digital Signature</th>
+                        <th class="py-3 px-4 text-sm font-bold text-gray-700 uppercase">Timestamp</th>
+                        <th class="py-3 px-4 text-sm font-bold text-gray-700 uppercase text-right">Audit ID</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for sig in signatures %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="py-4 px-4">
+                            <p class="font-bold text-gray-900">{{ sig.user.first_name }} {{ sig.user.last_name }}</p>
+                            <p class="text-xs text-gray-500">{{ sig.user.username }}</p>
+                        </td>
+                        <td class="py-4 px-4">
+                            <p class="font-mono font-medium text-gray-800">{{ sig.digital_signature }}</p>
+                            
+                            {% if sig.is_guardian_signature %}
+                                <span class="inline-block mt-1 bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded">
+                                    Guardian: {{ sig.guardian_relationship }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-4 text-sm text-gray-600">
+                            {{ sig.signed_at|date:"M j, Y, g:i a" }}
+                        </td>
+                        <td class="py-4 px-4 text-right text-xs font-mono text-gray-400">
+                            SIG-{{ sig.id }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="py-8 text-center text-gray-500 italic">No signatures found for this document.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="mt-12 text-center text-xs text-gray-400 no-print">
+            End of official audit report.
+        </div>
+    </div>
+</div>
+{% endblock %}

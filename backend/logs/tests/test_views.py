@@ -71,3 +71,141 @@ class LogHoursIntegrationTests(TestCase):
         saved_log = LogEntry.objects.last()  # <-- Change .first() to .last()
         self.assertEqual(saved_log.duration_hours, 4.00)
         self.assertEqual(saved_log.activity, "T")
+
+
+class LogManagementTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        # --- Farm A (Our Farm) ---
+        self.farm_a = Farm.objects.create(name="Farm A")
+        self.crop_a = Crop.objects.create(farm=self.farm_a, crop_name="Tomatoes")
+
+        self.manager_a = User.objects.create_user(
+            username="mgr_a", email="mgr_a@test.com", password="p", role="farm_manager"
+        )
+        FarmMembership.objects.create(
+            user=self.manager_a,
+            farm=self.farm_a,
+            is_approved=True,
+            agreed_to_waiver=True,
+        )
+
+        self.vol_a = User.objects.create_user(
+            username="vol_a", email="vol_a@test.com", password="p", role="volunteer"
+        )
+        FarmMembership.objects.create(
+            user=self.vol_a, farm=self.farm_a, is_approved=True, agreed_to_waiver=True
+        )
+
+        self.log_a = LogEntry.objects.create(
+            farm=self.farm_a,
+            volunteer=self.vol_a,
+            crop=self.crop_a,
+            activity="P",
+            duration_hours=5.00,
+            date_logged=timezone.now().date(),
+        )
+
+        # --- Farm B (Rival Farm) ---
+        self.farm_b = Farm.objects.create(name="Farm B")
+        self.vol_b = User.objects.create_user(
+            username="vol_b", email="vol_b@test.com", password="p", role="volunteer"
+        )
+        FarmMembership.objects.create(
+            user=self.vol_b, farm=self.farm_b, is_approved=True, agreed_to_waiver=True
+        )
+
+        self.log_b = LogEntry.objects.create(
+            farm=self.farm_b,
+            volunteer=self.vol_b,
+            crop=None,
+            activity="O",
+            duration_hours=2.00,
+            date_logged=timezone.now().date(),
+        )
+
+    def test_directory_access_control(self):
+        """Ensure only managers can view the master log directory."""
+        self.client.force_login(self.vol_a)
+        response = self.client.get(reverse("master_log_directory"))
+        self.assertEqual(response.status_code, 403)
+
+        self.client.force_login(self.manager_a)
+        response = self.client.get(reverse("master_log_directory"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_volunteer_can_edit_own_log(self):
+        """Ensure volunteers can edit their own logs and route back to the dashboard."""
+        self.client.force_login(self.vol_a)
+        url = reverse("edit_log", args=[self.log_a.id])
+        response = self.client.post(
+            url,
+            {
+                "date_logged": timezone.now().date().strftime("%Y-%m-%d"),
+                "crop": self.crop_a.id,
+                "activity": "T",
+                "duration_hours": 3.00,
+            },
+        )
+
+        self.assertRedirects(response, reverse("log_hours"))
+        self.log_a.refresh_from_db()
+        self.assertEqual(self.log_a.duration_hours, 3.00)
+
+    def test_volunteer_cannot_edit_others_log(self):
+        """Ensure volunteers get a 403 Forbidden if they try to edit a peer's log."""
+        vol_a2 = User.objects.create_user(
+            username="vol_a2", email="vola2@test.com", password="p", role="volunteer"
+        )
+        FarmMembership.objects.create(
+            user=vol_a2, farm=self.farm_a, is_approved=True, agreed_to_waiver=True
+        )
+
+        self.client.force_login(vol_a2)
+        url = reverse("edit_log", args=[self.log_a.id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+
+    def test_manager_can_edit_any_log_in_farm(self):
+        """Ensure managers can edit their volunteers' logs and route to the directory."""
+        self.client.force_login(self.manager_a)
+        url = reverse("edit_log", args=[self.log_a.id])
+        response = self.client.post(
+            url,
+            {
+                "date_logged": timezone.now().date().strftime("%Y-%m-%d"),
+                "crop": self.crop_a.id,
+                "activity": "T",
+                "duration_hours": 10.00,
+            },
+        )
+
+        self.assertRedirects(response, reverse("master_log_directory"))
+        self.log_a.refresh_from_db()
+        self.assertEqual(self.log_a.duration_hours, 10.00)
+
+    def test_manager_cannot_edit_rival_log(self):
+        """Ensure managers get a 404 Not Found if they try to edit a rival farm's log."""
+        self.client.force_login(self.manager_a)
+        url = reverse("edit_log", args=[self.log_b.id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_volunteer_can_delete_own_log(self):
+        """Ensure volunteers can delete their own logs securely."""
+        self.client.force_login(self.vol_a)
+        url = reverse("delete_log", args=[self.log_a.id])
+        response = self.client.post(url)
+
+        self.assertRedirects(response, reverse("log_hours"))
+        self.assertFalse(LogEntry.objects.filter(id=self.log_a.id).exists())
+
+    def test_manager_can_delete_farm_log(self):
+        """Ensure managers can delete their volunteers' logs securely."""
+        self.client.force_login(self.manager_a)
+        url = reverse("delete_log", args=[self.log_a.id])
+        response = self.client.post(url)
+
+        self.assertRedirects(response, reverse("master_log_directory"))
+        self.assertFalse(LogEntry.objects.filter(id=self.log_a.id).exists())
