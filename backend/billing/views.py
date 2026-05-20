@@ -6,6 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
+import logging
+
 
 # IMPORTANT: Import your Farm model so the webhook can update it!
 from farms.models import Farm
@@ -133,7 +135,10 @@ def stripe_webhook(request):
 
                 print(f"✅ Farm ID {farm_id} successfully upgraded!")
             except Farm.DoesNotExist:
-                print(f"❌ Error: Farm ID {farm_id} not found.")
+                # The farm record was deleted locally or not yet created. 
+                # There is nothing to revoke, so it is safe to ignore this webhook.
+                logger = logging.getLogger('django')
+                logger.warning(f"⚠️ Subscription deleted webhook received for unknown customer {customer_id}.")
 
     # ---------------------------------------------------------
     # 2. Handle Failed Payments (Expired Cards, Insufficient Funds)
