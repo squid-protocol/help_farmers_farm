@@ -337,35 +337,59 @@
 
 <dialog id="farm_settings_modal" class="p-8 rounded-2xl shadow-2xl border border-gray-200 backdrop:bg-slate-900/50 w-full max-w-2xl">
     <div class="flex justify-between items-center mb-6">
-        <h3 class="text-2xl font-bold text-gray-900">⚙️ Farm Settings</h3>
+        <h3 class="text-2xl font-bold text-gray-900">⚙️ General Farm Settings</h3>
         <button onclick="document.getElementById('farm_settings_modal').close()" class="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
     </div>
+    
+    <div class="mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center shadow-inner">
+        <div>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-widest">System Account Number</p>
+            <p class="text-lg font-mono font-black text-slate-800">
+                {{ farm.account_number|default:"Pending Generation (Save to assign)" }}
+            </p>
+        </div>
+        <div class="text-3xl opacity-50">🏛️</div>
+    </div>
+
     <form method="POST" class="space-y-4">
         {% csrf_token %}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
             <div class="w-full md:col-span-2">
                 <label class="block text-sm font-bold text-gray-700 mb-1">Farm Name</label>
                 {{ farm_form.name }}
             </div>
+            
+            <div class="w-full md:col-span-2">
+                <label class="block text-sm font-bold text-gray-700 mb-1">Physical Address</label>
+                {{ farm_form.address }}
+            </div>
+
             <div class="w-full">
+                <label class="block text-sm font-bold text-gray-700 mb-1">Contact Email</label>
+                {{ farm_form.contact_email }}
+            </div>
+            
+            <div class="w-full">
+                <label class="block text-sm font-bold text-gray-700 mb-1">Phone Number</label>
+                {{ farm_form.phone_number }}
+            </div>
+
+            <div class="w-full pt-4 border-t border-gray-100 mt-2">
                 <label class="block text-sm font-bold text-gray-700 mb-1">Season Starts</label>
                 {{ farm_form.season_start }}
             </div>
-            <div class="w-full">
+            
+            <div class="w-full pt-4 border-t border-gray-100 mt-2">
                 <label class="block text-sm font-bold text-gray-700 mb-1">Season Ends</label>
                 {{ farm_form.season_end }}
             </div>
-        </div>
-        
-        <div class="w-full pt-4 border-t border-gray-100 mt-4">
-            <label class="block text-sm font-bold text-gray-900 mb-1">Liability Waiver & Terms</label>
-            <p class="text-xs text-gray-500 mb-2">Pasting text here will automatically lock out all volunteers until they digitally sign this agreement.</p>
-            {{ farm_form.liability_waiver_text }}
+
         </div>
 
         <div class="flex justify-end gap-3 mt-8">
             <button type="button" onclick="document.getElementById('farm_settings_modal').close()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg transition">Cancel</button>
-            <button type="submit" name="submit_farm_settings" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-6 rounded-lg shadow transition">Save Settings</button>
+            <button type="submit" name="submit_farm_settings" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-6 rounded-lg shadow transition">Confirm Changes</button>
         </div>
     </form>
 </dialog>
@@ -431,6 +455,29 @@
         <div class="w-full">
             <label class="block text-sm font-bold text-gray-700 mb-1">Legal Text / Body</label>
             {{ compliance_setup_form.body_text }}
+        </div>
+
+        <div class="w-full mt-4">
+            <label class="block text-sm font-bold text-gray-700 mb-1">Target Audience</label>
+            {{ compliance_setup_form.assignment_type }}
+        </div>
+
+        <div id="specific_users_box" class="w-full overflow-hidden transition-all duration-300 ease-in-out max-h-0 opacity-0 mt-2">
+            <label class="block text-sm font-bold text-gray-700 mb-2">Select Specific Volunteers</label>
+            
+            <div class="space-y-1 max-h-60 overflow-y-auto custom-scrollbar p-2 border border-gray-200 rounded-xl bg-white shadow-inner">
+                {% for checkbox in compliance_setup_form.assigned_users %}
+                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition border border-transparent hover:border-gray-100">
+                    <label for="{{ checkbox.id_for_label }}" class="font-medium text-gray-700 cursor-pointer flex-grow text-sm">
+                        {{ checkbox.choice_label }}
+                    </label>
+                    <label class="relative inline-flex items-center cursor-pointer ml-4 shrink-0">
+                        {{ checkbox.tag }}
+                        <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
         </div>
 
         <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-4 mt-4">
@@ -548,6 +595,10 @@
             const activeToggle = complianceModal.querySelector('input[name="is_active"]');
             const dateInput = complianceModal.querySelector('input[name="expiration_date"]');
             const dateBox = document.getElementById('expiration_date_box');
+            
+            // NEW: Audience Targeting variables
+            const assignmentType = complianceModal.querySelector('select[name="assignment_type"]');
+            const userBox = document.getElementById('specific_users_box');
 
             // Hide default checkboxes so the custom Tailwind sliders take over
             if(activeToggle) activeToggle.classList.add('sr-only', 'peer');
@@ -563,10 +614,27 @@
                     if(dateInput) dateInput.value = ''; // Clear date if turned off
                 }
             }
+            
+            // NEW: Function to slide the user list down
+            function toggleUserBox() {
+                if (assignmentType && assignmentType.value === 'specific') {
+                    userBox.style.maxHeight = "400px";
+                    userBox.style.opacity = "1";
+                } else if (userBox) {
+                    userBox.style.maxHeight = "0px";
+                    userBox.style.opacity = "0";
+                }
+            }
 
             if (expireToggle) {
                 expireToggle.addEventListener('change', toggleDateBox);
                 toggleDateBox(); // Run on load
+            }
+            
+            // NEW: Event listener for the dropdown
+            if (assignmentType) {
+                assignmentType.addEventListener('change', toggleUserBox);
+                toggleUserBox(); // Run on load
             }
         }
     });

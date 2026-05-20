@@ -124,7 +124,15 @@ class VolunteerEditForm(forms.ModelForm):
 class FarmSettingsForm(forms.ModelForm):
     class Meta:
         model = Farm
-        fields = ["name", "season_start", "season_end", "liability_waiver_text"]
+        # THE FIX: Removed liability_waiver_text, added the new contact fields!
+        fields = [
+            "name",
+            "address",
+            "contact_email",
+            "phone_number",
+            "season_start",
+            "season_end",
+        ]
         widgets = {
             "name": forms.TextInput(
                 attrs={
@@ -132,6 +140,34 @@ class FarmSettingsForm(forms.ModelForm):
                         "bg-gray-50 border border-gray-300 text-gray-900 text-sm "
                         "rounded-lg block w-full p-2.5"
                     ),
+                }
+            ),
+            "address": forms.Textarea(
+                attrs={
+                    "rows": 3,
+                    "class": (
+                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm "
+                        "rounded-lg block w-full p-2.5 custom-scrollbar"
+                    ),
+                    "placeholder": "123 Harvest Lane\nFarmingville, MI 48103",
+                }
+            ),
+            "contact_email": forms.EmailInput(
+                attrs={
+                    "class": (
+                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm "
+                        "rounded-lg block w-full p-2.5"
+                    ),
+                    "placeholder": "info@schulerfarms.com",
+                }
+            ),
+            "phone_number": forms.TextInput(
+                attrs={
+                    "class": (
+                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm "
+                        "rounded-lg block w-full p-2.5"
+                    ),
+                    "placeholder": "(555) 123-4567",
                 }
             ),
             "season_start": forms.DateInput(
@@ -152,44 +188,43 @@ class FarmSettingsForm(forms.ModelForm):
                     ),
                 }
             ),
-            "liability_waiver_text": forms.Textarea(
-                attrs={
-                    "rows": 6,
-                    "class": (
-                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm "
-                        "rounded-lg block w-full p-2.5 custom-scrollbar"
-                    ),
-                    "placeholder": (
-                        "Paste your legal waiver text here. "
-                        "Leave blank to disable the compliance gate."
-                    ),
-                }
-            ),
         }
 
 
 class ComplianceFormSetup(forms.ModelForm):
     class Meta:
         model = ComplianceForm
-        fields = ["name", "body_text", "is_active", "does_expire", "expiration_date"]
+        fields = [
+            "name",
+            "body_text",
+            "assignment_type",
+            "assigned_users",
+            "is_active",
+            "does_expire",
+            "expiration_date",
+        ]
         widgets = {
             "name": forms.TextInput(
                 attrs={
-                    "class": (
-                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm "
-                        "rounded-lg block w-full p-2.5"
-                    ),
-                    "placeholder": "e.g., 2026 Heavy Machinery Waiver",
+                    "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5",
+                    "placeholder": "e.g., Tractor Operation Waiver",
                 }
             ),
             "body_text": forms.Textarea(
                 attrs={
                     "rows": 6,
-                    "class": (
-                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm "
-                        "rounded-lg block w-full p-2.5 custom-scrollbar"
-                    ),
+                    "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 custom-scrollbar",
                     "placeholder": "Paste the legal text here...",
+                }
+            ),
+            "assignment_type": forms.Select(
+                attrs={
+                    "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5",
+                }
+            ),
+            "assigned_users": forms.CheckboxSelectMultiple(
+                attrs={
+                    "class": "sr-only peer",
                 }
             ),
             "expiration_date": forms.DateInput(
@@ -202,3 +237,21 @@ class ComplianceFormSetup(forms.ModelForm):
                 }
             ),
         }
+
+    def __init__(self, *args, **kwargs):
+        # Extract the farm instance before passing to super
+        farm = kwargs.pop("farm", None)
+        super().__init__(*args, **kwargs)
+
+        if farm:
+            # Dynamically filter the users list to only show active standard volunteers on THIS farm
+            valid_users = (
+                User.objects.filter(
+                    memberships__farm=farm,
+                    is_active=True,
+                )
+                .exclude(role__in=["friend", "account_manager"])
+                .distinct()
+            )
+
+            self.fields["assigned_users"].queryset = valid_users
