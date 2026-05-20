@@ -9,13 +9,14 @@ from django.contrib import messages
 from django.utils import timezone
 
 # --- Local App Imports (Farms) ---
-from .models import Crop, WorkCommitment
+from .models import Crop, WorkCommitment, ComplianceForm  # <-- ADDED ComplianceForm
 from .forms import (
     CropForm,
     VolunteerCreationForm,
     WorkCommitmentForm,
     FarmSettingsForm,
     VolunteerEditForm,
+    ComplianceFormSetup,  # <-- ADDED ComplianceFormSetup
 )
 
 # --- Other App Imports ---
@@ -38,6 +39,7 @@ def manager_dashboard(request):
     volunteer_form = VolunteerCreationForm(request_user=request.user)
     commitment_form = WorkCommitmentForm()
     farm_form = FarmSettingsForm(instance=my_farm)
+    compliance_setup_form = ComplianceFormSetup()
 
     if request.method == "POST":
         if "submit_crop" in request.POST:
@@ -121,6 +123,17 @@ def manager_dashboard(request):
                 messages.success(request, "Farm settings updated successfully!")
                 return redirect("manager_dashboard")
 
+        elif "submit_compliance_form" in request.POST:
+            compliance_setup_form = ComplianceFormSetup(request.POST)
+            if compliance_setup_form.is_valid():
+                new_cform = compliance_setup_form.save(commit=False)
+                new_cform.farm = my_farm
+                new_cform.save()
+                messages.success(
+                    request, f"Compliance Form '{new_cform.name}' added successfully!"
+                )
+                return redirect("manager_dashboard")
+
     # Fetch data using the membership bridge
     crops = Crop.objects.filter(farm=my_farm).order_by("-is_active", "crop_name")
 
@@ -131,6 +144,11 @@ def manager_dashboard(request):
     volunteers = [m.user for m in memberships]
 
     commitments = WorkCommitment.objects.filter(farm=my_farm)
+
+    # --- THE MISSING QUERY ---
+    compliance_forms = ComplianceForm.objects.filter(farm=my_farm).order_by(
+        "-is_active", "name"
+    )
 
     active_crop_count = crops.filter(is_active=True).count()
 
@@ -170,6 +188,8 @@ def manager_dashboard(request):
         "crop_form": crop_form,
         "volunteer_form": volunteer_form,
         "commitment_form": commitment_form,
+        "compliance_setup_form": compliance_setup_form,  # <-- NEW
+        "compliance_forms": compliance_forms,  # <-- NEW
         "crops": crops,
         "volunteers": volunteers,
         "commitments": commitments,

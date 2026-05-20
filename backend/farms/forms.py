@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth import get_user_model
-from .models import Crop, WorkCommitment, Farm
+from .models import Crop, WorkCommitment, Farm, ComplianceForm
 
 # Fetch your CustomUser model
 User = get_user_model()
@@ -124,23 +124,81 @@ class VolunteerEditForm(forms.ModelForm):
 class FarmSettingsForm(forms.ModelForm):
     class Meta:
         model = Farm
-        fields = ["name", "season_start", "season_end"]
+        fields = ["name", "season_start", "season_end", "liability_waiver_text"]
         widgets = {
             "name": forms.TextInput(
                 attrs={
-                    "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5",
+                    "class": (
+                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm "
+                        "rounded-lg block w-full p-2.5"
+                    ),
                 }
             ),
             "season_start": forms.DateInput(
                 attrs={
                     "type": "date",
-                    "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5",
+                    "class": (
+                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm "
+                        "rounded-lg block w-full p-2.5"
+                    ),
                 }
             ),
             "season_end": forms.DateInput(
                 attrs={
                     "type": "date",
-                    "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5",
+                    "class": (
+                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm "
+                        "rounded-lg block w-full p-2.5"
+                    ),
+                }
+            ),
+            "liability_waiver_text": forms.Textarea(
+                attrs={
+                    "rows": 6,
+                    "class": (
+                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm "
+                        "rounded-lg block w-full p-2.5 custom-scrollbar"
+                    ),
+                    "placeholder": (
+                        "Paste your legal waiver text here. "
+                        "Leave blank to disable the compliance gate."
+                    ),
+                }
+            ),
+        }
+
+
+class ComplianceFormSetup(forms.ModelForm):
+    class Meta:
+        model = ComplianceForm
+        fields = ["name", "body_text", "is_active", "does_expire", "expiration_date"]
+        widgets = {
+            "name": forms.TextInput(
+                attrs={
+                    "class": (
+                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm "
+                        "rounded-lg block w-full p-2.5"
+                    ),
+                    "placeholder": "e.g., 2026 Heavy Machinery Waiver",
+                }
+            ),
+            "body_text": forms.Textarea(
+                attrs={
+                    "rows": 6,
+                    "class": (
+                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm "
+                        "rounded-lg block w-full p-2.5 custom-scrollbar"
+                    ),
+                    "placeholder": "Paste the legal text here...",
+                }
+            ),
+            "expiration_date": forms.DateInput(
+                attrs={
+                    "type": "date",
+                    "class": (
+                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm "
+                        "rounded-lg block w-full p-2.5"
+                    ),
                 }
             ),
         }

@@ -22,168 +22,119 @@
     {% endif %}
 {% endif %}
 
-<div class="mb-8">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+<div class="mb-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
             <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">⚙️ Manager Command Center</h1>
             <p class="text-gray-500 mt-1">🌾 {{ farm.name }} - Setup & Management</p>
         </div>
+    </div>
+</div>
+
+<div class="mb-8 border-b border-gray-200">
+    <nav class="-mb-px flex space-x-8 overflow-x-auto custom-scrollbar" aria-label="Tabs">
+        <button onclick="switchCommandTab('overview')" id="nav-overview" class="command-tab active-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-emerald-500 text-emerald-600">
+            📊 Overview
+        </button>
+        <button onclick="switchCommandTab('roster')" id="nav-roster" class="command-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            👥 Roster & Commitments
+        </button>
+        <button onclick="switchCommandTab('crops')" id="nav-crops" class="command-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            🌱 Crop Catalog
+        </button>
+        <button onclick="switchCommandTab('admin')" id="nav-admin" class="command-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            ⚖️ Admin & Compliance
+        </button>
+    </nav>
+</div>
+
+<div id="tab-overview" class="command-panel block">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 mt-4">
+        <div class="bg-white p-6 rounded-2xl border border-emerald-100 shadow-sm flex items-center gap-4">
+            <div class="p-4 bg-emerald-50 text-emerald-600 rounded-xl text-3xl">🌱</div>
+            <div>
+                <p class="text-xs text-gray-500 uppercase tracking-wide font-bold">Active Crops</p>
+                <p class="text-3xl font-black text-gray-900">{{ active_crop_count }}</p>
+            </div>
+        </div>
         
-        <div class="flex flex-wrap gap-2">
-            <button onclick="document.getElementById('farm_settings_modal').showModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-lg shadow-sm transition">⚙️ Settings</button>
-            <button onclick="document.getElementById('crop_modal').showModal()" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold py-2 px-4 rounded-lg shadow-sm transition">+ Add Crop</button>
-            <button onclick="document.getElementById('volunteer_modal').showModal()" class="bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-2 px-4 rounded-lg shadow-sm transition">+ Add Volunteer</button>
-            <button onclick="document.getElementById('commitment_modal').showModal()" class="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-bold py-2 px-4 rounded-lg shadow-sm transition">+ Add Commitment</button>
+        <div class="md:col-span-2 bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
+            <p class="text-xs text-gray-500 uppercase tracking-wide font-bold mb-3">Active Volunteer Force</p>
+            <div class="flex flex-wrap gap-6">
+                {% for stat in commitment_summary %}
+                <div class="flex items-center gap-2">
+                    <div class="h-10 w-10 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center text-xl shadow-sm">{{ stat.symbol|default:"⏱️" }}</div>
+                    <div>
+                        <p class="text-lg font-black text-gray-900">{{ stat.count }}</p>
+                        <p class="text-xs text-gray-500 font-medium">{{ stat.name }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+                <div class="flex items-center gap-2">
+                    <div class="h-10 w-10 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center text-xl shadow-sm">👤</div>
+                    <div>
+                        <p class="text-lg font-black text-gray-900">{{ standard_vol_count }}</p>
+                        <p class="text-xs text-gray-500 font-medium">Standard</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="flex flex-wrap gap-2 border-b border-gray-200 pb-4 items-center">
-        <span class="bg-emerald-100 text-emerald-800 font-bold py-2 px-4 rounded-lg shadow-sm">🎛️ Dashboard & Roster</span>
-        <a href="{% url 'progress_report' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg shadow-sm transition">📊 Progress Report</a>
+    <div class="mb-8">
+        <div class="flex items-center gap-2 mb-4">
+            <h3 class="text-xl font-bold text-gray-800">📝 Volunteer Field Notes</h3>
+        </div>
         
-        {% if user.is_staff %}
-            <a href="{% url 'admin:index' %}" class="bg-gray-100 hover:bg-gray-200 text-blue-600 font-bold py-2 px-4 rounded-lg shadow-sm transition">👑 Advanced Admin</a>
-        {% endif %}
-
-        <div class="ml-auto">
-            {% if farm.stripe_customer_id %}
-                <form action="{% url 'customer_portal' %}" method="POST" class="m-0">
-                    {% csrf_token %}
-                    <button type="submit" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold py-2 px-4 rounded-lg shadow-sm transition flex items-center gap-2">
-                        💳 Manage Billing
-                    </button>
-                </form>
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden w-full">
+            {% regroup recent_notes by date_logged|date:"o - \W\e\e\k W" as weekly_notes %}
+            
+            {% if weekly_notes %}
+                <div class="divide-y divide-gray-100">
+                    {% for week in weekly_notes %}
+                        <div class="bg-slate-50 px-6 py-3 border-b border-gray-100">
+                            <h4 class="text-sm font-bold text-slate-700 uppercase tracking-widest">{{ week.grouper }}</h4>
+                        </div>
+                        
+                        <div class="divide-y divide-gray-50">
+                            {% for log in week.list %}
+                                <div class="p-6 hover:bg-gray-50 transition">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div>
+                                            <a href="{% url 'volunteer_detail' log.volunteer.id %}" class="font-bold text-blue-600 hover:text-blue-800">
+                                                {{ log.volunteer.first_name|default:log.volunteer.username }} {{ log.volunteer.last_name }}
+                                            </a>
+                                            <span class="text-gray-400 mx-2">|</span>
+                                            <span class="text-sm font-medium text-gray-600">
+                                                {{ log.date_logged|date:"l, M j" }}
+                                            </span>
+                                        </div>
+                                        <span class="bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-md border border-emerald-100">
+                                            {{ log.get_activity_display }} - {{ log.crop.crop_name|default:"General" }}
+                                        </span>
+                                    </div>
+                                    <p class="text-gray-700 whitespace-pre-wrap text-sm leading-relaxed">{{ log.notes }}</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
             {% else %}
-                <a href="{% url 'pricing' %}" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold py-2 px-4 rounded-lg shadow-sm transition flex items-center gap-2">
-                    💳 Upgrade Plan
-                </a>
+                <div class="p-8 text-center text-gray-500 italic">
+                    No field notes have been submitted yet.
+                </div>
             {% endif %}
         </div>
     </div>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 mt-4">
-    <div class="bg-white p-6 rounded-2xl border border-emerald-100 shadow-sm flex items-center gap-4">
-        <div class="p-4 bg-emerald-50 text-emerald-600 rounded-xl text-3xl">🌱</div>
-        <div>
-            <p class="text-xs text-gray-500 uppercase tracking-wide font-bold">Active Crops</p>
-            <p class="text-3xl font-black text-gray-900">{{ active_crop_count }}</p>
+<div id="tab-roster" class="command-panel hidden">
+    <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+        <div class="flex gap-2">
+            <button onclick="document.getElementById('volunteer_modal').showModal()" class="bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-2 px-4 rounded-lg shadow-sm transition">+ Add Volunteer</button>
+            <button onclick="document.getElementById('commitment_modal').showModal()" class="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-bold py-2 px-4 rounded-lg shadow-sm transition">+ Add Commitment</button>
         </div>
-    </div>
-    
-    <div class="md:col-span-2 bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
-        <p class="text-xs text-gray-500 uppercase tracking-wide font-bold mb-3">Active Volunteer Force</p>
-        <div class="flex flex-wrap gap-6">
-            {% for stat in commitment_summary %}
-            <div class="flex items-center gap-2">
-                <div class="h-10 w-10 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center text-xl shadow-sm">{{ stat.symbol|default:"⏱️" }}</div>
-                <div>
-                    <p class="text-lg font-black text-gray-900">{{ stat.count }}</p>
-                    <p class="text-xs text-gray-500 font-medium">{{ stat.name }}</p>
-                </div>
-            </div>
-            {% endfor %}
-            <div class="flex items-center gap-2">
-                <div class="h-10 w-10 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center text-xl shadow-sm">👤</div>
-                <div>
-                    <p class="text-lg font-black text-gray-900">{{ standard_vol_count }}</p>
-                    <p class="text-xs text-gray-500 font-medium">Standard</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="mb-8">
-    <div class="flex items-center gap-2 mb-4">
-        <h3 class="text-xl font-bold text-gray-800">📝 Volunteer Field Notes</h3>
-    </div>
-    
-    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden w-full">
-        {% regroup recent_notes by date_logged|date:"o - \W\e\e\k W" as weekly_notes %}
-        
-        {% if weekly_notes %}
-            <div class="divide-y divide-gray-100">
-                {% for week in weekly_notes %}
-                    <div class="bg-slate-50 px-6 py-3 border-b border-gray-100">
-                        <h4 class="text-sm font-bold text-slate-700 uppercase tracking-widest">{{ week.grouper }}</h4>
-                    </div>
-                    
-                    <div class="divide-y divide-gray-50">
-                        {% for log in week.list %}
-                            <div class="p-6 hover:bg-gray-50 transition">
-                                <div class="flex justify-between items-start mb-2">
-                                    <div>
-                                        <a href="{% url 'volunteer_detail' log.volunteer.id %}" class="font-bold text-blue-600 hover:text-blue-800">
-                                            {{ log.volunteer.first_name|default:log.volunteer.username }} {{ log.volunteer.last_name }}
-                                        </a>
-                                        <span class="text-gray-400 mx-2">|</span>
-                                        <span class="text-sm font-medium text-gray-600">
-                                            {{ log.date_logged|date:"l, M j" }}
-                                        </span>
-                                    </div>
-                                    <span class="bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-md border border-emerald-100">
-                                        {{ log.get_activity_display }} - {{ log.crop.crop_name|default:"General" }}
-                                    </span>
-                                </div>
-                                <p class="text-gray-700 whitespace-pre-wrap text-sm leading-relaxed">{{ log.notes }}</p>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="p-8 text-center text-gray-500 italic">
-                No field notes have been submitted yet.
-            </div>
-        {% endif %}
-    </div>
-</div>
-
-<div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-    
-    <div>
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <span>🌱</span> Crop Catalog
-            </h3>
-            <div class="flex bg-gray-100 p-1 rounded-lg">
-                <button id="tab-crop-active" onclick="switchCropTab('active')" class="px-3 py-1 text-sm font-bold bg-white text-gray-800 rounded-md shadow-sm transition">Active</button>
-                <button id="tab-crop-total" onclick="switchCropTab('total')" class="px-3 py-1 text-sm font-bold text-gray-500 hover:text-gray-700 rounded-md transition">All Crops</button>
-            </div>
-        </div>
-        <ul class="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100 overflow-hidden">
-            {% for crop in crops %}
-                <li class="crop-row {% if not crop.is_active %}archived-crop{% endif %} p-4 flex justify-between items-center group transition {% if not crop.is_active %}bg-gray-50 opacity-60{% else %}hover:bg-gray-50{% endif %}" {% if not crop.is_active %}style="display: none;"{% endif %}>
-                     <div>
-                        <strong class="text-gray-900 text-lg">{{ crop.crop_name }}</strong>
-                        {% if crop.variety %}<span class="text-gray-500 text-sm ml-1">({{ crop.variety }})</span>{% endif %}
-                        
-                        {% if not crop.is_active %}
-                            <span class="ml-2 text-xs font-bold text-gray-500 uppercase tracking-wider">Archived</span>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                        <a href="{% url 'edit_crop' crop.id %}" class="p-2 rounded-full text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition" title="Edit Crop">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                        </a>
-                        <form action="{% url 'toggle_crop_status' crop.id %}" method="POST" class="m-0">
-                            {% csrf_token %}
-                            <button type="submit" class="p-2 rounded-full transition {% if crop.is_active %}text-gray-400 hover:text-red-600 hover:bg-red-50{% else %}text-gray-400 hover:text-emerald-600 hover:bg-emerald-50{% endif %}" title="{% if crop.is_active %}Archive Crop{% else %}Restore Crop{% endif %}">
-                                {% if crop.is_active %}
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                {% else %}
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
-                                {% endif %}
-                            </button>
-                        </form>
-                    </div>
-                </li>
-            {% empty %}
-                <li class="p-6 text-gray-500 italic text-center text-sm">No crops added yet.</li>
-            {% endfor %}
-        </ul>
+        <a href="{% url 'progress_report' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg shadow-sm transition">📊 View Progress Report</a>
     </div>
 
     <div>
@@ -196,7 +147,7 @@
                 <button id="tab-total" onclick="switchRosterTab('total')" class="px-3 py-1 text-sm font-bold text-gray-500 hover:text-gray-700 rounded-md transition">Total Roster</button>
             </div>
         </div>
-        <ul class="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100 overflow-hidden">
+        <ul class="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100 overflow-hidden mb-8">
             {% for volunteer in volunteers %}
                 <li class="volunteer-row {% if not volunteer.is_active or volunteer.role == 'friend' %}legacy-volunteer{% endif %} p-4 flex justify-between items-center group transition {% if not volunteer.is_active %}bg-gray-50 opacity-60{% else %}hover:bg-gray-50{% endif %}" {% if not volunteer.is_active or volunteer.role == 'friend' %}style="display: none;"{% endif %}>
                     
@@ -256,48 +207,162 @@
             {% endfor %}
         </ul>
     </div>
+
+    <div class="mb-8 border-t border-gray-200 pt-8">
+        <h3 class="text-xl font-bold text-gray-800 mb-4">Current Work Commitments</h3>
+        <ul class="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100 max-w-2xl overflow-hidden">
+            {% for item in commitments %}
+                <li class="p-4 flex justify-between items-center group transition hover:bg-gray-50">
+                    <div>
+                        <strong class="text-gray-900">{% if item.symbol %}{{ item.symbol }} {% endif %}{{ item.name }}</strong>
+                        <span class="bg-emerald-100 text-emerald-800 font-bold px-3 py-1.5 rounded-lg text-sm ml-2">{{ item.required_hours }} Hours</span>
+                    </div>
+                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                        <a href="{% url 'edit_commitment' item.id %}" class="p-2 rounded-full text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition" title="Edit Commitment">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        </a>
+                    </div>
+                </li>
+            {% empty %}
+                <li class="p-4 text-gray-500 italic text-sm">No work commitments added yet.</li>
+            {% endfor %}
+        </ul>
+    </div>
 </div>
 
-<div class="mb-8 border-t border-gray-200 pt-8">
-    <h3 class="text-xl font-bold text-gray-800 mb-4">Current Work Commitments</h3>
-    <ul class="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100 max-w-2xl overflow-hidden">
-        {% for item in commitments %}
-            <li class="p-4 flex justify-between items-center group transition hover:bg-gray-50">
-                <div>
-                    <strong class="text-gray-900">{% if item.symbol %}{{ item.symbol }} {% endif %}{{ item.name }}</strong>
-                    <span class="bg-emerald-100 text-emerald-800 font-bold px-3 py-1.5 rounded-lg text-sm ml-2">{{ item.required_hours }} Hours</span>
-                </div>
-                <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                    <a href="{% url 'edit_commitment' item.id %}" class="p-2 rounded-full text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition" title="Edit Commitment">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                    </a>
-                </div>
-            </li>
-        {% empty %}
-            <li class="p-4 text-gray-500 italic text-sm">No work commitments added yet.</li>
-        {% endfor %}
-    </ul>
+<div id="tab-crops" class="command-panel hidden">
+    <div class="mb-6 flex justify-end">
+        <button onclick="document.getElementById('crop_modal').showModal()" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold py-2 px-4 rounded-lg shadow-sm transition">+ Add Crop</button>
+    </div>
+
+    <div>
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <span>🌱</span> Crop Catalog
+            </h3>
+            <div class="flex bg-gray-100 p-1 rounded-lg">
+                <button id="tab-crop-active" onclick="switchCropTab('active')" class="px-3 py-1 text-sm font-bold bg-white text-gray-800 rounded-md shadow-sm transition">Active</button>
+                <button id="tab-crop-total" onclick="switchCropTab('total')" class="px-3 py-1 text-sm font-bold text-gray-500 hover:text-gray-700 rounded-md transition">All Crops</button>
+            </div>
+        </div>
+        <ul class="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100 overflow-hidden">
+            {% for crop in crops %}
+                <li class="crop-row {% if not crop.is_active %}archived-crop{% endif %} p-4 flex justify-between items-center group transition {% if not crop.is_active %}bg-gray-50 opacity-60{% else %}hover:bg-gray-50{% endif %}" {% if not crop.is_active %}style="display: none;"{% endif %}>
+                     <div>
+                        <strong class="text-gray-900 text-lg">{{ crop.crop_name }}</strong>
+                        {% if crop.variety %}<span class="text-gray-500 text-sm ml-1">({{ crop.variety }})</span>{% endif %}
+                        
+                        {% if not crop.is_active %}
+                            <span class="ml-2 text-xs font-bold text-gray-500 uppercase tracking-wider">Archived</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                        <a href="{% url 'edit_crop' crop.id %}" class="p-2 rounded-full text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition" title="Edit Crop">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        </a>
+                        <form action="{% url 'toggle_crop_status' crop.id %}" method="POST" class="m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="p-2 rounded-full transition {% if crop.is_active %}text-gray-400 hover:text-red-600 hover:bg-red-50{% else %}text-gray-400 hover:text-emerald-600 hover:bg-emerald-50{% endif %}" title="{% if crop.is_active %}Archive Crop{% else %}Restore Crop{% endif %}">
+                                {% if crop.is_active %}
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                {% else %}
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                                {% endif %}
+                            </button>
+                        </form>
+                    </div>
+                </li>
+            {% empty %}
+                <li class="p-6 text-gray-500 italic text-center text-sm">No crops added yet.</li>
+            {% endfor %}
+        </ul>
+    </div>
 </div>
 
-<dialog id="farm_settings_modal" class="p-8 rounded-2xl shadow-2xl border border-gray-200 backdrop:bg-slate-900/50 w-full max-w-lg">
+<div id="tab-admin" class="command-panel hidden">
+    <div class="flex flex-wrap gap-4 mb-8">
+        <button onclick="document.getElementById('farm_settings_modal').showModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-lg shadow-sm transition flex items-center gap-2">⚙️ General Settings</button>
+        
+        {% if farm.stripe_customer_id %}
+            <form action="{% url 'customer_portal' %}" method="POST" class="m-0">
+                {% csrf_token %}
+                <button type="submit" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold py-2 px-4 rounded-lg shadow-sm transition flex items-center gap-2">
+                    💳 Manage Billing
+                </button>
+            </form>
+        {% else %}
+            <a href="{% url 'pricing' %}" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold py-2 px-4 rounded-lg shadow-sm transition flex items-center gap-2">
+                💳 Upgrade Plan
+            </a>
+        {% endif %}
+        
+        {% if user.is_staff %}
+            <div class="border-l border-gray-200 ml-2 pl-6">
+                <a href="{% url 'admin:index' %}" class="bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 px-4 rounded-lg shadow-sm transition flex items-center gap-2">👑 Advanced Admin</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="border-t border-gray-200 pt-8">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <span>⚖️</span> Compliance Hub
+            </h3>
+            <button onclick="document.getElementById('compliance_modal').showModal()" class="bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-2 px-4 rounded-lg shadow-sm transition">+ Add Form</button>
+        </div>
+        <ul class="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100 overflow-hidden">
+            {% for form in compliance_forms %}
+                <li class="p-4 flex flex-col sm:flex-row justify-between sm:items-center group transition {% if not form.is_active %}bg-gray-50 opacity-60{% else %}hover:bg-gray-50{% endif %}">
+                    <div>
+                        <strong class="text-gray-900 text-lg">{{ form.name }}</strong>
+                        {% if not form.is_active %}
+                            <span class="ml-2 text-xs font-bold text-red-500 uppercase tracking-wider">Inactive</span>
+                        {% endif %}
+                        <p class="text-sm text-gray-500 mt-1">
+                            {% if form.does_expire and form.expiration_date %}
+                                Expires on: <strong class="text-gray-700">{{ form.expiration_date|date:"M j, Y" }}</strong>
+                            {% else %}
+                                Never expires.
+                            {% endif %}
+                        </p>
+                    </div>
+                </li>
+            {% empty %}
+                <li class="p-6 text-gray-500 italic text-center text-sm">No compliance forms set up yet.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<dialog id="farm_settings_modal" class="p-8 rounded-2xl shadow-2xl border border-gray-200 backdrop:bg-slate-900/50 w-full max-w-2xl">
     <div class="flex justify-between items-center mb-6">
         <h3 class="text-2xl font-bold text-gray-900">⚙️ Farm Settings</h3>
         <button onclick="document.getElementById('farm_settings_modal').close()" class="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
     </div>
     <form method="POST" class="space-y-4">
         {% csrf_token %}
-        <div class="w-full">
-            <label class="block text-sm font-bold text-gray-700 mb-1">Farm Name</label>
-            {{ farm_form.name }}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="w-full md:col-span-2">
+                <label class="block text-sm font-bold text-gray-700 mb-1">Farm Name</label>
+                {{ farm_form.name }}
+            </div>
+            <div class="w-full">
+                <label class="block text-sm font-bold text-gray-700 mb-1">Season Starts</label>
+                {{ farm_form.season_start }}
+            </div>
+            <div class="w-full">
+                <label class="block text-sm font-bold text-gray-700 mb-1">Season Ends</label>
+                {{ farm_form.season_end }}
+            </div>
         </div>
-        <div class="w-full">
-            <label class="block text-sm font-bold text-gray-700 mb-1">Season Starts</label>
-            {{ farm_form.season_start }}
+        
+        <div class="w-full pt-4 border-t border-gray-100 mt-4">
+            <label class="block text-sm font-bold text-gray-900 mb-1">Liability Waiver & Terms</label>
+            <p class="text-xs text-gray-500 mb-2">Pasting text here will automatically lock out all volunteers until they digitally sign this agreement.</p>
+            {{ farm_form.liability_waiver_text }}
         </div>
-        <div class="w-full">
-            <label class="block text-sm font-bold text-gray-700 mb-1">Season Ends</label>
-            {{ farm_form.season_end }}
-        </div>
+
         <div class="flex justify-end gap-3 mt-8">
             <button type="button" onclick="document.getElementById('farm_settings_modal').close()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg transition">Cancel</button>
             <button type="submit" name="submit_farm_settings" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-6 rounded-lg shadow transition">Save Settings</button>
@@ -349,7 +414,86 @@
         </div>
     </form>
 </dialog>
+
+<dialog id="compliance_modal" class="p-8 rounded-2xl shadow-2xl border border-blue-100 backdrop:bg-slate-900/50 w-full max-w-2xl">
+    <div class="flex justify-between items-center mb-6">
+        <h3 class="text-2xl font-bold text-blue-900">⚖️ Add Compliance Form</h3>
+        <button onclick="document.getElementById('compliance_modal').close()" class="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
+    </div>
+    <form method="POST" class="space-y-4">
+        {% csrf_token %}
+        
+        <div class="w-full">
+            <label class="block text-sm font-bold text-gray-700 mb-1">Form Name</label>
+            {{ compliance_setup_form.name }}
+        </div>
+        
+        <div class="w-full">
+            <label class="block text-sm font-bold text-gray-700 mb-1">Legal Text / Body</label>
+            {{ compliance_setup_form.body_text }}
+        </div>
+
+        <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-4 mt-4">
+            
+            <div class="flex items-center justify-between">
+                <div>
+                    <label class="font-bold text-gray-900">Require Signature Now?</label>
+                    <p class="text-xs text-gray-500">If active, this locks out volunteers until signed.</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    {{ compliance_setup_form.is_active }}
+                    <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                </label>
+            </div>
+
+            <div class="border-t border-gray-200 pt-4 flex items-center justify-between">
+                <div>
+                    <label class="font-bold text-gray-900">Does this form expire?</label>
+                    <p class="text-xs text-gray-500">Automatically deactivate on a specific date.</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    {{ compliance_setup_form.does_expire }}
+                    <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                </label>
+            </div>
+
+            <div id="expiration_date_box" class="overflow-hidden transition-all duration-300 ease-in-out max-h-0 opacity-0">
+                <div class="pt-2">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Expiration Date</label>
+                    {{ compliance_setup_form.expiration_date }}
+                </div>
+            </div>
+
+        </div>
+
+        <div class="flex justify-end gap-3 mt-8">
+            <button type="button" onclick="document.getElementById('compliance_modal').close()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg transition">Cancel</button>
+            <button type="submit" name="submit_compliance_form" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow transition">Save Form</button>
+        </div>
+    </form>
+</dialog>
+
 <script>
+    function switchCommandTab(tabId) {
+        // Hide all panels
+        document.querySelectorAll('.command-panel').forEach(panel => {
+            panel.classList.remove('block');
+            panel.classList.add('hidden');
+        });
+        
+        // Reset all nav buttons to inactive state
+        document.querySelectorAll('.command-tab').forEach(tab => {
+            tab.className = "command-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300";
+        });
+
+        // Show the selected panel
+        document.getElementById('tab-' + tabId).classList.remove('hidden');
+        document.getElementById('tab-' + tabId).classList.add('block');
+        
+        // Highlight the active nav button
+        document.getElementById('nav-' + tabId).className = "command-tab active-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-emerald-500 text-emerald-600";
+    }
+
     function switchRosterTab(tab) {
         const activeTabBtn = document.getElementById('tab-active');
         const totalTabBtn = document.getElementById('tab-total');
@@ -393,6 +537,39 @@
             });
         }
     }
+
+    // New Compliance Form Slide Toggle Logic
+    document.addEventListener('DOMContentLoaded', function() {
+        const complianceModal = document.getElementById('compliance_modal');
+        
+        if (complianceModal) {
+            // Scope our search strictly to the Compliance Modal to avoid ID collisions with the Crop Form!
+            const expireToggle = complianceModal.querySelector('input[name="does_expire"]');
+            const activeToggle = complianceModal.querySelector('input[name="is_active"]');
+            const dateInput = complianceModal.querySelector('input[name="expiration_date"]');
+            const dateBox = document.getElementById('expiration_date_box');
+
+            // Hide default checkboxes so the custom Tailwind sliders take over
+            if(activeToggle) activeToggle.classList.add('sr-only', 'peer');
+            if(expireToggle) expireToggle.classList.add('sr-only', 'peer');
+
+            function toggleDateBox() {
+                if (expireToggle && expireToggle.checked) {
+                    dateBox.style.maxHeight = "150px";
+                    dateBox.style.opacity = "1";
+                } else if(dateBox) {
+                    dateBox.style.maxHeight = "0px";
+                    dateBox.style.opacity = "0";
+                    if(dateInput) dateInput.value = ''; // Clear date if turned off
+                }
+            }
+
+            if (expireToggle) {
+                expireToggle.addEventListener('change', toggleDateBox);
+                toggleDateBox(); // Run on load
+            }
+        }
+    });
 </script>
 
 {% endblock %}
