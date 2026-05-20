@@ -65,3 +65,24 @@ class FarmMembership(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.farm.name} Onboarding"
+
+
+class FormSignature(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="signatures"
+    )
+    # The string reference prevents circular import crashes between apps
+    form = models.ForeignKey(
+        "farms.ComplianceForm", on_delete=models.CASCADE, related_name="signatures"
+    )
+
+    # Legal ESIGN Requirements
+    digital_signature = models.CharField(max_length=255)
+    signed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        # Prevents a user from signing the exact same form twice
+        unique_together = ("user", "form")
+
+    def __str__(self):
+        return f"{self.user.username} signed {self.form.name}"

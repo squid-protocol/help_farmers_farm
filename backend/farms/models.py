@@ -77,3 +77,33 @@ class WorkCommitment(models.Model):
 
     def __str__(self):
         return f"{self.symbol} {self.name} ({self.required_hours} hrs)"
+
+
+class ComplianceForm(models.Model):
+    # Relies on the Farm model already in this file
+    farm = models.ForeignKey(
+        Farm, on_delete=models.CASCADE, related_name="compliance_forms"
+    )
+    name = models.CharField(
+        max_length=255, help_text="e.g., 2026 General Liability Waiver"
+    )
+    body_text = models.TextField()
+
+    # The Slide Toggles
+    is_active = models.BooleanField(default=True)
+    does_expire = models.BooleanField(default=False)
+    expiration_date = models.DateField(null=True, blank=True)
+
+    def is_currently_valid(self):
+        """Checks if the form is active and hasn't passed its expiration date."""
+        if not self.is_active:
+            return False
+        if self.does_expire and self.expiration_date:
+            from django.utils import timezone
+
+            if timezone.now().date() > self.expiration_date:
+                return False
+        return True
+
+    def __str__(self):
+        return f"{self.name} - {self.farm.name}"
