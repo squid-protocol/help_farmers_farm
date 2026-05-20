@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.utils import timezone
 from accounts.models import FormSignature
 from farms.models import ComplianceForm
+from django_q.tasks import async_task
 
 from .forms import ProfileUpdateForm, AccountClaimForm
 
@@ -212,26 +213,38 @@ def sign_waiver_view(request):
                 )
 
         if is_valid:
-            # Create the immutable ESIGN audit record with the new fields
-            FormSignature.objects.create(
-                user=request.user,
-                form=form_to_sign,
+            # Grab the user's IP Address
+            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+            if x_forwarded_for:
+                ip_address = x_forwarded_for.split(',')[0]
+            else:
+                ip_address = request.META.get('REMOTE_ADDR')
+
+            # 1. Instantly save the database record so they pass the tollbooth!
+            sig_record = FormSignature.objects.create(
+                user=request.user, 
+                form=form_to_sign, 
                 digital_signature=signature,
                 is_guardian_signature=is_guardian,
                 guardian_relationship=guardian_relationship if is_guardian else None,
+                signer_ip_address=ip_address
+            )
+
+            # 2. Hand the heavy lifting off to the background worker!
+            async_task(
+                'accounts.tasks.generate_pdf_receipt',
+                sig_record.id,
+                request.user.id,
+                form_to_sign.id,
+                farm.id,
+                ip_address
             )
 
             if remaining_count > 1:
-                messages.success(
-                    request,
-                    f"'{form_to_sign.name}' signed successfully. Please sign the next document.",
-                )
+                messages.success(request, f"'{form_to_sign.name}' signed and is being secured in the background.")
                 return redirect("sign_waiver")
             else:
-                messages.success(
-                    request,
-                    f"All required compliance forms signed. Welcome to {farm.name}!",
-                )
+                messages.success(request, f"All forms signed and secured. Welcome to {farm.name}!")
                 return redirect("log_hours")
         else:
             messages.error(request, error_message)

@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "phonenumber_field",  # <-- Add this!
     "accounts",  # <-- Our custom user app
+    "django_q",         # <-- ADD THIS
     "farms",
     "logs",
     "crispy_forms",
@@ -225,3 +226,17 @@ STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
 
 # --- PHONE NUMBER FORMATTING ---
 PHONENUMBER_DEFAULT_REGION = "US"
+
+# --- DJANGO-Q2 BACKGROUND WORKER ---
+Q_CLUSTER = {
+    'name': 'HelpFarmersQueue',
+    'workers': 1,           # Only process one PDF at a time to save RAM
+    'recycle': 500,         # Restart worker occasionally to clear memory leaks
+    'timeout': 60,          # Kill task if a PDF takes longer than 60 seconds
+    'compress': True,       # Save DB space
+    'save_limit': 250,      # Keep the last 250 success receipts in the DB
+    'queue_limit': 500,     # Max tasks waiting in line
+    'cpu_affinity': 1,      # Restrict worker to a single CPU core
+    'label': 'Django Q',
+    'orm': 'default'        # Use your existing PostgreSQL database as the broker
+}

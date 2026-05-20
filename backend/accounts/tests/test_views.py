@@ -105,11 +105,15 @@ class ProfileViewsTests(TestCase):
         from accounts.models import FormSignature
 
         # Give them a signed form
-        form = ComplianceForm.objects.create(farm=self.farm, name="Test Doc", body_text="text")
-        FormSignature.objects.create(user=self.user, form=form, digital_signature="Test Name")
+        form = ComplianceForm.objects.create(
+            farm=self.farm, name="Test Doc", body_text="text"
+        )
+        FormSignature.objects.create(
+            user=self.user, form=form, digital_signature="Test Name"
+        )
 
         response = self.client.get(reverse("profile"))
-        
+
         self.assertEqual(response.status_code, 200)
         self.assertIn("signatures", response.context)
         self.assertEqual(response.context["signatures"].count(), 1)
@@ -339,7 +343,7 @@ class ComplianceGateTests(TestCase):
         )
         # Should succeed and unlock the app
         self.assertRedirects(response, reverse("log_hours"))
-        
+
         # Verify the database caught the guardian metadata
         sig = FormSignature.objects.get(user=self.user, form=self.compliance_form)
         self.assertTrue(sig.is_guardian_signature)
