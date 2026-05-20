@@ -2,6 +2,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.conf import settings
 from django.utils import timezone
+from django.db.models import Q  # <-- Added the Q import here!
 from accounts.models import FormSignature
 from farms.models import ComplianceForm
 
@@ -63,10 +64,14 @@ class RequireWaiverMiddleware:
         ):
             today = timezone.now().date()
 
-            # 1. Fetch all currently active, unexpired forms for this farm
-            valid_forms = ComplianceForm.objects.filter(
-                farm=request.active_farm, is_active=True
-            ).exclude(does_expire=True, expiration_date__lt=today)
+            # 1. Fetch all unexpired, active forms for this farm
+            # AND ensure it applies to THIS user (either 'all' or they are specifically targeted)
+            valid_forms = (
+                ComplianceForm.objects.filter(farm=request.active_farm, is_active=True)
+                .filter(Q(assignment_type="all") | Q(assigned_users=request.user))
+                .exclude(does_expire=True, expiration_date__lt=today)
+                .distinct()
+            )
 
             if valid_forms.exists():
                 # 2. Find which ones the user has ALREADY signed

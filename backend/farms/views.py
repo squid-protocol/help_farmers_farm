@@ -39,7 +39,7 @@ def manager_dashboard(request):
     volunteer_form = VolunteerCreationForm(request_user=request.user)
     commitment_form = WorkCommitmentForm()
     farm_form = FarmSettingsForm(instance=my_farm)
-    compliance_setup_form = ComplianceFormSetup()
+    compliance_setup_form = ComplianceFormSetup(farm=my_farm)
 
     if request.method == "POST":
         if "submit_crop" in request.POST:
@@ -124,11 +124,17 @@ def manager_dashboard(request):
                 return redirect("manager_dashboard")
 
         elif "submit_compliance_form" in request.POST:
-            compliance_setup_form = ComplianceFormSetup(request.POST)
+            compliance_setup_form = ComplianceFormSetup(
+                request.POST, farm=my_farm
+            )  # Pass farm here!
             if compliance_setup_form.is_valid():
                 new_cform = compliance_setup_form.save(commit=False)
                 new_cform.farm = my_farm
                 new_cform.save()
+
+                # CRITICAL: Save the specific users to the database!
+                compliance_setup_form.save_m2m()
+
                 messages.success(
                     request, f"Compliance Form '{new_cform.name}' added successfully!"
                 )
