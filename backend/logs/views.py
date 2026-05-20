@@ -19,6 +19,17 @@ def log_hours_view(request):
 
     # 1. Handle New Shift Submissions
     if request.method == "POST":
+
+        # --- THE READ-ONLY TOLLBOOTH ---
+        if not request.active_farm.is_active_account:
+            messages.error(
+                request,
+                "🛑 Trial Expired: Your farm's account is in Read-Only mode. "
+                "Please contact your Farm Manager to upgrade."
+            )
+            return redirect("log_hours")
+        # --- END TOLLBOOTH ---
+
         form = LogEntryForm(request.POST, user=request.user)
         if form.is_valid():
             new_log = form.save(commit=False)
