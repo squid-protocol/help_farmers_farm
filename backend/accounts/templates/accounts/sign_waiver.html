@@ -4,20 +4,27 @@
 <div class="max-w-3xl mx-auto mt-10 mb-20 px-4">
     
     <div class="text-center mb-8">
-        <div class="mx-auto h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        <div class="mx-auto h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
         </div>
         <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Legal Action Required</h1>
-        <p class="text-gray-500 mt-2">You must review and sign the liability waiver for <strong>{{ farm.name }}</strong> before you can access the platform.</p>
+        <p class="text-gray-500 mt-2">You must review and sign this document for <strong>{{ farm.name }}</strong> before you can access the platform.</p>
+        
+        {% if remaining_count > 1 %}
+            <div class="inline-block mt-4 bg-amber-100 text-amber-800 font-bold px-4 py-1.5 rounded-full text-sm">
+                Document 1 of {{ remaining_count }}
+            </div>
+        {% endif %}
     </div>
 
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-8">
-        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
-            <h2 class="text-sm font-bold text-gray-500 uppercase tracking-widest">Liability Waiver & Release</h2>
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-8 relative">
+        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h2 class="text-sm font-bold text-gray-500 uppercase tracking-widest">{{ compliance_form.name }}</h2>
+            <span id="scroll-badge" class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded">Scroll to bottom to sign ↓</span>
         </div>
         
-        <div class="p-6 md:p-8 h-96 overflow-y-auto bg-white text-gray-700 text-sm leading-relaxed whitespace-pre-wrap font-serif border-b border-gray-200 custom-scrollbar">
-{{ farm.liability_waiver_text }}
+        <div id="waiver-text-box" class="p-6 md:p-8 h-96 overflow-y-auto bg-white text-gray-700 text-sm leading-relaxed whitespace-pre-wrap font-serif border-b border-gray-200 custom-scrollbar">
+{{ compliance_form.body_text }}
         </div>
 
         <form method="POST" class="p-6 md:p-8 bg-gray-50">
@@ -33,15 +40,44 @@
                 <label class="block text-sm font-bold text-gray-900 mb-2">Digital Signature</label>
                 <p class="text-xs text-gray-500 mb-3">By typing your name below, you electronically agree to the terms outlined above. This constitutes a legally binding signature.</p>
                 
-                <input type="text" name="signature" required 
-                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 font-medium text-gray-900 shadow-sm" 
+                <input type="text" name="signature" id="signature-input" required disabled
+                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 font-medium text-gray-900 shadow-sm disabled:bg-gray-200 disabled:cursor-not-allowed transition" 
                        placeholder="Type your full name (e.g. {{ request.user.first_name }} {{ request.user.last_name }})">
             </div>
 
-            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-6 rounded-xl shadow transition transform hover:-translate-y-0.5">
+            <button type="submit" id="sign-button" disabled
+                    class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-6 rounded-xl shadow transition transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
                 I Agree & Sign
             </button>
         </form>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const textBox = document.getElementById('waiver-text-box');
+        const signatureInput = document.getElementById('signature-input');
+        const signButton = document.getElementById('sign-button');
+        const scrollBadge = document.getElementById('scroll-badge');
+
+        function unlockForm() {
+            signatureInput.disabled = false;
+            signButton.disabled = false;
+            scrollBadge.className = "bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded";
+            scrollBadge.innerText = "✓ Ready to Sign";
+        }
+
+        // Check if the user has scrolled to the bottom (allowing a 5px margin of error for browser rendering quirks)
+        textBox.addEventListener('scroll', function() {
+            if (textBox.scrollHeight - textBox.scrollTop <= textBox.clientHeight + 5) {
+                unlockForm();
+            }
+        });
+
+        // Fail-safe: If the text is so short that there is no scrollbar, unlock it immediately on load
+        if (textBox.scrollHeight <= textBox.clientHeight) {
+            unlockForm();
+        }
+    });
+</script>
 {% endblock %}

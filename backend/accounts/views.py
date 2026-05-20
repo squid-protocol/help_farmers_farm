@@ -7,7 +7,8 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model, login
 from django.db.models import Q
 from django.utils import timezone
-from accounts.models import FarmMembership
+from accounts.models import FormSignature
+from farms.models import ComplianceForm
 
 from .forms import ProfileUpdateForm, AccountClaimForm
 
@@ -148,35 +149,62 @@ def claim_account_setup(request, user_id):
 @login_required
 def sign_waiver_view(request):
     farm = request.active_farm
-    membership = get_object_or_404(FarmMembership, user=request.user, farm=farm)
+    today = timezone.now().date()
 
-    # If they already signed it, kick them back to the dashboard
-    if membership.agreed_to_waiver:
+    # Get all active, unexpired forms for the farm
+    valid_forms = ComplianceForm.objects.filter(farm=farm, is_active=True).exclude(
+        does_expire=True, expiration_date__lt=today
+    )
+
+    # Get the IDs of the forms this user has already signed
+    signed_form_ids = FormSignature.objects.filter(
+        user=request.user, form__in=valid_forms
+    ).values_list("form_id", flat=True)
+
+    # Filter down to only the forms they haven't signed yet
+    pending_forms = valid_forms.exclude(id__in=signed_form_ids)
+
+    # If they've signed everything, let them into the app!
+    if not pending_forms.exists():
         return redirect("log_hours")
+
+    # Grab the first pending form to show them
+    form_to_sign = pending_forms.first()
+    remaining_count = pending_forms.count()
 
     if request.method == "POST":
         signature = request.POST.get("signature", "").strip()
         expected_name = f"{request.user.first_name} {request.user.last_name}".strip()
 
-        # Simple validation to ensure they actually typed their name
         if (
             signature.lower() == expected_name.lower()
             or signature.lower() == request.user.username.lower()
         ):
-            membership.agreed_to_waiver = True
-            membership.digital_signature = signature
-            membership.signed_at = timezone.now()
-            membership.save()
-
-            messages.success(
-                request, f"Waiver digitally signed. Welcome to {farm.name}!"
+            # Create the immutable ESIGN audit record
+            FormSignature.objects.create(
+                user=request.user, form=form_to_sign, digital_signature=signature
             )
-            return redirect("log_hours")
+
+            if remaining_count > 1:
+                messages.success(
+                    request,
+                    f"'{form_to_sign.name}' signed successfully. Please sign the next document.",
+                )
+                return redirect("sign_waiver")
+            else:
+                messages.success(
+                    request,
+                    f"All required compliance forms signed. Welcome to {farm.name}!",
+                )
+                return redirect("log_hours")
         else:
             messages.error(
                 request, "Your signature must match your first and last name exactly."
             )
 
-    return render(
-        request, "accounts/sign_waiver.html", {"farm": farm, "membership": membership}
-    )
+    context = {
+        "farm": farm,
+        "compliance_form": form_to_sign,
+        "remaining_count": remaining_count,
+    }
+    return render(request, "accounts/sign_waiver.html", context)
