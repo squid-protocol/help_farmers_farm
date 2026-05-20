@@ -55,9 +55,8 @@ def manager_dashboard(request):
             # --- THE CAPACITY TOLLBOOTH ---
             # 1. Count how many active standard volunteers this farm currently has
             current_volunteers = User.objects.filter(
-                farmmembership__farm=my_farm,
+                memberships__farm=my_farm,
                 is_active=True,
-                role="volunteer",  # Only count standard volunteers, managers are free
             ).count()
 
             # 2. Check the capacity limits based on their Stripe tier

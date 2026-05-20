@@ -39,6 +39,14 @@ class Farm(models.Model):
         super().save(*args, **kwargs)
 
     @property
+    def trial_days_remaining(self):
+        """Calculates days left in the standard 60-day trial."""
+        trial_length = 60
+        days_active = (timezone.now() - self.created_at).days
+        remaining = trial_length - days_active
+        return max(0, remaining)
+
+    @property
     def is_active_account(self):
         """Returns True if they paid, are comped, or are still in the 90-day trial."""
         return self.is_paid or self.is_comped or self.trial_days_remaining > 0
