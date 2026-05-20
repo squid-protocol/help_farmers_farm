@@ -9,6 +9,12 @@ class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ["first_name", "last_name", "email", "phone_number", "username"]
+        widgets = {
+            "phone_number": forms.TextInput(attrs={"placeholder": "(555) 123-4567"}),
+        }
+        help_texts = {
+            "phone_number": "Format: (555) 123-4567 or +15551234567",
+        }
 
 
 # --- Update the standard Login Form label ---

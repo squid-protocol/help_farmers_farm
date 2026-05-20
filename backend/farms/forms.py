@@ -63,6 +63,10 @@ class VolunteerCreationForm(forms.ModelForm):
             "legacy_years_volunteered": forms.NumberInput(
                 attrs={"placeholder": "e.g., 5"}
             ),
+            "phone_number": forms.TextInput(attrs={"placeholder": "(555) 123-4567"}),
+        }
+        help_texts = {
+            "phone_number": "Format: (555) 123-4567 or +15551234567",
         }
 
     field_order = [
@@ -133,6 +137,9 @@ class FarmSettingsForm(forms.ModelForm):
             "season_start",
             "season_end",
         ]
+        help_texts = {
+            "phone_number": "Format: (555) 123-4567 or +15551234567",
+        }
         widgets = {
             "name": forms.TextInput(
                 attrs={
