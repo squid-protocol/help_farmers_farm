@@ -48,8 +48,58 @@
         </form>
 
     </div>
+
+    <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+        <h3 class="text-2xl font-extrabold text-gray-900 mb-6">Signed Legal Documents</h3>
+        
+        {% if signatures %}
+            <ul class="divide-y divide-gray-100 border-t border-gray-100">
+                {% for sig in signatures %}
+                    <li class="py-4 flex justify-between items-center group">
+                        <div>
+                            <p class="font-bold text-gray-900 text-lg">{{ sig.form.name }}</p>
+                            <p class="text-sm text-gray-500">Signed on {{ sig.signed_at|date:"F j, Y" }}</p>
+                        </div>
+                        <button onclick="document.getElementById('doc-modal-{{ sig.id }}').showModal()" 
+                                class="px-5 py-2 bg-gray-50 border border-gray-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 text-gray-700 font-bold rounded-xl shadow-sm transition text-sm">
+                            View Document
+                        </button>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-gray-500 italic bg-gray-50 p-4 rounded-xl border border-gray-100 text-center">You have not signed any legal documents yet.</p>
+        {% endif %}
+    </div>
+
 </div>
 
+{% for sig in signatures %}
+<dialog id="doc-modal-{{ sig.id }}" class="p-8 rounded-2xl shadow-2xl border border-gray-200 backdrop:bg-slate-900/50 w-full max-w-3xl">
+    <div class="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
+        <h3 class="text-2xl font-bold text-gray-900">{{ sig.form.name }}</h3>
+        <button onclick="document.getElementById('doc-modal-{{ sig.id }}').close()" class="text-gray-400 hover:text-gray-600 font-bold text-3xl leading-none">&times;</button>
+    </div>
+    
+    <div class="h-96 overflow-y-auto bg-gray-50 p-6 md:p-8 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap font-serif border border-gray-200 rounded-xl custom-scrollbar mb-6">
+{{ sig.form.body_text }}
+    </div>
+
+    <div class="bg-blue-50 p-5 rounded-xl border border-blue-100">
+        <h4 class="text-sm font-bold text-blue-900 uppercase tracking-widest border-b border-blue-200 pb-2 mb-3">Digital Signature Receipt</h4>
+        <p class="text-sm text-blue-900 mb-2"><strong>Electronically Signed By:</strong> {{ sig.digital_signature }}</p>
+        
+        {% if sig.is_guardian_signature %}
+            <p class="text-sm text-blue-900 mb-2 bg-blue-100 inline-block px-2 py-1 rounded font-medium">
+                Signed on behalf of minor by: {{ sig.guardian_relationship }}
+            </p>
+        {% endif %}
+        
+        <p class="text-sm text-blue-900 mb-2"><strong>Timestamp:</strong> {{ sig.signed_at|date:"F j, Y, g:i a" }}</p>
+        <p class="text-xs text-blue-700 font-mono mt-4 pt-2 border-t border-blue-200/50">Audit ID: DOC-{{ sig.form.id }}-SIG-{{ sig.id }}-USR-{{ user.id }}</p>
+    </div>
+</dialog>
+{% endfor %}
 <form id="avatar-form" action="{% url 'upload_avatar' %}" method="POST" class="hidden">
     {% csrf_token %}
     <input type="hidden" name="avatar_base64" id="avatar_base64_input">

@@ -15,7 +15,6 @@ from .forms import ProfileUpdateForm, AccountClaimForm
 # Formally load the CustomUser model
 User = get_user_model()
 
-
 @login_required
 def profile_view(request):
     user = request.user
@@ -30,11 +29,14 @@ def profile_view(request):
     else:
         form = ProfileUpdateForm(instance=user)
 
+    # --- NEW: Fetch their signed legal documents ---
+    signatures = FormSignature.objects.filter(user=user).select_related("form").order_by("-signed_at")
+
     context = {
         "form": form,
+        "signatures": signatures,
     }
     return render(request, "accounts/profile.html", context)
-
 
 @login_required
 def upload_avatar(request):
@@ -175,7 +177,7 @@ def sign_waiver_view(request):
     if request.method == "POST":
         signature = request.POST.get("signature", "").strip()
         expected_name = f"{request.user.first_name} {request.user.last_name}".strip()
-        
+
         # --- NEW: Guardian Logic ---
         is_guardian = request.POST.get("is_guardian") == "on"
         guardian_relationship = request.POST.get("guardian_relationship", "").strip()
@@ -199,16 +201,18 @@ def sign_waiver_view(request):
             ):
                 is_valid = True
             else:
-                error_message = "Your signature must match your first and last name exactly."
+                error_message = (
+                    "Your signature must match your first and last name exactly."
+                )
 
         if is_valid:
             # Create the immutable ESIGN audit record with the new fields
             FormSignature.objects.create(
-                user=request.user, 
-                form=form_to_sign, 
+                user=request.user,
+                form=form_to_sign,
                 digital_signature=signature,
                 is_guardian_signature=is_guardian,
-                guardian_relationship=guardian_relationship if is_guardian else None
+                guardian_relationship=guardian_relationship if is_guardian else None,
             )
 
             if remaining_count > 1:
