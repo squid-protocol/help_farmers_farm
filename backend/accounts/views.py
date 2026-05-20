@@ -175,14 +175,40 @@ def sign_waiver_view(request):
     if request.method == "POST":
         signature = request.POST.get("signature", "").strip()
         expected_name = f"{request.user.first_name} {request.user.last_name}".strip()
+        
+        # --- NEW: Guardian Logic ---
+        is_guardian = request.POST.get("is_guardian") == "on"
+        guardian_relationship = request.POST.get("guardian_relationship", "").strip()
 
-        if (
-            signature.lower() == expected_name.lower()
-            or signature.lower() == request.user.username.lower()
-        ):
-            # Create the immutable ESIGN audit record
+        is_valid = False
+        error_message = ""
+
+        if is_guardian:
+            # If a parent is signing, we just ensure they provided a relationship and a name
+            if not guardian_relationship:
+                error_message = "Please specify your relationship to the minor (e.g., Parent, Legal Guardian)."
+            elif len(signature) < 2:
+                error_message = "Please type your full legal name as the guardian."
+            else:
+                is_valid = True
+        else:
+            # Standard strict name matching for adults
+            if (
+                signature.lower() == expected_name.lower()
+                or signature.lower() == request.user.username.lower()
+            ):
+                is_valid = True
+            else:
+                error_message = "Your signature must match your first and last name exactly."
+
+        if is_valid:
+            # Create the immutable ESIGN audit record with the new fields
             FormSignature.objects.create(
-                user=request.user, form=form_to_sign, digital_signature=signature
+                user=request.user, 
+                form=form_to_sign, 
+                digital_signature=signature,
+                is_guardian_signature=is_guardian,
+                guardian_relationship=guardian_relationship if is_guardian else None
             )
 
             if remaining_count > 1:
@@ -198,9 +224,7 @@ def sign_waiver_view(request):
                 )
                 return redirect("log_hours")
         else:
-            messages.error(
-                request, "Your signature must match your first and last name exactly."
-            )
+            messages.error(request, error_message)
 
     context = {
         "farm": farm,

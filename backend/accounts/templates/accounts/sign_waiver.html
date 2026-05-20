@@ -36,9 +36,25 @@
                 {% endfor %}
             {% endif %}
 
+            <div class="mb-6 p-5 bg-blue-50 rounded-xl border border-blue-100 shadow-inner">
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" name="is_guardian" id="guardian-toggle" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                    <span class="text-sm font-bold text-blue-900">I am a parent or legal guardian signing on behalf of a minor.</span>
+                </label>
+                
+                <div id="guardian-details" class="overflow-hidden transition-all duration-300 max-h-0 opacity-0 mt-0">
+                    <div class="pt-4">
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Relationship to Volunteer</label>
+                        <input type="text" name="guardian_relationship" id="relationship-input"
+                               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm" 
+                               placeholder="e.g., Mother, Father, Legal Guardian">
+                    </div>
+                </div>
+            </div>
+
             <div class="mb-6">
                 <label class="block text-sm font-bold text-gray-900 mb-2">Digital Signature</label>
-                <p class="text-xs text-gray-500 mb-3">By typing your name below, you electronically agree to the terms outlined above. This constitutes a legally binding signature.</p>
+                <p id="signature-hint" class="text-xs text-gray-500 mb-3">By typing your name below, you electronically agree to the terms outlined above. This constitutes a legally binding signature.</p>
                 
                 <input type="text" name="signature" id="signature-input" required disabled
                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 font-medium text-gray-900 shadow-sm disabled:bg-gray-200 disabled:cursor-not-allowed transition" 
@@ -59,7 +75,14 @@
         const signatureInput = document.getElementById('signature-input');
         const signButton = document.getElementById('sign-button');
         const scrollBadge = document.getElementById('scroll-badge');
+        
+        // Guardian Elements
+        const guardianToggle = document.getElementById('guardian-toggle');
+        const guardianDetails = document.getElementById('guardian-details');
+        const relationshipInput = document.getElementById('relationship-input');
+        const signatureHint = document.getElementById('signature-hint');
 
+        // Scroll to unlock logic
         function unlockForm() {
             signatureInput.disabled = false;
             signButton.disabled = false;
@@ -67,17 +90,35 @@
             scrollBadge.innerText = "✓ Ready to Sign";
         }
 
-        // Check if the user has scrolled to the bottom (allowing a 5px margin of error for browser rendering quirks)
         textBox.addEventListener('scroll', function() {
             if (textBox.scrollHeight - textBox.scrollTop <= textBox.clientHeight + 5) {
                 unlockForm();
             }
         });
 
-        // Fail-safe: If the text is so short that there is no scrollbar, unlock it immediately on load
         if (textBox.scrollHeight <= textBox.clientHeight) {
             unlockForm();
         }
+
+        // Guardian Toggle Logic
+        guardianToggle.addEventListener('change', function() {
+            if (this.checked) {
+                guardianDetails.style.maxHeight = "100px";
+                guardianDetails.style.opacity = "1";
+                guardianDetails.style.marginTop = "0.5rem";
+                
+                signatureHint.innerText = "Type your full name as the Parent/Guardian to legally agree to these terms on behalf of the minor.";
+                signatureInput.placeholder = "Type your full legal name";
+            } else {
+                guardianDetails.style.maxHeight = "0px";
+                guardianDetails.style.opacity = "0";
+                guardianDetails.style.marginTop = "0";
+                
+                relationshipInput.value = '';
+                signatureHint.innerText = "By typing your name below, you electronically agree to the terms outlined above. This constitutes a legally binding signature.";
+                signatureInput.placeholder = "Type your full name (e.g. {{ request.user.first_name }} {{ request.user.last_name }})";
+            }
+        });
     });
 </script>
 {% endblock %}
