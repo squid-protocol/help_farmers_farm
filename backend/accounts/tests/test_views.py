@@ -3,6 +3,8 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from farms.models import Farm, ComplianceForm
 from accounts.models import FarmMembership, FormSignature
+from django.core import mail
+from django.core.signing import TimestampSigner
 
 User = get_user_model()
 
@@ -63,10 +65,12 @@ class ProfileViewsTests(TestCase):
             "first_name": "Updated",
             "last_name": "Name",
             "email": "test@example.com",
+            "phone_number": "+12025550150",  # Using a valid fictional US number block
+            "address": "123 Test Lane",
         }
         response = self.client.post(reverse("profile"), post_data)
         self.assertRedirects(response, reverse("profile"))
-
+        
     def test_upload_avatar_post(self):
         dummy_base64_image = (
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1"
@@ -92,13 +96,14 @@ class ProfileViewsTests(TestCase):
             "last_name": "Name",
             "email": "test@example.com",
             "phone_number": "Not a real number",
+            "address": "123 Test Lane",
         }
         response = self.client.post(reverse("profile"), post_data)
 
         # It should bounce back to the form (200), not redirect (302)
         self.assertEqual(response.status_code, 200)
         self.assertIn("phone_number", response.context["form"].errors)
-
+        
     def test_profile_view_displays_signed_documents(self):
         """Phase 3: Ensure signed documents are passed to the profile context."""
         from farms.models import ComplianceForm
@@ -249,6 +254,9 @@ class ComplianceGateTests(TestCase):
             last_name="Doe",
             email="john@example.com",
             password="securepassword",
+            phone_number="+15555555555",
+            address="123 Farm Way",
+            is_email_verified=True,
         )
         self.membership = FarmMembership.objects.create(
             user=self.user, farm=self.farm, is_approved=True
@@ -260,7 +268,7 @@ class ComplianceGateTests(TestCase):
         self.assertRedirects(response, reverse("sign_waiver"))
 
     def test_successful_signature_unlocks_account(self):
-        response = self.client.post(reverse("sign_waiver"), {"signature": "John Doe"})
+        response = self.client.post(reverse("sign_waiver"), {"signature": "John Doe", "sign_document": "true"})
         self.assertRedirects(response, reverse("log_hours"))
 
         signature_exists = FormSignature.objects.filter(
@@ -274,7 +282,7 @@ class ComplianceGateTests(TestCase):
         self.assertTemplateUsed(response, "accounts/sign_waiver.html")
 
     def test_waiver_rejects_wrong_name(self):
-        response = self.client.post(reverse("sign_waiver"), {"signature": "Wrong Name"})
+        response = self.client.post(reverse("sign_waiver"), {"signature": "Wrong Name", "sign_document": "true"})
         self.assertEqual(response.status_code, 200)
         self.assertContains(
             response, "Your signature must match your first and last name exactly."
@@ -303,7 +311,7 @@ class ComplianceGateTests(TestCase):
             is_active=True,
             assignment_type="all",
         )
-        response = self.client.post(reverse("sign_waiver"), {"signature": "John Doe"})
+        response = self.client.post(reverse("sign_waiver"), {"signature": "John Doe", "sign_document": "true"})
         self.assertRedirects(response, reverse("sign_waiver"))
 
     def test_specific_assignment_waiver_logic(self):
@@ -338,7 +346,8 @@ class ComplianceGateTests(TestCase):
             {
                 "is_guardian": "on",
                 "guardian_relationship": "Mother",
-                "signature": "Jane Doe",  # Purposely does NOT match the volunteer's name
+                "signature": "Jane Doe",
+                "sign_document": "true",
             },
         )
         # Should succeed and unlock the app
@@ -358,7 +367,120 @@ class ComplianceGateTests(TestCase):
                 "is_guardian": "on",
                 "guardian_relationship": "",  # Missing!
                 "signature": "Jane Doe",
+                "sign_document": "true",
             },
         )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Please specify your relationship")
+
+    def test_waiver_hard_blocks_incomplete_profile(self):
+        """Ensure missing physical address redirects to profile."""
+        self.user.address = ""
+        self.user.save()
+        response = self.client.get(reverse("sign_waiver"))
+        self.assertRedirects(response, reverse("profile"))
+
+    def test_waiver_hard_blocks_unverified_email_post(self):
+        """Ensure unverified users cannot post a signature."""
+        self.user.is_email_verified = False
+        self.user.save()
+        response = self.client.post(reverse("sign_waiver"), {"signature": "John Doe", "sign_document": "true"})
+        
+        # It should bounce them back to the waiver page with the error message
+        self.assertRedirects(response, reverse("sign_waiver"))
+        
+        # Verify the database physically rejected the signature creation
+        signature_exists = FormSignature.objects.filter(user=self.user, form=self.compliance_form).exists()
+        self.assertFalse(signature_exists)
+
+
+class EmailVerificationTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.farm = Farm.objects.create(name="Strict Liability Farm")
+
+        self.compliance_form = ComplianceForm.objects.create(
+            farm=self.farm,
+            name="2026 Safety Waiver",
+            body_text="You must sign this to enter.",
+            is_active=True,
+            assignment_type="all",
+        )
+
+        self.user = User.objects.create_user(
+            username="test_volunteer",
+            first_name="John",
+            last_name="Doe",
+            email="john@example.com",
+            password="securepassword",
+            phone_number="+15555555555",
+            address="123 Farm Way",
+            is_email_verified=False,
+        )
+        self.membership = FarmMembership.objects.create(
+            user=self.user, farm=self.farm, is_approved=True
+        )
+        self.client.force_login(self.user)
+
+    def test_send_verification_email(self):
+        """Ensure the view generates a token and sends an email."""
+        response = self.client.post(reverse("sign_waiver"), {"send_verification": "true"})
+        self.assertRedirects(response, reverse("sign_waiver"))
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("Verify your signature account", mail.outbox[0].subject)
+
+    def test_verify_email_link_valid(self):
+        """Ensure a valid cryptographic token flips the verification boolean."""
+        signer = TimestampSigner()
+        token = signer.sign(self.user.id)
+        response = self.client.get(reverse("verify_email_link", args=[token]))
+        
+        self.assertRedirects(response, reverse("sign_waiver"))
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.is_email_verified)
+
+    def test_verify_email_link_wrong_user(self):
+        """Ensure a user cannot use someone else's token to verify their own account."""
+        signer = TimestampSigner()
+        other_user = User.objects.create_user(username="other", email="other@example.com", password="p")
+        token = signer.sign(other_user.id)
+        
+        response = self.client.get(reverse("verify_email_link", args=[token]))
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.is_email_verified)
+
+    def test_verify_email_link_invalid_token(self):
+        """Ensure tampered or expired tokens fail securely."""
+        response = self.client.get(reverse("verify_email_link", args=["tampered:token:here"]))
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.is_email_verified)
+
+    def test_signature_with_x_forwarded_for(self):
+        """Ensure the server correctly extracts the real IP address behind a proxy."""
+        self.user.is_email_verified = True
+        self.user.save()
+        
+        self.client.post(
+            reverse("sign_waiver"),
+            {"signature": "John Doe", "sign_document": "true"},
+            HTTP_X_FORWARDED_FOR="192.168.1.1, 10.0.0.1"
+        )
+        sig = FormSignature.objects.first()
+        self.assertEqual(sig.signer_ip_address, "192.168.1.1")
+
+    def test_form_signature_str_methods(self):
+        """Ensure the string representations for the WORM database audit logs format correctly."""
+        self.user.is_email_verified = True
+        self.user.save()
+        
+        # Test Standard Signature
+        sig1 = FormSignature.objects.create(user=self.user, form=self.compliance_form, digital_signature="John Doe")
+        self.assertEqual(str(sig1), f"test_volunteer signed {self.compliance_form.name}")
+
+# Test Guardian Signature (Use a second form to avoid the unique DB constraint)
+        form2 = ComplianceForm.objects.create(farm=self.farm, name="Minor Safety Addendum", body_text="text")
+        sig2 = FormSignature.objects.create(
+            user=self.user, form=form2, digital_signature="Jane Doe",
+            is_guardian_signature=True, guardian_relationship="Mother"
+        )
+        self.assertEqual(str(sig2), f"Jane Doe (Guardian) signed {form2.name} for test_volunteer")
