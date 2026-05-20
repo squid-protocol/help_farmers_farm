@@ -21,7 +21,7 @@ from .forms import (
 
 # --- Other App Imports ---
 from logs.models import LogEntry
-from accounts.models import FarmMembership  # <-- ADDED IMPORT
+from accounts.models import FarmMembership, FormSignature  # <-- UPDATED IMPORT
 
 User = get_user_model()
 
@@ -34,6 +34,14 @@ def is_manager(user):
 @user_passes_test(is_manager, login_url="/log-hours/")
 def manager_dashboard(request):
     my_farm = request.active_farm
+
+    # --- FIX: Catch managers/admins who aren't linked to a farm yet ---
+    if not my_farm:
+        messages.error(
+            request, 
+            "You are not linked to a farm. Please assign yourself to a farm via a FarmMembership in the Admin panel."
+        )
+        return redirect("admin:index" if request.user.is_staff else "/")
 
     crop_form = CropForm()
     volunteer_form = VolunteerCreationForm(request_user=request.user)
@@ -193,8 +201,8 @@ def manager_dashboard(request):
         "crop_form": crop_form,
         "volunteer_form": volunteer_form,
         "commitment_form": commitment_form,
-        "compliance_setup_form": compliance_setup_form,  # <-- NEW
-        "compliance_forms": compliance_forms,  # <-- NEW
+        "compliance_setup_form": compliance_setup_form,
+        "compliance_forms": compliance_forms,
         "crops": crops,
         "volunteers": volunteers,
         "commitments": commitments,
@@ -441,3 +449,26 @@ def switch_active_farm(request):
     # Send them back to the exact page they were just looking at
     next_url = request.POST.get("next", "/log-hours/")
     return redirect(next_url)
+
+
+@login_required
+@user_passes_test(is_manager, login_url="/log-hours/")
+def compliance_audit_view(request, form_id):
+    farm = request.active_farm
+
+    # 1. Securely fetch the form, proving it belongs to this specific farm
+    compliance_form = get_object_or_404(ComplianceForm, id=form_id, farm=farm)
+
+    # 2. Fetch every signature for this specific form, ordered by newest first
+    signatures = (
+        FormSignature.objects.filter(form=compliance_form)
+        .select_related("user")
+        .order_by("-signed_at")
+    )
+
+    context = {
+        "farm": farm,
+        "compliance_form": compliance_form,
+        "signatures": signatures,
+    }
+    return render(request, "farms/compliance_audit.html", context)

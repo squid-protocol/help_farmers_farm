@@ -3,6 +3,12 @@ from . import views
 
 urlpatterns = [
     path("dashboard/", views.manager_dashboard, name="manager_dashboard"),
+    # --- NEW: The Compliance Audit Trail ---
+    path(
+        "compliance/<int:form_id>/audit/",
+        views.compliance_audit_view,
+        name="compliance_audit",
+    ),
     path(
         "volunteer/<int:volunteer_id>/",
         views.volunteer_detail_view,
