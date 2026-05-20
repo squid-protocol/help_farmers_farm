@@ -140,7 +140,11 @@ class FarmSettingsForm(forms.ModelForm):
         ]
         help_texts = {
             "phone_number": "Format: (555) 123-4567 or +15551234567",
-            "allows_joint_accounts": "⚠️ LIABILITY WARNING: Enabling this disables strict WORM-compliant waiver tracking so multiple people can share one account. Do not use if you require legally binding digital signatures.",
+            "allows_joint_accounts": (
+                "⚠️ LIABILITY WARNING: Enabling this disables strict WORM-compliant waiver tracking "
+                "so multiple people can share one account. Do not use if you require legally binding "
+                "digital signatures."
+            ),
         }
         widgets = {
             "name": forms.TextInput(

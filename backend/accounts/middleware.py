@@ -92,13 +92,16 @@ class RequireWaiverMiddleware:
                     # We MUST let them access their profile to fill out missing legal info,
                     # and allow the cryptographic email verification link to pass through!
                     allowed_paths = [
-                        reverse("sign_waiver"), 
+                        reverse("sign_waiver"),
                         reverse("logout"),
                         reverse("profile"),
                         reverse("upload_avatar"),
                     ]
 
-                    if request.path not in allowed_paths and not request.path.startswith('/accounts/verify-email/'):
+                    if (
+                        request.path not in allowed_paths
+                        and not request.path.startswith("/accounts/verify-email/")
+                    ):
                         return redirect("sign_waiver")
 
         return self.get_response(request)
