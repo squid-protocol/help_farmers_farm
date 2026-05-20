@@ -19,6 +19,12 @@ class CustomUser(AbstractUser):
 
     # THE FIX: Upgraded to strict E.164 validation
     phone_number = PhoneNumberField(blank=True, null=True)
+    
+    # --- NEW: Physical Address for Legal Identity ---
+    address = models.TextField(blank=True, null=True, help_text="Required for legal waivers.")
+
+    # --- NEW: Legal Verification ---
+    is_email_verified = models.BooleanField(default=False)
 
     legacy_years_volunteered = models.IntegerField(
         default=0, help_text="Number of years volunteered prior to using this system."
@@ -75,23 +81,27 @@ class FormSignature(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="signatures"
     )
-    # The string reference prevents circular import crashes between apps
     form = models.ForeignKey(
         "farms.ComplianceForm", on_delete=models.CASCADE, related_name="signatures"
     )
 
-    # Legal ESIGN Requirements
     digital_signature = models.CharField(max_length=255)
     signed_at = models.DateTimeField(auto_now_add=True)
 
-    # --- NEW: Guardian Signature Support ---
     is_guardian_signature = models.BooleanField(default=False)
     guardian_relationship = models.CharField(
-        max_length=100, null=True, blank=True, help_text="e.g., Parent, Legal Guardian"
+        max_length=100, 
+        null=True, 
+        blank=True,
+        help_text="e.g., Parent, Legal Guardian"
     )
+    
+    # --- NEW: Immutable WORM Data ---
+    signer_ip_address = models.GenericIPAddressField(null=True, blank=True)
+    document_hash = models.CharField(max_length=64, null=True, blank=True, help_text="SHA-256 Cryptographic Hash")
+    pdf_receipt = models.FileField(upload_to="waivers/vault/", null=True, blank=True)
 
     class Meta:
-        # Prevents a user from signing the exact same form twice
         unique_together = ("user", "form")
 
     def __str__(self):
