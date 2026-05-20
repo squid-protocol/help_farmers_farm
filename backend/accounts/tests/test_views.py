@@ -19,7 +19,7 @@ class LoginActionTests(TestCase):
             password="my_secure_password123",
         )
         # Create the bridge!
-        FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True)
+        FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True, agreed_to_waiver=True)
 
         self.login_url = reverse("login")
 
@@ -48,9 +48,7 @@ class ProfileViewsTests(TestCase):
             email="profile_tester@example.com",
             password="testpass123",
         )
-        FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True)
-
-        # Force the test client to log in
+        FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True, agreed_to_waiver=True)
         self.client.force_login(self.user)
 
     def test_profile_view_get(self):
@@ -67,32 +65,131 @@ class ProfileViewsTests(TestCase):
             "last_name": "Name",
             "email": "test@example.com",
         }
-
         response = self.client.post(reverse("profile"), post_data)
-
-        if response.status_code == 200:
-            print("\n--- FORM VALIDATION FAILED ---")
-            print(response.context["form"].errors)
-            print("------------------------------\n")
-
-        # Check that it redirects back to the profile page on success
         self.assertRedirects(response, reverse("profile"))
 
     def test_upload_avatar_post(self):
         """Tests uploading an avatar via base64 data."""
-        # This is a tiny 1x1 pixel transparent PNG encoded in base64
         dummy_base64_image = (
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1"
             "HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
         )
-
         response = self.client.post(
             reverse("upload_avatar"), {"avatar_base64": dummy_base64_image}
         )
-
-        # Check that it redirects back to the profile page
         self.assertRedirects(response, reverse("profile"))
-
-        # Verify the avatar was actually saved to the user model
         self.user.refresh_from_db()
         self.assertTrue(bool(self.user.avatar))
+
+
+class LegacyClaimFlowTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.farm = Farm.objects.create(name="Legacy Farm")
+        
+        # Ghost account (no email)
+        self.ghost_user = User.objects.create(
+            username="john_doe",
+            first_name="John",
+            last_name="Doe",
+            email="" 
+        )
+        self.ghost_user.set_unusable_password()
+        self.ghost_user.save()
+        
+        # Claimed account
+        self.claimed_user = User.objects.create_user(
+            username="jane_doe",
+            first_name="Jane",
+            last_name="Doe",
+            email="jane@example.com",
+            password="securepassword"
+        )
+        self.search_url = reverse("claim_search")
+        self.setup_url = reverse("claim_setup", args=[self.ghost_user.id])
+
+    def test_search_finds_unclaimed_account(self):
+        response = self.client.post(self.search_url, {"search_name": "John"})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.ghost_user, response.context["matches"])
+        self.assertNotIn(self.claimed_user, response.context["matches"])
+
+    def test_search_fails_gracefully_on_no_match(self):
+        response = self.client.post(self.search_url, {"search_name": "Ghostbuster"})
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context["matches"])
+
+    def test_setup_secures_account_and_logs_in(self):
+        response = self.client.post(self.setup_url, {
+            "email": "john.doe@newemail.com",
+            "password": "newsecurepassword123",
+            "confirm_password": "newsecurepassword123"
+        })
+        self.assertRedirects(response, reverse("log_hours"))
+        self.ghost_user.refresh_from_db()
+        self.assertEqual(self.ghost_user.email, "john.doe@newemail.com")
+        self.assertTrue(self.ghost_user.has_usable_password())
+
+
+class EmailTollboothTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.farm = Farm.objects.create(name="Tollbooth Farm")
+        self.no_email_user = User.objects.create_user(
+            username="no_email_guy",
+            email="",
+            password="securepassword"
+        )
+        FarmMembership.objects.create(user=self.no_email_user, farm=self.farm, is_approved=True)
+        self.update_url = reverse("update_email")
+
+    def test_tollbooth_forces_redirect_for_missing_email(self):
+        self.client.force_login(self.no_email_user)
+        response = self.client.get(reverse("log_hours"))
+        self.assertRedirects(response, self.update_url)
+
+    def test_successful_email_update_clears_tollbooth(self):
+        self.client.force_login(self.no_email_user)
+        response = self.client.post(self.update_url, {
+            "email": "nowihaveanemail@example.com"
+        })
+        self.assertRedirects(response, "/")
+        self.no_email_user.refresh_from_db()
+        self.assertEqual(self.no_email_user.email, "nowihaveanemail@example.com")
+
+
+class ComplianceGateTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.farm = Farm.objects.create(
+            name="Strict Liability Farm",
+            liability_waiver_text="You must sign this to enter."
+        )
+        self.user = User.objects.create_user(
+            username="test_volunteer",
+            first_name="John",
+            last_name="Doe",
+            email="john@example.com",
+            password="securepassword"
+        )
+        # Approved, but NO waiver signature yet
+        self.membership = FarmMembership.objects.create(
+            user=self.user, 
+            farm=self.farm, 
+            is_approved=True,
+            agreed_to_waiver=False 
+        )
+        self.client.force_login(self.user)
+
+    def test_middleware_redirects_to_waiver(self):
+        response = self.client.get(reverse("log_hours"))
+        self.assertRedirects(response, reverse("sign_waiver"))
+
+    def test_successful_signature_unlocks_account(self):
+        response = self.client.post(reverse("sign_waiver"), {
+            "signature": "John Doe"
+        })
+        self.assertRedirects(response, reverse("log_hours"))
+        self.membership.refresh_from_db()
+        self.assertTrue(self.membership.agreed_to_waiver)
+        self.assertIsNotNone(self.membership.signed_at)
