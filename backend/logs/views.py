@@ -25,7 +25,7 @@ def log_hours_view(request):
             messages.error(
                 request,
                 "🛑 Trial Expired: Your farm's account is in Read-Only mode. "
-                "Please contact your Farm Manager to upgrade."
+                "Please contact your Farm Manager to upgrade.",
             )
             return redirect("log_hours")
         # --- END TOLLBOOTH ---
