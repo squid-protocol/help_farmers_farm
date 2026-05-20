@@ -168,5 +168,45 @@ def stripe_webhook(request):
             except Farm.DoesNotExist:
                 pass
 
+    # ---------------------------------------------------------
+    # 4. Handle Plan Upgrades/Downgrades & Past Due states
+    # ---------------------------------------------------------
+    elif event["type"] == "customer.subscription.updated":
+        subscription = event["data"]["object"]
+        customer_id = subscription.get("customer")
+        status = subscription.get("status")
+
+        # Safely extract the new Stripe Price ID they just switched to
+        try:
+            new_price_id = subscription["items"]["data"][0]["price"]["id"]
+        except (KeyError, IndexError):
+            new_price_id = None
+
+        if customer_id:
+            try:
+                farm = Farm.objects.get(stripe_customer_id=customer_id)
+                
+                # Map the Stripe Price ID to your internal database tiers
+                if new_price_id == 'price_1TYsDw4Q1x6w9f8FBWp82g03':
+                    farm.subscription_tier = 'starter'
+                elif new_price_id == 'price_1TYsF54Q1x6w9f8FaXJmkcE1':
+                    farm.subscription_tier = 'growth'
+                elif new_price_id == 'price_1TYsJj4Q1x6w9f8FpRlCUh0j': # <-- PREMIUM ADDED
+                    farm.subscription_tier = 'premium'
+                
+                # Ensure their paid status matches the new subscription state
+                # 'past_due' occurs during the dunning grace period
+                if status in ['active', 'trialing', 'past_due']:
+                    farm.is_paid = True
+                else:
+                    farm.is_paid = False
+                    
+                farm.save()
+                print(f"🔄 Farm {farm.name} subscription updated (Status: {status}).")
+                
+            except Farm.DoesNotExist:
+                # Safely ignore webhooks for deleted farms
+                pass
+
     # Always return a 200 OK so Stripe knows we received it
     return HttpResponse(status=200)
