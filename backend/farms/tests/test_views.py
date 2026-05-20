@@ -261,7 +261,34 @@ class ManagerDashboardActionTests(TestCase):
             WorkCommitment.objects.filter(farm=self.farm, name="Quarter Share").exists()
         )
 
-    def test_manager_can_create_compliance_form(self):
+    def test_manager_cannot_create_compliance_form_on_starter_tier(self):
+        """Ensure the UI blocks compliance form creation for Starter tiers."""
+        self.client.force_login(self.manager)
+
+        response = self.client.post(
+            self.dashboard_url,
+            {
+                "submit_compliance_form": "true",
+                "name": "2026 Tractor Safety",
+                "body_text": "Keep your hands inside the vehicle.",
+                "assignment_type": "all",
+                "is_active": True,
+                "does_expire": False,
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        # Verify the database physically rejected the form creation
+        self.assertFalse(
+            ComplianceForm.objects.filter(
+                farm=self.farm, name="2026 Tractor Safety"
+            ).exists()
+        )
+
+    def test_manager_can_create_compliance_form_on_growth_tier(self):
+        """Ensure the form creation works if they upgrade to the Growth tier."""
+        self.farm.subscription_tier = "growth"
+        self.farm.save()
         self.client.force_login(self.manager)
 
         response = self.client.post(
