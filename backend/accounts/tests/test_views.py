@@ -19,7 +19,9 @@ class LoginActionTests(TestCase):
             password="my_secure_password123",
         )
         # Create the bridge!
-        FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True, agreed_to_waiver=True)
+        FarmMembership.objects.create(
+            user=self.user, farm=self.farm, is_approved=True, agreed_to_waiver=True
+        )
 
         self.login_url = reverse("login")
 
@@ -48,7 +50,9 @@ class ProfileViewsTests(TestCase):
             email="profile_tester@example.com",
             password="testpass123",
         )
-        FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True, agreed_to_waiver=True)
+        FarmMembership.objects.create(
+            user=self.user, farm=self.farm, is_approved=True, agreed_to_waiver=True
+        )
         self.client.force_login(self.user)
 
     def test_profile_view_get(self):
@@ -86,24 +90,21 @@ class LegacyClaimFlowTests(TestCase):
     def setUp(self):
         self.client = Client()
         self.farm = Farm.objects.create(name="Legacy Farm")
-        
+
         # Ghost account (no email)
         self.ghost_user = User.objects.create(
-            username="john_doe",
-            first_name="John",
-            last_name="Doe",
-            email="" 
+            username="john_doe", first_name="John", last_name="Doe", email=""
         )
         self.ghost_user.set_unusable_password()
         self.ghost_user.save()
-        
+
         # Claimed account
         self.claimed_user = User.objects.create_user(
             username="jane_doe",
             first_name="Jane",
             last_name="Doe",
             email="jane@example.com",
-            password="securepassword"
+            password="securepassword",
         )
         self.search_url = reverse("claim_search")
         self.setup_url = reverse("claim_setup", args=[self.ghost_user.id])
@@ -120,11 +121,14 @@ class LegacyClaimFlowTests(TestCase):
         self.assertFalse(response.context["matches"])
 
     def test_setup_secures_account_and_logs_in(self):
-        response = self.client.post(self.setup_url, {
-            "email": "john.doe@newemail.com",
-            "password": "newsecurepassword123",
-            "confirm_password": "newsecurepassword123"
-        })
+        response = self.client.post(
+            self.setup_url,
+            {
+                "email": "john.doe@newemail.com",
+                "password": "newsecurepassword123",
+                "confirm_password": "newsecurepassword123",
+            },
+        )
         self.assertRedirects(response, reverse("log_hours"))
         self.ghost_user.refresh_from_db()
         self.assertEqual(self.ghost_user.email, "john.doe@newemail.com")
@@ -136,11 +140,11 @@ class EmailTollboothTests(TestCase):
         self.client = Client()
         self.farm = Farm.objects.create(name="Tollbooth Farm")
         self.no_email_user = User.objects.create_user(
-            username="no_email_guy",
-            email="",
-            password="securepassword"
+            username="no_email_guy", email="", password="securepassword"
         )
-        FarmMembership.objects.create(user=self.no_email_user, farm=self.farm, is_approved=True)
+        FarmMembership.objects.create(
+            user=self.no_email_user, farm=self.farm, is_approved=True
+        )
         self.update_url = reverse("update_email")
 
     def test_tollbooth_forces_redirect_for_missing_email(self):
@@ -150,9 +154,9 @@ class EmailTollboothTests(TestCase):
 
     def test_successful_email_update_clears_tollbooth(self):
         self.client.force_login(self.no_email_user)
-        response = self.client.post(self.update_url, {
-            "email": "nowihaveanemail@example.com"
-        })
+        response = self.client.post(
+            self.update_url, {"email": "nowihaveanemail@example.com"}
+        )
         self.assertRedirects(response, "/")
         self.no_email_user.refresh_from_db()
         self.assertEqual(self.no_email_user.email, "nowihaveanemail@example.com")
@@ -163,21 +167,18 @@ class ComplianceGateTests(TestCase):
         self.client = Client()
         self.farm = Farm.objects.create(
             name="Strict Liability Farm",
-            liability_waiver_text="You must sign this to enter."
+            liability_waiver_text="You must sign this to enter.",
         )
         self.user = User.objects.create_user(
             username="test_volunteer",
             first_name="John",
             last_name="Doe",
             email="john@example.com",
-            password="securepassword"
+            password="securepassword",
         )
         # Approved, but NO waiver signature yet
         self.membership = FarmMembership.objects.create(
-            user=self.user, 
-            farm=self.farm, 
-            is_approved=True,
-            agreed_to_waiver=False 
+            user=self.user, farm=self.farm, is_approved=True, agreed_to_waiver=False
         )
         self.client.force_login(self.user)
 
@@ -186,9 +187,7 @@ class ComplianceGateTests(TestCase):
         self.assertRedirects(response, reverse("sign_waiver"))
 
     def test_successful_signature_unlocks_account(self):
-        response = self.client.post(reverse("sign_waiver"), {
-            "signature": "John Doe"
-        })
+        response = self.client.post(reverse("sign_waiver"), {"signature": "John Doe"})
         self.assertRedirects(response, reverse("log_hours"))
         self.membership.refresh_from_db()
         self.assertTrue(self.membership.agreed_to_waiver)

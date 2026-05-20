@@ -53,31 +53,34 @@ def manager_dashboard(request):
             # --- THE CAPACITY TOLLBOOTH ---
             # 1. Count how many active standard volunteers this farm currently has
             current_volunteers = User.objects.filter(
-                farmmembership__farm=my_farm, 
+                farmmembership__farm=my_farm,
                 is_active=True,
-                role='volunteer' # Only count standard volunteers, managers are free
+                role="volunteer",  # Only count standard volunteers, managers are free
             ).count()
 
             # 2. Check the capacity limits based on their Stripe tier
-            tier = getattr(my_farm, 'subscription_tier', 'starter') # Default to starter if missing
+            tier = getattr(
+                my_farm, "subscription_tier", "starter"
+            )  # Default to starter if missing
             capacity_reached = False
             limit = 0
-            
-            if tier == 'starter' and current_volunteers >= 50:
+
+            if tier == "starter" and current_volunteers >= 50:
                 capacity_reached = True
                 limit = 50
-            elif tier == 'growth' and current_volunteers >= 200:
+            elif tier == "growth" and current_volunteers >= 200:
                 capacity_reached = True
                 limit = 200
-                
+
             # 3. Drop the gate if they are full
             if capacity_reached:
                 messages.error(
-                    request, 
-                    f"🛑 Limit Reached: The {tier.title()} plan allows a maximum of {limit} active volunteers. Please archive old volunteers or upgrade your plan in the Billing portal."
+                    request,
+                    f"🛑 Limit Reached: The {tier.title()} plan allows a maximum of {limit} "
+                    "active volunteers. Please archive old volunteers or upgrade your "
+                    "plan in the Billing portal."
                 )
                 return redirect("manager_dashboard")
-            # --- END TOLLBOOTH ---
 
             # If they pass the tollbooth, process the form...
             volunteer_form = VolunteerCreationForm(
@@ -87,16 +90,16 @@ def manager_dashboard(request):
                 new_user = volunteer_form.save(commit=False)
                 new_user.set_password(volunteer_form.cleaned_data["password"])
                 # Ensure they are saved as a volunteer
-                new_user.role = 'volunteer'
+                new_user.role = "volunteer"
                 new_user.save()
 
                 # --- NEW: Create the Bridge Record! ---
                 FarmMembership.objects.create(
-                    user=new_user, 
-                    farm=my_farm, 
-                    is_approved=True, 
+                    user=new_user,
+                    farm=my_farm,
+                    is_approved=True,
                     agreed_to_waiver=True,
-                    work_commitment=volunteer_form.cleaned_data.get('work_commitment')
+                    work_commitment=volunteer_form.cleaned_data.get("work_commitment"),
                 )
 
                 messages.success(request, "Volunteer created successfully!")

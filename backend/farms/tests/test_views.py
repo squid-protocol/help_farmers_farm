@@ -110,81 +110,99 @@ class ManagerDashboardActionTests(TestCase):
     def setUp(self):
         self.client = Client()
         self.farm = Farm.objects.create(name="Action Test Farm")
-        
+
         # Create a manager with an email so they pass the Email Tollbooth
         self.manager = User.objects.create_user(
             username="action_manager",
             email="manager@test.com",
             password="securepassword",
-            role="farm_manager"
+            role="farm_manager",
         )
         FarmMembership.objects.create(
-            user=self.manager, 
-            farm=self.farm, 
+            user=self.manager,
+            farm=self.farm,
             is_approved=True,
-            agreed_to_waiver=True # Pass the Waiver Tollbooth
+            agreed_to_waiver=True,  # Pass the Waiver Tollbooth
         )
-        
+
         self.dashboard_url = reverse("manager_dashboard")
 
     def test_manager_can_create_crop(self):
         self.client.force_login(self.manager)
-        response = self.client.post(self.dashboard_url, {
-            "submit_crop": "true",
-            "crop_name": "Ghost Peppers",
-            "variety": "Spicy",
-            "is_active": True
-        })
-        
+        response = self.client.post(
+            self.dashboard_url,
+            {
+                "submit_crop": "true",
+                "crop_name": "Ghost Peppers",
+                "variety": "Spicy",
+                "is_active": True,
+            },
+        )
+
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(Crop.objects.filter(farm=self.farm, crop_name="Ghost Peppers").exists())
+        self.assertTrue(
+            Crop.objects.filter(farm=self.farm, crop_name="Ghost Peppers").exists()
+        )
 
     def test_manager_can_create_volunteer(self):
         self.client.force_login(self.manager)
-        response = self.client.post(self.dashboard_url, {
-            "submit_volunteer": "true",
-            "username": "new_guy",
-            "first_name": "New",
-            "last_name": "Guy",
-            "email": "newguy@example.com",
-            "phone_number": "555-1234",
-            "legacy_years_volunteered": 0,
-            "role": "volunteer",
-            "password": "temporarypassword123"
-        })
-        
+        response = self.client.post(
+            self.dashboard_url,
+            {
+                "submit_volunteer": "true",
+                "username": "new_guy",
+                "first_name": "New",
+                "last_name": "Guy",
+                "email": "newguy@example.com",
+                "phone_number": "555-1234",
+                "legacy_years_volunteered": 0,
+                "role": "volunteer",
+                "password": "temporarypassword123",
+            },
+        )
+
         self.assertEqual(response.status_code, 302)
-        
+
         # Verify the user was created
         new_user = User.objects.filter(username="new_guy").first()
         self.assertIsNotNone(new_user)
-        
+
         # CRITICAL: Verify the bridge table was created linking them to the farm!
-        self.assertTrue(FarmMembership.objects.filter(user=new_user, farm=self.farm).exists())
+        self.assertTrue(
+            FarmMembership.objects.filter(user=new_user, farm=self.farm).exists()
+        )
 
     def test_manager_can_create_commitment(self):
         self.client.force_login(self.manager)
         from farms.models import WorkCommitment
-        
-        response = self.client.post(self.dashboard_url, {
-            "submit_commitment": "true",
-            "name": "Quarter Share",
-            "required_hours": 20
-        })
-        
+
+        response = self.client.post(
+            self.dashboard_url,
+            {
+                "submit_commitment": "true",
+                "name": "Quarter Share",
+                "required_hours": 20,
+            },
+        )
+
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(WorkCommitment.objects.filter(farm=self.farm, name="Quarter Share").exists())
+        self.assertTrue(
+            WorkCommitment.objects.filter(farm=self.farm, name="Quarter Share").exists()
+        )
 
     def test_manager_can_update_farm_settings(self):
         self.client.force_login(self.manager)
-        
-        response = self.client.post(self.dashboard_url, {
-            "submit_farm_settings": "true",
-            "name": "Updated Farm Name",
-            "season_start": "2026-05-01",
-            "season_end": "2026-10-31"
-        })
-        
+
+        response = self.client.post(
+            self.dashboard_url,
+            {
+                "submit_farm_settings": "true",
+                "name": "Updated Farm Name",
+                "season_start": "2026-05-01",
+                "season_end": "2026-10-31",
+            },
+        )
+
         self.assertEqual(response.status_code, 302)
         self.farm.refresh_from_db()
         self.assertEqual(self.farm.name, "Updated Farm Name")
