@@ -87,10 +87,7 @@ class FormSignature(models.Model):
     # --- NEW: Guardian Signature Support ---
     is_guardian_signature = models.BooleanField(default=False)
     guardian_relationship = models.CharField(
-        max_length=100, 
-        null=True, 
-        blank=True,
-        help_text="e.g., Parent, Legal Guardian"
+        max_length=100, null=True, blank=True, help_text="e.g., Parent, Legal Guardian"
     )
 
     class Meta:

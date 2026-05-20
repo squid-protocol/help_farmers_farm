@@ -99,6 +99,21 @@ class ProfileViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("phone_number", response.context["form"].errors)
 
+    def test_profile_view_displays_signed_documents(self):
+        """Phase 3: Ensure signed documents are passed to the profile context."""
+        from farms.models import ComplianceForm
+        from accounts.models import FormSignature
+
+        # Give them a signed form
+        form = ComplianceForm.objects.create(farm=self.farm, name="Test Doc", body_text="text")
+        FormSignature.objects.create(user=self.user, form=form, digital_signature="Test Name")
+
+        response = self.client.get(reverse("profile"))
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("signatures", response.context)
+        self.assertEqual(response.context["signatures"].count(), 1)
+
 
 class LegacyClaimFlowTests(TestCase):
     def setUp(self):
@@ -311,3 +326,35 @@ class ComplianceGateTests(TestCase):
         response = self.client.post(reverse("logout"))
         if hasattr(response, "url"):
             self.assertNotEqual(response.url, reverse("sign_waiver"))
+
+    def test_waiver_accepts_guardian_signature(self):
+        """Phase 2: Ensure a parent can sign for a minor without matching the account name."""
+        response = self.client.post(
+            reverse("sign_waiver"),
+            {
+                "is_guardian": "on",
+                "guardian_relationship": "Mother",
+                "signature": "Jane Doe",  # Purposely does NOT match the volunteer's name
+            },
+        )
+        # Should succeed and unlock the app
+        self.assertRedirects(response, reverse("log_hours"))
+        
+        # Verify the database caught the guardian metadata
+        sig = FormSignature.objects.get(user=self.user, form=self.compliance_form)
+        self.assertTrue(sig.is_guardian_signature)
+        self.assertEqual(sig.guardian_relationship, "Mother")
+        self.assertEqual(sig.digital_signature, "Jane Doe")
+
+    def test_waiver_rejects_guardian_without_relationship(self):
+        """Phase 2: Ensure we mandate the relationship field for guardians."""
+        response = self.client.post(
+            reverse("sign_waiver"),
+            {
+                "is_guardian": "on",
+                "guardian_relationship": "",  # Missing!
+                "signature": "Jane Doe",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Please specify your relationship")

@@ -15,6 +15,7 @@ from .forms import ProfileUpdateForm, AccountClaimForm
 # Formally load the CustomUser model
 User = get_user_model()
 
+
 @login_required
 def profile_view(request):
     user = request.user
@@ -30,13 +31,18 @@ def profile_view(request):
         form = ProfileUpdateForm(instance=user)
 
     # --- NEW: Fetch their signed legal documents ---
-    signatures = FormSignature.objects.filter(user=user).select_related("form").order_by("-signed_at")
+    signatures = (
+        FormSignature.objects.filter(user=user)
+        .select_related("form")
+        .order_by("-signed_at")
+    )
 
     context = {
         "form": form,
         "signatures": signatures,
     }
     return render(request, "accounts/profile.html", context)
+
 
 @login_required
 def upload_avatar(request):
