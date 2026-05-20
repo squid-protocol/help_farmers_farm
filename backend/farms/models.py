@@ -1,18 +1,27 @@
 from django.db import models
 from django.utils import timezone
-from datetime import timedelta
+from django.conf import settings
+import uuid
 
 
 class Farm(models.Model):
     name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # --- NEW: Static System Identification ---
+    account_number = models.CharField(
+        max_length=20, unique=True, blank=True, null=True, editable=False
+    )
+
+    # --- NEW: General Farm Info ---
+    address = models.TextField(blank=True, null=True)
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    contact_email = models.EmailField(blank=True, null=True)
+
     # --- Season Boundaries ---
     season_start = models.DateField(null=True, blank=True)
     season_end = models.DateField(null=True, blank=True)
 
-    # --- Custom Onboarding Data ---
-    liability_waiver_text = models.TextField(blank=True, null=True)
     onboarding_schema = models.JSONField(default=list, blank=True)
 
     # --- BILLING & SUBSCRIPTIONS ---
@@ -23,13 +32,11 @@ class Farm(models.Model):
     subscription_tier = models.CharField(max_length=50, blank=True, null=True)
     stripe_customer_id = models.CharField(max_length=255, blank=True, null=True)
 
-    # --- TRIAL LOGIC ---
-    @property
-    def trial_days_remaining(self):
-        """Calculates days left in the 90-day trial."""
-        expiration_date = self.created_at + timedelta(days=90)
-        remaining = (expiration_date - timezone.now()).days
-        return max(0, remaining)
+    def save(self, *args, **kwargs):
+        # Auto-generate a secure, static account number if one doesn't exist
+        if not self.account_number:
+            self.account_number = f"FARM-{uuid.uuid4().hex[:8].upper()}"
+        super().save(*args, **kwargs)
 
     @property
     def is_active_account(self):
@@ -80,7 +87,11 @@ class WorkCommitment(models.Model):
 
 
 class ComplianceForm(models.Model):
-    # Relies on the Farm model already in this file
+    ASSIGNMENT_CHOICES = [
+        ("all", "All Volunteers"),
+        ("specific", "Specific Volunteers"),
+    ]
+
     farm = models.ForeignKey(
         Farm, on_delete=models.CASCADE, related_name="compliance_forms"
     )
@@ -89,18 +100,22 @@ class ComplianceForm(models.Model):
     )
     body_text = models.TextField()
 
-    # The Slide Toggles
+    # --- THE TARGETING ENGINE ---
+    assignment_type = models.CharField(
+        max_length=10, choices=ASSIGNMENT_CHOICES, default="all"
+    )
+    assigned_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, blank=True, related_name="assigned_compliance_forms"
+    )
+
     is_active = models.BooleanField(default=True)
     does_expire = models.BooleanField(default=False)
     expiration_date = models.DateField(null=True, blank=True)
 
     def is_currently_valid(self):
-        """Checks if the form is active and hasn't passed its expiration date."""
         if not self.is_active:
             return False
         if self.does_expire and self.expiration_date:
-            from django.utils import timezone
-
             if timezone.now().date() > self.expiration_date:
                 return False
         return True
