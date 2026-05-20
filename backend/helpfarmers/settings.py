@@ -59,6 +59,7 @@ MIDDLEWARE = [
     "axes.middleware.AxesMiddleware",
     "accounts.middleware.RequireEmailMiddleware",
     "farms.middleware.ActiveFarmMiddleware",
+    "accounts.middleware.RequireWaiverMiddleware",
 ]
 
 ROOT_URLCONF = "helpfarmers.urls"

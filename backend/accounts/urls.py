@@ -16,4 +16,5 @@ urlpatterns = [
     # NEW: The Claim Flow
     path("setup-access/", views.claim_account_search, name="claim_search"),
     path("setup-access/<int:user_id>/", views.claim_account_setup, name="claim_setup"),
+    path("sign-waiver/", views.sign_waiver_view, name="sign_waiver"),
 ]

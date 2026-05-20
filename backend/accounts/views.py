@@ -6,6 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login
 from django.db.models import Q
+from django.utils import timezone
+from accounts.models import FarmMembership
 
 from .forms import ProfileUpdateForm, AccountClaimForm
 
@@ -140,4 +142,41 @@ def claim_account_setup(request, user_id):
         request,
         "accounts/claim_setup.html",
         {"form": form, "claim_user": user_to_claim},
+    )
+
+
+@login_required
+def sign_waiver_view(request):
+    farm = request.active_farm
+    membership = get_object_or_404(FarmMembership, user=request.user, farm=farm)
+
+    # If they already signed it, kick them back to the dashboard
+    if membership.agreed_to_waiver:
+        return redirect("log_hours")
+
+    if request.method == "POST":
+        signature = request.POST.get("signature", "").strip()
+        expected_name = f"{request.user.first_name} {request.user.last_name}".strip()
+
+        # Simple validation to ensure they actually typed their name
+        if (
+            signature.lower() == expected_name.lower()
+            or signature.lower() == request.user.username.lower()
+        ):
+            membership.agreed_to_waiver = True
+            membership.digital_signature = signature
+            membership.signed_at = timezone.now()
+            membership.save()
+
+            messages.success(
+                request, f"Waiver digitally signed. Welcome to {farm.name}!"
+            )
+            return redirect("log_hours")
+        else:
+            messages.error(
+                request, "Your signature must match your first and last name exactly."
+            )
+
+    return render(
+        request, "accounts/sign_waiver.html", {"farm": farm, "membership": membership}
     )
