@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
 from farms.models import Farm
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 class CustomUser(AbstractUser):
@@ -15,7 +16,10 @@ class CustomUser(AbstractUser):
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="volunteer")
     avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
-    phone_number = models.CharField(max_length=20, null=True, blank=True)
+
+    # THE FIX: Upgraded to strict E.164 validation
+    phone_number = PhoneNumberField(blank=True, null=True)
+
     legacy_years_volunteered = models.IntegerField(
         default=0, help_text="Number of years volunteered prior to using this system."
     )

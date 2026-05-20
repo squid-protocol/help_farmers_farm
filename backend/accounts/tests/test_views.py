@@ -84,6 +84,21 @@ class ProfileViewsTests(TestCase):
         response = self.client.post(reverse("upload_avatar"), {})
         self.assertRedirects(response, reverse("profile"))
 
+    def test_profile_view_rejects_invalid_phone(self):
+        """Ensure the profile form strictly validates phone numbers."""
+        post_data = {
+            "username": self.user.username,
+            "first_name": "Updated",
+            "last_name": "Name",
+            "email": "test@example.com",
+            "phone_number": "Not a real number",
+        }
+        response = self.client.post(reverse("profile"), post_data)
+
+        # It should bounce back to the form (200), not redirect (302)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("phone_number", response.context["form"].errors)
+
 
 class LegacyClaimFlowTests(TestCase):
     def setUp(self):

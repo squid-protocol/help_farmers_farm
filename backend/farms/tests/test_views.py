@@ -184,7 +184,7 @@ class ManagerDashboardActionTests(TestCase):
                 "first_name": "New",
                 "last_name": "Guy",
                 "email": "newguy@example.com",
-                "phone_number": "555-1234",
+                "phone_number": "(201) 555-0123",
                 "legacy_years_volunteered": 0,
                 "role": "volunteer",
                 "password": "temporarypassword123",
