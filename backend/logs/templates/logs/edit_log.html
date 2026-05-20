@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load tailwind_filters %}
+
+{% block content %}
+<div class="max-w-xl mx-auto mt-10 mb-20">
+    <div class="mb-6">
+        <a href="{% if is_manager and log.volunteer != request.user %}{% url 'master_log_directory' %}{% else %}{% url 'log_hours' %}{% endif %}" class="text-gray-500 hover:text-emerald-600 font-bold transition flex items-center gap-1">
+            ← Back to {% if is_manager and log.volunteer != request.user %}Directory{% else %}Dashboard{% endif %}
+        </a>
+    </div>
+
+    <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-lg">
+        <h2 class="text-2xl font-extrabold text-gray-900 mb-2">Edit Shift Entry</h2>
+        <p class="text-gray-500 mb-6">
+            {% if is_manager and log.volunteer != request.user %}
+                Editing log for <strong>{{ log.volunteer.first_name|default:log.volunteer.username }}</strong>.
+            {% else %}
+                Update your recorded hours or activity.
+            {% endif %}
+        </p>
+        
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+            {{ form|crispy }}
+            
+            <div class="pt-4 flex justify-between gap-3 border-t border-gray-100 mt-6">
+                <button type="button" onclick="document.getElementById('delete_modal').showModal()" class="px-6 py-3 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-xl transition">Delete Shift</button>
+                
+                <div class="flex gap-3">
+                    <a href="{% if is_manager and log.volunteer != request.user %}{% url 'master_log_directory' %}{% else %}{% url 'log_hours' %}{% endif %}" class="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition">Cancel</a>
+                    <button type="submit" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow transition">Save Changes</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<dialog id="delete_modal" class="p-8 rounded-2xl shadow-2xl border border-red-100 backdrop:bg-slate-900/50 w-full max-w-md">
+    <h3 class="text-2xl font-bold text-red-900 mb-4">⚠️ Delete Shift?</h3>
+    <p class="text-gray-600 mb-6">Are you sure you want to permanently delete this <strong>{{ log.duration_hours }} hour</strong> shift? This action cannot be undone, and the hours will be removed from your farm's analytics.</p>
+    
+    <form action="{% url 'delete_log' log.id %}" method="POST" class="flex justify-end gap-3">
+        {% csrf_token %}
+        <button type="button" onclick="document.getElementById('delete_modal').close()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg transition">Cancel</button>
+        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg shadow transition">Permanently Delete</button>
+    </form>
+</dialog>
+
+<script>
+    // Re-use your smart crop toggling logic from the main logging page
+    document.addEventListener('DOMContentLoaded', function() {
+        const activitySelect = document.getElementById('id_activity');
+        const cropSelect = document.getElementById('id_crop');
+
+        function toggleCropField() {
+            if (!activitySelect || !cropSelect) return;
+            const selectedActivity = activitySelect.value;
+            
+            if (selectedActivity === 'O' || selectedActivity === 'M') {
+                cropSelect.value = '';
+                cropSelect.style.pointerEvents = 'none';
+                cropSelect.classList.add('bg-gray-200', 'opacity-60');
+            } else {
+                cropSelect.style.pointerEvents = 'auto';
+                cropSelect.classList.remove('bg-gray-200', 'opacity-60');
+            }
+        }
+
+        toggleCropField();
+        if (activitySelect) {
+            activitySelect.addEventListener('change', toggleCropField);
+        }
+    });
+</script>
+{% endblock %}

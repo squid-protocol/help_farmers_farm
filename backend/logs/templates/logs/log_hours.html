@@ -92,12 +92,17 @@
                 {% if history_shifts %}
                     <div class="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                         {% for shift in history_shifts %}
-                        <div class="p-3 bg-gray-50 rounded-lg border border-gray-100 flex justify-between items-center text-sm hover:bg-white hover:shadow-sm transition">
+                        <div class="p-3 bg-gray-50 rounded-lg border border-gray-100 flex justify-between items-center text-sm hover:bg-white hover:shadow-sm transition group">
                             <div>
                                 <p class="font-bold text-gray-800">{{ shift.date_logged|date:"M j, Y" }}</p>
                                 <p class="text-gray-500">{{ shift.get_activity_display }} - {{ shift.crop.crop_name|default:"General" }}</p>
                             </div>
-                            <span class="bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded">{{ shift.duration_hours }} hrs</span>
+                            <div class="flex items-center gap-3">
+                                <span class="bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded">{{ shift.duration_hours }} hrs</span>
+                                <a href="{% url 'edit_log' shift.id %}" class="text-gray-400 hover:text-blue-600 transition opacity-0 group-hover:opacity-100" title="Edit Shift">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                </a>
+                            </div>
                         </div>
                         {% endfor %}
                     </div>
