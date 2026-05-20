@@ -15,11 +15,11 @@
         
         <div class="bg-white rounded-3xl p-8 border border-gray-200 shadow-sm hover:shadow-lg transition flex flex-col h-full">
             <h3 class="text-2xl font-bold text-gray-900">Starter</h3>
-            <p class="text-gray-500 text-sm mt-2">Best for small CSAs and community gardens (Up to 50 Volunteers)</p>
+            <p class="text-gray-500 text-sm mt-2">Best for small community gardens operating on the honor system (Up to 50 Volunteers)</p>
             <p class="text-5xl font-extrabold text-gray-900 mt-6 mb-8">$249<span class="text-lg font-medium text-gray-500">/yr</span></p>
             
             <ul class="space-y-4 mb-8 flex-grow text-gray-600">
-                <li class="flex items-center gap-3">✅ Digital Waiver & Onboarding Tollbooth</li>
+                <li class="flex items-center gap-3">✅ Basic Time Logging & Shift Scheduling</li>
                 <li class="flex items-center gap-3">✅ Personal Volunteer Impact Dashboards</li>
                 <li class="flex items-center gap-3">✅ Gamified Pacing & Seasonal Badges</li>
             </ul>
@@ -36,40 +36,40 @@
                 Most Popular
             </div>
             
-            <h3 class="text-2xl font-bold text-white">Growth</h3>
-            <p class="text-emerald-100 text-sm mt-2">Best for scaling operations escaping the clipboard (51-200 Volunteers)</p>
+            <h3 class="text-2xl font-bold text-white">Professional</h3>
+            <p class="text-emerald-100 text-sm mt-2">Best for growing operations that require strict liability protection (Up to 200 Volunteers)</p>
             <p class="text-5xl font-extrabold text-white mt-6 mb-8">$499<span class="text-lg font-medium text-emerald-200">/yr</span></p>
             
             <ul class="space-y-4 mb-8 flex-grow text-emerald-50">
                 <li class="flex items-center gap-3">✨ <span class="font-bold">Everything in Starter, plus:</span></li>
-                <li class="flex items-center gap-3">✅ Strict Row-Level Multi-Tenancy Isolation</li>
-                <li class="flex items-center gap-3">✅ Automated "Double-Click" Prevention</li>
+                <li class="flex items-center gap-3">✅ Automated Liability Compliance Gate</li>
+                <li class="flex items-center gap-3">✅ Standard Digital Signature Waivers</li>
                 <li class="flex items-center gap-3">✅ Manager Command Center & Roster Analytics</li>
             </ul>
 
             <form action="{% url 'create_checkout_session' %}" method="POST" class="mt-auto">
                 {% csrf_token %}
                 <input type="hidden" name="price_id" value="price_1TYsF54Q1x6w9f8FaXJmkcE1">
-                <button type="submit" class="w-full bg-white hover:bg-gray-50 text-emerald-700 font-bold py-3 rounded-xl shadow transition">Select Growth</button>
+                <button type="submit" class="w-full bg-white hover:bg-gray-50 text-emerald-700 font-bold py-3 rounded-xl shadow transition">Select Professional</button>
             </form>
         </div>
 
         <div class="bg-white rounded-3xl p-8 border border-gray-200 shadow-sm hover:shadow-lg transition flex flex-col h-full">
-            <h3 class="text-2xl font-bold text-gray-900">Institutional</h3>
-            <p class="text-gray-500 text-sm mt-2">Best for grant-funded programs requiring audit-ready data (200+ Volunteers)</p>
+            <h3 class="text-2xl font-bold text-gray-900">Enterprise</h3>
+            <p class="text-gray-500 text-sm mt-2">Best for grant-funded programs or massive leagues requiring audit-ready workflows (200+ Volunteers)</p>
             <p class="text-5xl font-extrabold text-gray-900 mt-6 mb-8">$999<span class="text-lg font-medium text-gray-500">/yr</span></p>
             
             <ul class="space-y-4 mb-8 flex-grow text-gray-600">
-                <li class="flex items-center gap-3">✨ <span class="font-bold">Everything in Growth, plus:</span></li>
-                <li class="flex items-center gap-3">✅ 52-Week HTMX Activity Heatmaps</li>
+                <li class="flex items-center gap-3">✨ <span class="font-bold">Everything in Professional, plus:</span></li>
+                <li class="flex items-center gap-3">✅ Custom Multi-Document Workflows</li>
                 <li class="flex items-center gap-3">✅ Exportable Statistical Grant Reports</li>
-                <li class="flex items-center gap-3">✅ Term Frequency & Crop Mastery Analytics</li>
+                <li class="flex items-center gap-3">✅ 52-Week HTMX Activity Heatmaps</li>
             </ul>
 
             <form action="{% url 'create_checkout_session' %}" method="POST" class="mt-auto">
                 {% csrf_token %}
                 <input type="hidden" name="price_id" value="price_1TYsJj4Q1x6w9f8FpRlCUh0j">
-                <button type="submit" class="w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold py-3 rounded-xl transition">Select Institutional</button>
+                <button type="submit" class="w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold py-3 rounded-xl transition">Select Enterprise</button>
             </form>
         </div>
 

@@ -64,6 +64,15 @@ class Farm(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def can_use_waivers(self):
+        """Feature flag for the Compliance Engine."""
+        # The base $249 tier explicitly revokes liability protection
+        if self.subscription_tier == "starter":
+            return False
+        # Free trials, Growth ($499), Institutional ($999), and comped accounts get access
+        return True
+
 
 class Crop(models.Model):
     # The Row-Level Multi-Tenancy link
