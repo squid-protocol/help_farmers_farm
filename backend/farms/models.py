@@ -50,6 +50,9 @@ class Farm(models.Model):
     )
     stripe_customer_id = models.CharField(max_length=255, blank=True, null=True)
 
+    welcome_email_subject = models.CharField(max_length=255, default="Welcome!")
+    welcome_email_body = models.TextField(default="Welcome to our farm!")
+
     def save(self, *args, **kwargs):
         # Auto-generate a secure, static account number if one doesn't exist
         if not self.account_number:

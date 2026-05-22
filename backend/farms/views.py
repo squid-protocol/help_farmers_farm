@@ -232,16 +232,22 @@ def manager_dashboard(request):
     sig_set = set()
 
     if requires_waivers:
-        all_active = ComplianceForm.objects.filter(farm=my_farm, is_active=True).prefetch_related("assigned_users")
+        all_active = ComplianceForm.objects.filter(
+            farm=my_farm, is_active=True
+        ).prefetch_related("assigned_users")
         active_forms = [f for f in all_active if f.is_currently_valid()]
-        user_signatures = FormSignature.objects.filter(form__farm=my_farm).values_list("user_id", "form_id")
+        user_signatures = FormSignature.objects.filter(form__farm=my_farm).values_list(
+            "user_id", "form_id"
+        )
         sig_set = set(user_signatures)
 
     grouped_data = {}
 
     for mem in prog_memberships:
         vol = mem.user
-        logs = LogEntry.objects.filter(volunteer=vol, date_logged__year=current_year, farm=my_farm)
+        logs = LogEntry.objects.filter(
+            volunteer=vol, date_logged__year=current_year, farm=my_farm
+        )
         total_hours = logs.aggregate(total=Sum("duration_hours"))["total"] or 0.0
 
         target = mem.work_commitment.required_hours if mem.work_commitment else 0
@@ -252,7 +258,9 @@ def manager_dashboard(request):
         if requires_waivers:
             missing_waiver = False
             for cform in active_forms:
-                applies = (cform.assignment_type == "all" or vol in cform.assigned_users.all())
+                applies = (
+                    cform.assignment_type == "all" or vol in cform.assigned_users.all()
+                )
                 if applies:
                     if (vol.id, cform.id) not in sig_set:
                         missing_waiver = True
@@ -268,7 +276,9 @@ def manager_dashboard(request):
             "waiver_status": waiver_status,
         }
 
-        group_key = mem.work_commitment.name if mem.work_commitment else "Standard Volunteers"
+        group_key = (
+            mem.work_commitment.name if mem.work_commitment else "Standard Volunteers"
+        )
         if group_key not in grouped_data:
             grouped_data[group_key] = []
         grouped_data[group_key].append(vol_data)
