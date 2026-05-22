@@ -370,4 +370,4 @@ class LogUnhappyPathTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
         # Prove the pacing engine calculated the necessary trajectory
-        self.assertTrue(response.context["required_pace"] > 0)
+        self.assertGreater(response.context["required_pace"], 0)
