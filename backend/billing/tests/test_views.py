@@ -279,3 +279,97 @@ class WebhookEdgeCaseTests(TestCase):
         }
         response = self.client.post(self.webhook_url, content_type="application/json")
         self.assertEqual(response.status_code, 200)
+
+
+class WebhookSubscriptionUpdatedTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.webhook_url = reverse("stripe_webhook")
+        self.farm = Farm.objects.create(
+            name="Upgrade Farm",
+            is_paid=True,
+            stripe_customer_id="cus_upgrade_123",
+            subscription_tier="starter",
+        )
+
+    @patch("stripe.Webhook.construct_event")
+    def test_webhook_upgrades_tier_to_growth(self, mock_construct):
+        """Ensure a plan change updates the subscription tier string."""
+        mock_construct.return_value = {
+            "type": "customer.subscription.updated",
+            "data": {
+                "object": {
+                    "customer": "cus_upgrade_123",
+                    "status": "active",
+                    "items": {
+                        "data": [{"price": {"id": "price_1TYsF54Q1x6w9f8FaXJmkcE1"}}]
+                    },
+                }
+            },
+        }
+        response = self.client.post(self.webhook_url, content_type="application/json")
+        self.assertEqual(response.status_code, 200)
+
+        self.farm.refresh_from_db()
+        self.assertEqual(self.farm.subscription_tier, "growth")
+        self.assertTrue(self.farm.is_paid)
+
+    @patch("stripe.Webhook.construct_event")
+    def test_webhook_upgrades_tier_to_premium(self, mock_construct):
+        """Ensure the new premium tier maps correctly."""
+        mock_construct.return_value = {
+            "type": "customer.subscription.updated",
+            "data": {
+                "object": {
+                    "customer": "cus_upgrade_123",
+                    "status": "active",
+                    "items": {
+                        "data": [{"price": {"id": "price_1TYsJj4Q1x6w9f8FpRlCUh0j"}}]
+                    },
+                }
+            },
+        }
+        response = self.client.post(self.webhook_url, content_type="application/json")
+        self.assertEqual(response.status_code, 200)
+
+        self.farm.refresh_from_db()
+        self.assertEqual(self.farm.subscription_tier, "premium")
+
+    @patch("stripe.Webhook.construct_event")
+    def test_webhook_unpaid_status_revokes_access(self, mock_construct):
+        """Ensure a failed recurring payment gracefully disables is_paid."""
+        mock_construct.return_value = {
+            "type": "customer.subscription.updated",
+            "data": {
+                "object": {
+                    "customer": "cus_upgrade_123",
+                    "status": "unpaid",
+                    "items": {
+                        "data": [{"price": {"id": "price_1TYsF54Q1x6w9f8FaXJmkcE1"}}]
+                    },
+                }
+            },
+        }
+        response = self.client.post(self.webhook_url, content_type="application/json")
+        self.assertEqual(response.status_code, 200)
+
+        self.farm.refresh_from_db()
+        self.assertFalse(self.farm.is_paid)
+
+    @patch("stripe.Webhook.construct_event")
+    def test_webhook_ignores_missing_farm_on_update(self, mock_construct):
+        """Ensure the system doesn't crash on an update for a deleted farm."""
+        mock_construct.return_value = {
+            "type": "customer.subscription.updated",
+            "data": {
+                "object": {
+                    "customer": "cus_ghost_updater",
+                    "status": "active",
+                    "items": {
+                        "data": [{"price": {"id": "price_1TYsF54Q1x6w9f8FaXJmkcE1"}}]
+                    },
+                }
+            },
+        }
+        response = self.client.post(self.webhook_url, content_type="application/json")
+        self.assertEqual(response.status_code, 200)
