@@ -238,7 +238,12 @@ class EmailTollboothTests(TestCase):
 class ComplianceGateTests(TestCase):
     def setUp(self):
         self.client = Client()
-        self.farm = Farm.objects.create(name="Strict Liability Farm")
+        self.farm = Farm.objects.create(
+            name="Strict Liability Farm",
+            welcome_email_body="Welcome!",
+            welcome_email_subject="Hi!",
+            subscription_tier="growth",
+        )
 
         self.compliance_form = ComplianceForm.objects.create(
             farm=self.farm,
@@ -261,6 +266,11 @@ class ComplianceGateTests(TestCase):
         self.membership = FarmMembership.objects.create(
             user=self.user, farm=self.farm, is_approved=True
         )
+
+        session = self.client.session
+        session["active_farm_id"] = self.farm.id
+        session.save()
+
         self.client.force_login(self.user)
 
     def test_middleware_redirects_to_waiver(self):
@@ -409,7 +419,11 @@ class ComplianceGateTests(TestCase):
 class EmailVerificationTests(TestCase):
     def setUp(self):
         self.client = Client()
-        self.farm = Farm.objects.create(name="Strict Liability Farm")
+        self.farm = Farm.objects.create(
+            name="Strict Liability Farm",
+            welcome_email_body="Welcome!",
+            welcome_email_subject="Hi!",
+        )
 
         self.compliance_form = ComplianceForm.objects.create(
             farm=self.farm,
@@ -429,9 +443,17 @@ class EmailVerificationTests(TestCase):
             address="123 Farm Way",
             is_email_verified=False,
         )
+        self.user.is_email_verified = False
+        self.user.save()
+
         self.membership = FarmMembership.objects.create(
             user=self.user, farm=self.farm, is_approved=True
         )
+
+        session = self.client.session
+        session["active_farm_id"] = self.farm.id
+        session.save()
+
         self.client.force_login(self.user)
 
     def test_send_verification_email(self):

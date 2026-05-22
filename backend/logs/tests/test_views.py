@@ -13,7 +13,11 @@ class LogHoursIntegrationTests(TestCase):
     def setUp(self):
         # 1. Arrange: Build the world
         self.client = Client()
-        self.farm = Farm.objects.create(name="Schuler Test Farm")
+        self.farm = Farm.objects.create(
+            name="Schuler Test Farm",
+            welcome_email_body="Welcome to the farm!",
+            welcome_email_subject="Welcome!",
+        )
         self.crop = Crop.objects.create(farm=self.farm, crop_name="Heirloom Tomatoes")
 
         self.user = User.objects.create_user(
@@ -74,15 +78,26 @@ class LogHoursIntegrationTests(TestCase):
 
 
 class LogManagementTests(TestCase):
+
     def setUp(self):
+        import uuid
+
         self.client = Client()
+        uid = str(uuid.uuid4())[:8]
 
         # --- Farm A (Our Farm) ---
-        self.farm_a = Farm.objects.create(name="Farm A")
+        self.farm_a = Farm.objects.create(
+            name=f"Farm A {uid}",
+            welcome_email_body="Welcome to Farm A!",
+            welcome_email_subject="Welcome!",
+        )
         self.crop_a = Crop.objects.create(farm=self.farm_a, crop_name="Tomatoes")
 
         self.manager_a = User.objects.create_user(
-            username="mgr_a", email="mgr_a@test.com", password="p", role="farm_manager"
+            username=f"mgr_a_{uid}",
+            email=f"mgr_a_{uid}@test.com",
+            password="p",
+            role="farm_manager",
         )
         FarmMembership.objects.create(
             user=self.manager_a,
@@ -92,7 +107,10 @@ class LogManagementTests(TestCase):
         )
 
         self.vol_a = User.objects.create_user(
-            username="vol_a", email="vol_a@test.com", password="p", role="volunteer"
+            username=f"vol_a_{uid}",
+            email=f"vol_a_{uid}@test.com",
+            password="p",
+            role="volunteer",
         )
         FarmMembership.objects.create(
             user=self.vol_a, farm=self.farm_a, is_approved=True, agreed_to_waiver=True
@@ -108,9 +126,16 @@ class LogManagementTests(TestCase):
         )
 
         # --- Farm B (Rival Farm) ---
-        self.farm_b = Farm.objects.create(name="Farm B")
+        self.farm_b = Farm.objects.create(
+            name=f"Farm B {uid}",
+            welcome_email_body="Welcome to Farm B!",
+            welcome_email_subject="Welcome!",
+        )
         self.vol_b = User.objects.create_user(
-            username="vol_b", email="vol_b@test.com", password="p", role="volunteer"
+            username=f"vol_b_{uid}",
+            email=f"vol_b_{uid}@test.com",
+            password="p",
+            role="volunteer",
         )
         FarmMembership.objects.create(
             user=self.vol_b, farm=self.farm_b, is_approved=True, agreed_to_waiver=True
