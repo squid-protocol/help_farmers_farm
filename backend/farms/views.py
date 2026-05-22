@@ -22,6 +22,7 @@ from .forms import (
 # --- Other App Imports ---
 from logs.models import LogEntry
 from accounts.models import FarmMembership, FormSignature  # <-- UPDATED IMPORT
+from farms.tasks import send_volunteer_welcome_email, send_broadcast_email
 
 User = get_user_model()
 
@@ -111,7 +112,16 @@ def manager_dashboard(request):
                     work_commitment=volunteer_form.cleaned_data.get("work_commitment"),
                 )
 
-                messages.success(request, "Volunteer created successfully!")
+                # --- TRIGGER: Fire the Automated Welcome Email ---
+                email_status = send_volunteer_welcome_email(
+                    user_id=new_user.id,
+                    farm_id=my_farm.id,
+                    raw_password=volunteer_form.cleaned_data["password"],
+                )
+
+                messages.success(
+                    request, f"Volunteer created successfully! {email_status}"
+                )
                 return redirect("manager_dashboard")
 
         elif "submit_commitment" in request.POST:
@@ -129,6 +139,32 @@ def manager_dashboard(request):
                 farm_form.save()
                 messages.success(request, "Farm settings updated successfully!")
                 return redirect("manager_dashboard")
+
+        elif "submit_broadcast" in request.POST:
+            subject = request.POST.get("broadcast_subject")
+            body = request.POST.get("broadcast_body")
+            audience = request.POST.get("audience", "all")
+            specific_ids = request.POST.getlist("specific_users")
+
+            status_msg = send_broadcast_email(
+                farm_id=my_farm.id,
+                subject=subject,
+                custom_body=body,
+                audience_value=audience,
+                specific_ids=specific_ids,
+            )
+            messages.success(request, status_msg)
+            return redirect("manager_dashboard")
+
+        elif "submit_welcome_email" in request.POST:
+            # Handle the Welcome Email update from the Comms tab
+            my_farm.welcome_email_subject = request.POST.get(
+                "welcome_email_subject", ""
+            )
+            my_farm.welcome_email_body = request.POST.get("welcome_email_body", "")
+            my_farm.save()
+            messages.success(request, "Automated Welcome Email template updated!")
+            return redirect("manager_dashboard")
 
         elif "submit_compliance_form" in request.POST:
             # --- NEW: FEATURE FLAG TOLLBOOTH ---

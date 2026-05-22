@@ -222,6 +222,102 @@
     </div>
 </div>
 
+<div id="tab-comms" class="command-panel hidden">
+    <div class="mb-6 mt-4">
+        <h2 class="text-2xl font-bold text-gray-800">📢 Farm Communications</h2>
+        <p class="text-gray-500 mt-1">Manage automated onboarding and mass broadcasts.</p>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
+        
+        <div class="bg-white rounded-xl shadow-sm border border-blue-100 p-6">
+            <h3 class="text-xl font-bold text-blue-900 border-b border-gray-100 pb-3 mb-4 flex items-center gap-2"><span>📤</span> Send a Broadcast</h3>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Target Audience</label>
+                        <select name="audience" id="audience_select" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                            <option value="all">👥 All Active Volunteers</option>
+                            <option disabled>──────────</option>
+                            {% for c in commitments %}
+                                <option value="tier_{{ c.id }}">{% if c.symbol %}{{ c.symbol }} {% endif %}Only: {{ c.name }} ({{ c.required_hours }} hrs)</option>
+                            {% endfor %}
+                            <option disabled>──────────</option>
+                            <option value="specific">🎯 Select Specific Volunteers...</option>
+                        </select>
+                    </div>
+
+                    <div id="broadcast_specific_users_box" class="overflow-hidden transition-all duration-300 ease-in-out max-h-0 opacity-0">
+                        <div class="space-y-1 max-h-48 overflow-y-auto custom-scrollbar p-2 border border-blue-200 rounded-xl bg-blue-50 shadow-inner">
+                            {% for volunteer in volunteers %}
+                                {% if volunteer.is_active and volunteer.role != 'friend' %}
+                                <div class="flex items-center justify-between p-2 hover:bg-white rounded-lg transition border border-transparent hover:border-blue-100">
+                                    <label for="b_user_{{ volunteer.id }}" class="font-medium text-gray-700 cursor-pointer flex-grow text-sm flex items-center gap-2">
+                                        {% if volunteer.work_commitment and volunteer.work_commitment.symbol %}
+                                            <span title="{{ volunteer.work_commitment.name }}">{{ volunteer.work_commitment.symbol }}</span>
+                                        {% else %}
+                                            <span>👤</span>
+                                        {% endif %}
+                                        {{ volunteer.first_name|default:volunteer.username }} {{ volunteer.last_name }}
+                                    </label>
+                                    <label class="relative inline-flex items-center cursor-pointer ml-4 shrink-0">
+                                        <input type="checkbox" name="specific_users" value="{{ volunteer.id }}" id="b_user_{{ volunteer.id }}" class="sr-only peer">
+                                        <div class="w-9 h-5 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Subject Line</label>
+                        <input type="text" name="broadcast_subject" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 focus:ring-blue-500 focus:border-blue-500 shadow-sm" placeholder="e.g., U-Pick Tomatoes this Saturday!">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Message Body</label>
+                        <textarea name="broadcast_body" required rows="6" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 custom-scrollbar focus:ring-blue-500 focus:border-blue-500 shadow-sm" placeholder="Type your update here..."></textarea>
+                    </div>
+                    <div class="pt-4 border-t border-gray-100">
+                        <button type="submit" name="submit_broadcast" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow transition">
+                            Send Broadcast Email
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-emerald-100 p-6">
+            <h3 class="text-xl font-bold text-emerald-900 border-b border-gray-100 pb-3 mb-4 flex items-center gap-2"><span>👋</span> Automated Welcome Email</h3>
+            <p class="text-sm text-gray-500 mb-4">This message is automatically delivered via email to new volunteers the moment you create their account.</p>
+            
+            <form method="POST">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Subject Line</label>
+                        <input type="text" name="welcome_email_subject" value="{{ farm.welcome_email_subject }}" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 focus:ring-emerald-500 focus:border-emerald-500 shadow-sm" placeholder="Welcome to the farm!">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Automated Message Body</label>
+                        <textarea name="welcome_email_body" required rows="7" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 custom-scrollbar focus:ring-emerald-500 focus:border-emerald-500 shadow-sm" placeholder="Introduce them to the farm, explain parking, what to bring, etc...">{{ farm.welcome_email_body }}</textarea>
+                    </div>
+                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-500">
+                        <strong>Note:</strong> We will automatically append a link to the login portal and their temporary password to the bottom of this email.
+                    </div>
+                    <div class="pt-2 border-t border-gray-100">
+                        <button type="submit" name="submit_welcome_email" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-xl shadow transition">
+                            Save Welcome Template
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
 <div id="tab-roster" class="command-panel hidden">
     <div class="flex justify-start gap-2 mb-6 mt-4">
         <button onclick="document.getElementById('volunteer_modal').showModal()" class="bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-2 px-4 rounded-lg shadow-sm transition">+ Add Volunteer</button>
@@ -734,6 +830,27 @@
 
     // New Compliance Form Slide Toggle Logic
     document.addEventListener('DOMContentLoaded', function() {
+        
+        // --- NEW: Broadcast Communications Slide Logic ---
+        const audienceSelect = document.getElementById('audience_select');
+        const specificUsersBox = document.getElementById('broadcast_specific_users_box');
+
+        function toggleBroadcastUsers() {
+            if (audienceSelect && audienceSelect.value === 'specific') {
+                specificUsersBox.style.maxHeight = "400px";
+                specificUsersBox.style.opacity = "1";
+            } else if (specificUsersBox) {
+                specificUsersBox.style.maxHeight = "0px";
+                specificUsersBox.style.opacity = "0";
+            }
+        }
+
+        if (audienceSelect) {
+            audienceSelect.addEventListener('change', toggleBroadcastUsers);
+            toggleBroadcastUsers(); // Run on load
+        }
+
+        // --- Compliance Modal Logic ---
         const complianceModal = document.getElementById('compliance_modal');
         
         if (complianceModal) {

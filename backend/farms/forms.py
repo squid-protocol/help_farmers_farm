@@ -170,6 +170,8 @@ class FarmSettingsForm(forms.ModelForm):
             "address",
             "contact_email",
             "phone_number",
+            "welcome_email_subject",
+            "welcome_email_body",
             "season_start",
             "season_end",
             "allows_joint_accounts",
@@ -234,6 +236,24 @@ class FarmSettingsForm(forms.ModelForm):
                     "class": (
                         "bg-gray-50 border border-gray-300 text-gray-900 text-sm "
                         "rounded-lg block w-full p-2.5"
+                    ),
+                }
+            ),
+            "welcome_email_subject": forms.TextInput(
+                attrs={
+                    "class": (
+                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm "
+                        "rounded-lg block w-full p-2.5"
+                    ),
+                    "placeholder": "Welcome to the farm!",
+                }
+            ),
+            "welcome_email_body": forms.Textarea(
+                attrs={
+                    "rows": 4,
+                    "class": (
+                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm "
+                        "rounded-lg block w-full p-2.5 custom-scrollbar"
                     ),
                 }
             ),
