@@ -616,7 +616,7 @@ def get_volunteer_heatmap(request):
         try:
             logs = logs.filter(date_logged__year=int(year))
         except ValueError:
-            pass
+            year = "all"
 
     data = list(
         logs.values(
