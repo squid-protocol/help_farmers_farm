@@ -598,3 +598,148 @@ def get_seasonal_timeline(request):
 
     chart_html = fig.to_html(full_html=False, include_plotlyjs=False)
     return render(request, "analytics/partials/chart.html", {"chart": chart_html})
+
+@login_required
+def get_volunteer_heatmap(request):
+    farm = request.active_farm
+    year = request.GET.get("year", "all")
+
+    # 1. FETCH DATA
+    logs = LogEntry.objects.filter(farm=farm).select_related("volunteer")
+    if year != "all":
+        try:
+            logs = logs.filter(date_logged__year=int(year))
+        except ValueError:
+            pass
+
+    data = list(
+        logs.values(
+            "date_logged",
+            "volunteer__first_name",
+            "volunteer__last_name",
+            "volunteer__username",
+            "duration_hours",
+        )
+    )
+
+    if not data:
+        empty_html = """
+        <div class="flex flex-col items-center justify-center py-20 text-gray-400">
+            <p class="text-xl font-medium">No volunteer activity found for this timeframe.</p>
+        </div>
+        """
+        return render(request, "analytics/partials/chart.html", {"chart": empty_html})
+
+    df = pd.DataFrame(data)
+
+    # 2. PREPARE DATA
+    df["WeekOfYear"] = (
+        pd.to_datetime(df["date_logged"]).dt.isocalendar().week.astype(int)
+    )
+    df["duration_hours"] = df["duration_hours"].astype(float)
+
+    # Create a clean display name for the Y-Axis
+    def make_name(row):
+        first = row.get("volunteer__first_name") or ""
+        last = row.get("volunteer__last_name") or ""
+        full_name = f"{first} {last}".strip()
+        return full_name if full_name else row.get("volunteer__username", "Unknown")
+
+    df["Volunteer"] = df.apply(make_name, axis=1)
+
+    # 3. AGGREGATE HOURS PER WEEK
+    agg_df = (
+        df.groupby(["Volunteer", "WeekOfYear"])["duration_hours"].sum().reset_index()
+    )
+
+    # Sort volunteers alphabetically (reverse so A is at the top of the Plotly Y-axis)
+    volunteers = sorted(agg_df["Volunteer"].unique().tolist(), reverse=True)
+    weeks = list(range(1, 53))
+
+    pivot_z = (
+        agg_df.pivot(index="Volunteer", columns="WeekOfYear", values="duration_hours")
+        .reindex(index=volunteers, columns=weeks)
+        .fillna(0)
+    )
+
+    z_matrix = pivot_z.values.tolist()
+
+    # 4. BUILD THE PLOTLY FIGURE
+    fig = go.Figure()
+
+    # Create a custom colorscale where exactly 0 is white, and >0 starts the rainbow
+    custom_rainbow = [
+        [0.0, "#ffffff"],  # 0 hours = Pure White
+        [0.001, "#ffffff"],  # Sharp cutoff just below the 0.25hr minimum log
+        [0.001, "#8b5cf6"],  # Start the rainbow (Purple) immediately after 0
+        [0.2, "#3b82f6"],  # Blue
+        [0.4, "#10b981"],  # Green
+        [0.6, "#f59e0b"],  # Yellow
+        [0.8, "#ea580c"],  # Orange
+        [1.0, "#ef4444"],  # Red
+    ]
+
+    # Main Heatmap Trace
+    fig.add_trace(
+        go.Heatmap(
+            z=z_matrix,
+            x=weeks,
+            y=volunteers,
+            colorscale=custom_rainbow,
+            zmin=0,
+            zmax=40,
+            hovertemplate=(
+                "<b>Week:</b> %{x}<br><b>Volunteer:</b> %{y}<br>"
+                "<b>Hours Logged:</b> %{z} hrs<extra></extra>"
+            ),
+            showscale=True,
+            colorbar=dict(
+                title="Total Hours",
+                thickness=15,
+                orientation="h",
+                x=0.5,
+                y=-0.25,
+            ),
+        )
+    )
+
+    # The Ghost Trace (Mirrors labels to the right side of the screen)
+    fig.add_trace(
+        go.Heatmap(
+            z=[[None] * len(weeks)] * len(volunteers),
+            x=weeks,
+            y=volunteers,
+            yaxis="y2",
+            showscale=False,
+            hoverinfo="skip",
+        )
+    )
+
+    # 5. USER-FRIENDLY AXES
+    xaxis_config = dict(
+        title="Week of Year",
+        tickmode="linear",
+        dtick=4,
+        showgrid=True,
+        gridcolor="rgba(200,200,200,0.3)",
+    )
+
+    fig.update_layout(
+        plot_bgcolor="white",  # Pure white background to make the rainbow pop
+        paper_bgcolor="white",
+        margin=dict(l=150, r=150, t=20, b=120),
+        height=max(400, len(volunteers) * 25 + 150),
+        xaxis=xaxis_config,
+        yaxis=dict(title="", tickfont=dict(size=13), automargin=True),
+        yaxis2=dict(
+            overlaying="y",
+            side="right",
+            matches="y",
+            showgrid=False,
+            tickfont=dict(size=13),
+        ),
+        hoverlabel=dict(bgcolor="white", font_size=13, font_color="black"),
+    )
+
+    chart_html = fig.to_html(full_html=False, include_plotlyjs=False)
+    return render(request, "analytics/partials/chart.html", {"chart": chart_html})
