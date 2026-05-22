@@ -44,7 +44,7 @@ def manager_dashboard(request):
         return redirect("admin:index" if request.user.is_staff else "/")
 
     crop_form = CropForm()
-    volunteer_form = VolunteerCreationForm(request_user=request.user)
+    volunteer_form = VolunteerCreationForm(request_user=request.user, farm=my_farm)
     commitment_form = WorkCommitmentForm()
     farm_form = FarmSettingsForm(instance=my_farm)
     compliance_setup_form = ComplianceFormSetup(farm=my_farm)
@@ -93,7 +93,7 @@ def manager_dashboard(request):
 
             # If they pass the tollbooth, process the form...
             volunteer_form = VolunteerCreationForm(
-                request.POST, request_user=request.user
+                request.POST, request_user=request.user, farm=my_farm
             )
             if volunteer_form.is_valid():
                 new_user = volunteer_form.save(commit=False)
@@ -400,16 +400,32 @@ def edit_volunteer_view(request, volunteer_id):
         if request.user != volunteer:
             raise PermissionDenied("You cannot edit other managers.")
 
+    # Fetch the membership bridge to get/set the current work commitment
+    membership = FarmMembership.objects.get(user=volunteer, farm=request.active_farm)
+
     if request.method == "POST":
         form = VolunteerEditForm(
-            request.POST, instance=volunteer, request_user=request.user
+            request.POST,
+            instance=volunteer,
+            request_user=request.user,
+            farm=request.active_farm,
         )
         if form.is_valid():
             form.save()
+
+            # Save the new work commitment to the bridge table
+            membership.work_commitment = form.cleaned_data.get("work_commitment")
+            membership.save()
+
             messages.success(request, f"{volunteer.username} updated successfully!")
             return redirect("manager_dashboard")
     else:
-        form = VolunteerEditForm(instance=volunteer, request_user=request.user)
+        form = VolunteerEditForm(
+            instance=volunteer,
+            request_user=request.user,
+            farm=request.active_farm,
+            initial={"work_commitment": membership.work_commitment},
+        )
     return render(
         request,
         "farms/edit_item.html",

@@ -101,7 +101,7 @@ def send_broadcast_email(farm_id, subject, custom_body, audience_value):
     batch_size = 50
     try:
         for i in range(0, len(messages), batch_size):
-            batch = messages[i: i + batch_size]
+            batch = messages[i : i + batch_size]
             connection.send_messages(batch)
     finally:
         connection.close()

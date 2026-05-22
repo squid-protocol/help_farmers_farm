@@ -45,6 +45,16 @@ class VolunteerCreationForm(forms.ModelForm):
         widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
         help_text="Provide a temporary password.",
     )
+    work_commitment = forms.ModelChoiceField(
+        queryset=WorkCommitment.objects.none(),
+        required=False,
+        empty_label="Standard Volunteer (No specific tier)",
+        widget=forms.Select(
+            attrs={
+                "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5"
+            }
+        ),
+    )
 
     class Meta:
         model = User
@@ -54,6 +64,7 @@ class VolunteerCreationForm(forms.ModelForm):
             "last_name",
             "email",
             "phone_number",
+            "work_commitment",
             "legacy_years_volunteered",
             "role",
         ]
@@ -75,6 +86,7 @@ class VolunteerCreationForm(forms.ModelForm):
         "last_name",
         "email",
         "phone_number",
+        "work_commitment",
         "legacy_years_volunteered",
         "role",
         "password",
@@ -82,7 +94,13 @@ class VolunteerCreationForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.request_user = kwargs.pop("request_user", None)
+        self.farm = kwargs.pop("farm", None)
         super().__init__(*args, **kwargs)
+
+        if self.farm:
+            self.fields["work_commitment"].queryset = WorkCommitment.objects.filter(
+                farm=self.farm
+            )
 
         if self.request_user:
             if (
@@ -97,6 +115,17 @@ class VolunteerCreationForm(forms.ModelForm):
 
 
 class VolunteerEditForm(forms.ModelForm):
+    work_commitment = forms.ModelChoiceField(
+        queryset=WorkCommitment.objects.none(),
+        required=False,
+        empty_label="Standard Volunteer (No specific tier)",
+        widget=forms.Select(
+            attrs={
+                "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5"
+            }
+        ),
+    )
+
     class Meta:
         model = User
         fields = [
@@ -104,13 +133,20 @@ class VolunteerEditForm(forms.ModelForm):
             "first_name",
             "last_name",
             "email",
+            "work_commitment",
             "role",
             "is_active",
         ]
 
     def __init__(self, *args, **kwargs):
         self.request_user = kwargs.pop("request_user", None)
+        self.farm = kwargs.pop("farm", None)
         super().__init__(*args, **kwargs)
+
+        if self.farm:
+            self.fields["work_commitment"].queryset = WorkCommitment.objects.filter(
+                farm=self.farm
+            )
 
         if self.request_user:
             # Prevent farm managers from granting account_manager privileges
