@@ -234,3 +234,140 @@ class LogManagementTests(TestCase):
 
         self.assertRedirects(response, reverse("master_log_directory"))
         self.assertFalse(LogEntry.objects.filter(id=self.log_a.id).exists())
+
+    def test_volunteer_cannot_delete_others_log(self):
+        """Ensure the Ghost Delete attack is blocked by a 403 Permission Denied."""
+        vol_a2 = User.objects.create_user(
+            username="vol_a2_hacker",
+            email="hacker@test.com",
+            password="p",
+            role="volunteer",
+        )
+        FarmMembership.objects.create(
+            user=vol_a2, farm=self.farm_a, is_approved=True, agreed_to_waiver=True
+        )
+
+        self.client.force_login(vol_a2)
+        url = reverse("delete_log", args=[self.log_a.id])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 403)
+
+
+class LogUnhappyPathTests(TestCase):
+    def setUp(self):
+        from datetime import timedelta
+
+        self.client = Client()
+
+        # Create a farm with a future season to trigger pacing engine logic
+        self.farm = Farm.objects.create(
+            name="Edge Case Farm",
+            welcome_email_subject="Hi",
+            welcome_email_body="Welcome",
+            season_start=timezone.now().date() + timedelta(days=10),
+            season_end=timezone.now().date() + timedelta(days=100),
+        )
+        self.crop = Crop.objects.create(farm=self.farm, crop_name="Peppers")
+        self.user = User.objects.create_user(
+            username="test_edge", email="edge@test.com", password="p"
+        )
+        FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True)
+
+        self.client.force_login(self.user)
+        self.log_url = reverse("log_hours")
+
+    def test_tollbooth_blocks_logging_on_inactive_accounts(self):
+        """Ensure unpaid/expired farms cannot log new hours."""
+        from unittest.mock import patch, PropertyMock
+
+        # Force the farm to appear as expired/unpaid
+        with patch(
+            "farms.models.Farm.is_active_account", new_callable=PropertyMock
+        ) as mock_active:
+            mock_active.return_value = False
+
+            response = self.client.post(
+                self.log_url,
+                {
+                    "date_logged": timezone.now().date().strftime("%Y-%m-%d"),
+                    "crop": self.crop.id,
+                    "activity": "T",
+                    "duration_hours": "2.00",
+                },
+            )
+
+            # The tollbooth should intercept and redirect back to the page
+            self.assertRedirects(response, self.log_url)
+            self.assertEqual(LogEntry.objects.count(), 0)
+
+    def test_database_exception_handled_gracefully(self):
+        """Ensure a hard database crash during save does not 500 the server."""
+        from unittest.mock import patch
+
+        # Intercept the exact moment the log tries to write to the DB and force a crash
+        with patch("logs.models.LogEntry.save") as mock_save:
+            mock_save.side_effect = Exception("Simulated Hard DB Crash")
+
+            response = self.client.post(
+                self.log_url,
+                {
+                    "date_logged": timezone.now().date().strftime("%Y-%m-%d"),
+                    "crop": self.crop.id,
+                    "activity": "T",
+                    "duration_hours": "2.00",
+                },
+            )
+
+            # The view's try/except block should catch it and re-render the page cleanly (200 OK)
+            self.assertEqual(response.status_code, 200)
+
+    def test_form_validation_blocks_impossible_hours(self):
+        """Ensure the Physics-Defier attack fails."""
+        response = self.client.post(
+            self.log_url,
+            {
+                "date_logged": timezone.now().date().strftime("%Y-%m-%d"),
+                "crop": self.crop.id,
+                "activity": "T",
+                "duration_hours": "25.00",  # Exceeds the 24.00 MaxValueValidator limit
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("duration_hours", response.context["form"].errors)
+        self.assertEqual(LogEntry.objects.count(), 0)
+
+    def test_form_validation_blocks_missing_payload(self):
+        """Ensure empty POST payloads (bypassing HTML required tags) are caught gracefully."""
+        response = self.client.post(self.log_url, {})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["form"].errors)
+        self.assertEqual(LogEntry.objects.count(), 0)
+
+    def test_pacing_engine_edge_cases(self):
+        """Force the pacing engine to calculate required pace across all boundary lines."""
+        from farms.models import WorkCommitment
+
+        commitment = WorkCommitment.objects.create(
+            farm=self.farm, name="Tester", required_hours=10
+        )
+        membership = FarmMembership.objects.get(user=self.user)
+        membership.work_commitment = commitment
+        membership.save()
+
+        # Log exactly 2 hours so remaining_hours is 8 (triggers the pacing math)
+        LogEntry.objects.create(
+            farm=self.farm,
+            volunteer=self.user,
+            crop=self.crop,
+            activity="T",
+            duration_hours=2.00,
+            date_logged=timezone.now().date(),
+        )
+
+        response = self.client.get(self.log_url)
+        self.assertEqual(response.status_code, 200)
+
+        # Prove the pacing engine calculated the necessary trajectory
+        self.assertTrue(response.context["required_pace"] > 0)
