@@ -1,8 +1,13 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
+from django.http import HttpResponse
+from django.core.exceptions import PermissionDenied
 import plotly.graph_objects as go
 import pandas as pd
+from django.utils import timezone
+from datetime import timedelta
+from accounts.models import CustomUser, Farm
 
 from logs.models import LogEntry
 
@@ -599,6 +604,7 @@ def get_seasonal_timeline(request):
     chart_html = fig.to_html(full_html=False, include_plotlyjs=False)
     return render(request, "analytics/partials/chart.html", {"chart": chart_html})
 
+
 @login_required
 def get_volunteer_heatmap(request):
     farm = request.active_farm
@@ -743,3 +749,71 @@ def get_volunteer_heatmap(request):
 
     chart_html = fig.to_html(full_html=False, include_plotlyjs=False)
     return render(request, "analytics/partials/chart.html", {"chart": chart_html})
+
+
+@login_required
+def get_adoption_report(request):
+    if not request.user.is_staff:
+        return HttpResponse(status=403)
+
+    farms = Farm.objects.all()
+    one_week_ago = timezone.now() - timedelta(days=7)
+    report_html = '<div class="space-y-6">'
+
+    for farm in farms:
+        # 1. Volunteer Participation %
+        # Math: (Volunteers with logs in 7 days / Total active volunteers) * 100
+        all_volunteers = CustomUser.objects.filter(
+            memberships__farm=farm, is_active=True
+        ).exclude(role__in=["account_manager", "farm_manager"])
+        active_volunteers = all_volunteers.filter(
+            logs__date_logged__gte=one_week_ago.date()
+        ).distinct()
+
+        total_vol_count = all_volunteers.count()
+        active_vol_count = active_volunteers.count()
+
+        participation_pct = (
+            (active_vol_count / total_vol_count * 100) if total_vol_count > 0 else 0
+        )
+
+        # 2. Manager Engagement (Last Login)
+        manager = CustomUser.objects.filter(
+            memberships__farm=farm, role="farm_manager"
+        ).first()
+        last_seen = manager.last_login if manager and manager.last_login else None
+        is_engaged = last_seen and last_seen >= one_week_ago
+
+        # Build the HTML snippet
+        report_html += f"""
+        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-900">{farm.name}</h3>
+                <span class="text-xs font-bold uppercase tracking-widest {'text-emerald-600' if is_engaged else 'text-gray-400'}">
+                    {'Manager Active' if is_engaged else 'Manager Inactive'}
+                </span>
+            </div>
+            <div class="space-y-2">
+                <div class="flex justify-between text-sm text-gray-600 font-bold">
+                    <span>Volunteer Participation</span>
+                    <span>{int(participation_pct)}%</span>
+                </div>
+                <div class="w-full bg-gray-100 h-4 rounded-full overflow-hidden">
+                    <div style="width: {participation_pct}%" class="h-4 bg-emerald-500"></div>
+                </div>
+                <p class="text-xs text-gray-400">
+                    {active_vol_count} / {total_vol_count} volunteers active this week
+                </p>
+            </div>
+        </div>
+        """
+
+    report_html += "</div>"
+    return render(request, "analytics/partials/chart.html", {"chart": report_html})
+
+
+@login_required
+def admin_adoption_dashboard(request):
+    if not request.user.is_staff:
+        raise PermissionDenied("You are not authorized to view this page.")
+    return render(request, "analytics/admin_dashboard.html")
