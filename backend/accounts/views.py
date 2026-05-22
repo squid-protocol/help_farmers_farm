@@ -353,16 +353,18 @@ def verify_email_link_view(request, token):
 def delete_account_view(request):
     """Triggers the CCPA/GDPR anonymization protocol."""
     user = request.user
-    
+
     # Log the event for the farm's audit trail before destroying the identity
     logger = logging.getLogger("audit")
     logger.info(f"User {user.id} ({user.username}) requested account anonymization.")
 
     # Fire the protocol
     user.anonymize_and_archive()
-    
+
     # Destroy their active browser session
     logout(request)
-    
-    messages.success(request, "Your account has been permanently anonymized and deleted.")
+
+    messages.success(
+        request, "Your account has been permanently anonymized and deleted."
+    )
     return redirect("home")

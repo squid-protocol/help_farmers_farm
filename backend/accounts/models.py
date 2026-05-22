@@ -46,7 +46,7 @@ class CustomUser(AbstractUser):
         membership = self.memberships.filter(is_approved=True).first()
         return membership.work_commitment if membership else None
 
-# -----------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
 
     def anonymize_and_archive(self):
         """
@@ -62,7 +62,7 @@ class CustomUser(AbstractUser):
         self.is_active = False
         self.role = "friend"  # Demote to lowest privilege
         self.avatar = None
-        self.set_unusable_password() # Cryptographically locks the account forever
+        self.set_unusable_password()  # Cryptographically locks the account forever
         self.save()
 
     def __str__(self):
