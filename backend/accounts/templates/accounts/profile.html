@@ -72,7 +72,26 @@
         {% endif %}
     </div>
 
+    <div class="bg-red-50 p-8 rounded-2xl border border-red-100 shadow-sm">
+        <h3 class="text-2xl font-extrabold text-red-900 mb-2">Danger Zone</h3>
+        <p class="text-red-700 mb-6">Permanently delete your account and anonymize your personal data. This will revoke your access to the farm immediately.</p>
+        <button onclick="document.getElementById('delete_account_modal').showModal()" class="bg-white border-2 border-red-200 text-red-600 hover:bg-red-600 hover:text-white font-bold py-3 px-6 rounded-xl transition">
+            Delete My Account
+        </button>
+    </div>
+
 </div>
+
+<dialog id="delete_account_modal" class="p-8 rounded-2xl shadow-2xl border border-red-200 backdrop:bg-slate-900/70 w-full max-w-md">
+    <h3 class="text-2xl font-bold text-red-900 mb-4">⚠️ Delete Account?</h3>
+    <p class="text-gray-600 mb-6">Are you sure you want to permanently delete your account? Your personal information will be scrubbed, and you will lose access immediately. This action <strong>cannot be undone</strong>.</p>
+    
+    <form action="{% url 'delete_account' %}" method="POST" class="flex justify-end gap-3">
+        {% csrf_token %}
+        <button type="button" onclick="document.getElementById('delete_account_modal').close()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg transition">Cancel</button>
+        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg shadow transition">Permanently Delete</button>
+    </form>
+</dialog>
 
 {% for sig in signatures %}
 <dialog id="doc-modal-{{ sig.id }}" class="p-8 rounded-2xl shadow-2xl border border-gray-200 backdrop:bg-slate-900/50 w-full max-w-3xl">

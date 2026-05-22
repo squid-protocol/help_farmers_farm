@@ -22,4 +22,5 @@ urlpatterns = [
         views.verify_email_link_view,
         name="verify_email_link",
     ),
+    path("delete-account/", views.delete_account_view, name="delete_account"),
 ]
