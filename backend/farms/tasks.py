@@ -97,11 +97,11 @@ def send_broadcast_email(farm_id, subject, custom_body, audience_value):
     # 5. Fire them off in batches to prevent SMTP socket timeouts
     connection = get_connection()
     connection.open()
-    
+
     batch_size = 50
     try:
         for i in range(0, len(messages), batch_size):
-            batch = messages[i:i + batch_size]
+            batch = messages[i: i + batch_size]
             connection.send_messages(batch)
     finally:
         connection.close()

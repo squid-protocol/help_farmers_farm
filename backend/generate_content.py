@@ -62,23 +62,25 @@ def build_tree_map(startpath):
     tree = []
     if not os.path.exists(startpath):
         return "Directory not found."
-        
+
     for root, dirs, files in os.walk(startpath):
         # Modify dirs in-place to skip ignored directories in the tree map
         dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
-        
-        level = root.replace(startpath, '').count(os.sep)
-        indent = ' ' * 4 * level
+
+        level = root.replace(startpath, "").count(os.sep)
+        indent = " " * 4 * level
         tree.append(f"{indent}📁 {os.path.basename(root)}/")
-        
-        subindent = ' ' * 4 * (level + 1)
+
+        subindent = " " * 4 * (level + 1)
         for f in files:
-            if (any(f.endswith(ext) for ext in IGNORE_EXTS) 
-                or f in IGNORE_FILES 
-                or f.endswith("_context.md")):
+            if (
+                any(f.endswith(ext) for ext in IGNORE_EXTS)
+                or f in IGNORE_FILES
+                or f.endswith("_context.md")
+            ):
                 continue
             tree.append(f"{subindent}📄 {f}")
-            
+
     return "\n".join(tree)
 
 
@@ -133,7 +135,7 @@ def generate_context():
             continue  # Skip creating empty files
 
         output_filename = f"{subsystem}_context.md"
-        
+
         # Build the tree map for the specific subsystem (or root for core)
         search_path = f"./{subsystem}" if subsystem != "core" else "."
         tree_map = build_tree_map(search_path)
