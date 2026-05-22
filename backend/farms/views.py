@@ -265,7 +265,6 @@ def manager_dashboard(request):
 
     requires_waivers = my_farm.can_use_waivers
     active_forms = []
-    sig_set = set()
 
     if requires_waivers:
         all_active = ComplianceForm.objects.filter(
@@ -276,6 +275,8 @@ def manager_dashboard(request):
             "user_id", "form_id"
         )
         sig_set = set(user_signatures)
+    else:
+        sig_set = set()
 
     grouped_data = {}
 
