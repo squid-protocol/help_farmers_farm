@@ -13,6 +13,10 @@ from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.core.mail import send_mail
 from django.conf import settings
 from django.urls import reverse
+from django.core.exceptions import PermissionDenied
+from django.contrib.auth import logout
+from django.views.decorators.http import require_POST
+import logging
 
 from .forms import ProfileUpdateForm, AccountClaimForm
 
@@ -218,13 +222,26 @@ def sign_waiver_view(request):
     form_to_sign = pending_forms.first()
     remaining_count = pending_forms.count()
 
-    if request.method == "POST" and "sign_document" in request.POST:
+    if request.method == "POST" and (
+        "sign_document" in request.POST or "digital_signature" in request.POST
+    ):
         # Security check: don't let them hack the form if they aren't verified
         if not request.user.is_email_verified:
             messages.error(request, "You must verify your email before signing.")
             return redirect("sign_waiver")
 
-        signature = request.POST.get("signature", "").strip()
+        # --- SECURITY FIX 1: IDOR & Cross-Tenant Pollution Prevention ---
+        submitted_form_id = request.POST.get("form_id")
+        if submitted_form_id and str(form_to_sign.id) != str(submitted_form_id):
+            raise PermissionDenied(
+                "Security Exception: You cannot sign a document belonging to another farm."
+            )
+
+        # --- SECURITY FIX 2: Strict Signature Payload Validation ---
+        # Fallback to 'digital_signature' to catch automated DOM bypass attacks
+        signature = request.POST.get(
+            "digital_signature", request.POST.get("signature", "")
+        ).strip()
         expected_name = f"{request.user.first_name} {request.user.last_name}".strip()
 
         is_guardian = request.POST.get("is_guardian") == "on"
@@ -233,7 +250,10 @@ def sign_waiver_view(request):
         is_valid = False
         error_message = ""
 
-        if is_guardian:
+        # Fail instantly if the signature is blank or just whitespace
+        if not signature:
+            error_message = "A valid digital signature is legally required."
+        elif is_guardian:
             if not guardian_relationship:
                 error_message = "Please specify your relationship to the minor (e.g., Parent, Legal Guardian)."
             elif len(signature) < 2:
@@ -241,10 +261,9 @@ def sign_waiver_view(request):
             else:
                 is_valid = True
         else:
-            if (
-                signature.lower() == expected_name.lower()
-                or signature.lower() == request.user.username.lower()
-            ):
+            if expected_name and signature.lower() == expected_name.lower():
+                is_valid = True
+            elif signature.lower() == request.user.username.lower():
                 is_valid = True
             else:
                 error_message = (
@@ -327,3 +346,25 @@ def verify_email_link_view(request, token):
         )
 
     return redirect("sign_waiver")
+
+
+@login_required
+@require_POST
+def delete_account_view(request):
+    """Triggers the CCPA/GDPR anonymization protocol."""
+    user = request.user
+
+    # Log the event for the farm's audit trail before destroying the identity
+    logger = logging.getLogger("audit")
+    logger.info(f"User {user.id} ({user.username}) requested account anonymization.")
+
+    # Fire the protocol
+    user.anonymize_and_archive()
+
+    # Destroy their active browser session
+    logout(request)
+
+    messages.success(
+        request, "Your account has been permanently anonymized and deleted."
+    )
+    return redirect("home")

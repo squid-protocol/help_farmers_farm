@@ -22,6 +22,7 @@ from .forms import (
 # --- Other App Imports ---
 from logs.models import LogEntry
 from accounts.models import FarmMembership, FormSignature  # <-- UPDATED IMPORT
+from farms.tasks import send_volunteer_welcome_email, send_broadcast_email
 
 User = get_user_model()
 
@@ -111,7 +112,16 @@ def manager_dashboard(request):
                     work_commitment=volunteer_form.cleaned_data.get("work_commitment"),
                 )
 
-                messages.success(request, "Volunteer created successfully!")
+                # --- TRIGGER: Fire the Automated Welcome Email ---
+                email_status = send_volunteer_welcome_email(
+                    user_id=new_user.id,
+                    farm_id=my_farm.id,
+                    raw_password=volunteer_form.cleaned_data["password"],
+                )
+
+                messages.success(
+                    request, f"Volunteer created successfully! {email_status}"
+                )
                 return redirect("manager_dashboard")
 
         elif "submit_commitment" in request.POST:
@@ -129,6 +139,32 @@ def manager_dashboard(request):
                 farm_form.save()
                 messages.success(request, "Farm settings updated successfully!")
                 return redirect("manager_dashboard")
+
+        elif "submit_broadcast" in request.POST:
+            subject = request.POST.get("broadcast_subject")
+            body = request.POST.get("broadcast_body")
+            audience = request.POST.get("audience", "all")
+            specific_ids = request.POST.getlist("specific_users")
+
+            status_msg = send_broadcast_email(
+                farm_id=my_farm.id,
+                subject=subject,
+                custom_body=body,
+                audience_value=audience,
+                specific_ids=specific_ids,
+            )
+            messages.success(request, status_msg)
+            return redirect("manager_dashboard")
+
+        elif "submit_welcome_email" in request.POST:
+            # Handle the Welcome Email update from the Comms tab
+            my_farm.welcome_email_subject = request.POST.get(
+                "welcome_email_subject", ""
+            )
+            my_farm.welcome_email_body = request.POST.get("welcome_email_body", "")
+            my_farm.save()
+            messages.success(request, "Automated Welcome Email template updated!")
+            return redirect("manager_dashboard")
 
         elif "submit_compliance_form" in request.POST:
             # --- NEW: FEATURE FLAG TOLLBOOTH ---
@@ -203,8 +239,95 @@ def manager_dashboard(request):
         .order_by("-date_logged")
     )
 
+    # --- PROGRESS REPORT MERGE ---
+    today = timezone.now().date()
+    try:
+        current_year = int(request.GET.get("year", today.year))
+    except ValueError:
+        current_year = today.year
+
+    expected_pct = 0.0
+    if my_farm.season_start and my_farm.season_end:
+        if current_year < today.year:
+            expected_pct = 100.0
+        elif current_year == today.year:
+            total_season_days = (my_farm.season_end - my_farm.season_start).days
+            if total_season_days > 0:
+                days_elapsed = (today - my_farm.season_start).days
+                days_elapsed = max(0, min(days_elapsed, total_season_days))
+                expected_pct = (days_elapsed / total_season_days) * 100.0
+
+    prog_memberships = (
+        FarmMembership.objects.filter(farm=my_farm, user__is_active=True)
+        .exclude(user__role="friend")
+        .select_related("user", "work_commitment")
+    )
+
+    requires_waivers = my_farm.can_use_waivers
+    active_forms = []
+
+    if requires_waivers:
+        all_active = ComplianceForm.objects.filter(
+            farm=my_farm, is_active=True
+        ).prefetch_related("assigned_users")
+        active_forms = [f for f in all_active if f.is_currently_valid()]
+        user_signatures = FormSignature.objects.filter(form__farm=my_farm).values_list(
+            "user_id", "form_id"
+        )
+        sig_set = set(user_signatures)
+    else:
+        sig_set = set()
+
+    grouped_data = {}
+
+    for mem in prog_memberships:
+        vol = mem.user
+        logs = LogEntry.objects.filter(
+            volunteer=vol, date_logged__year=current_year, farm=my_farm
+        )
+        total_hours = logs.aggregate(total=Sum("duration_hours"))["total"] or 0.0
+
+        target = mem.work_commitment.required_hours if mem.work_commitment else 0
+        pct = min((total_hours / target) * 100, 100) if target > 0 else 0
+        is_behind = pct < expected_pct if target > 0 else False
+
+        waiver_status = "manual"
+        if requires_waivers:
+            missing_waiver = False
+            for cform in active_forms:
+                applies = (
+                    cform.assignment_type == "all" or vol in cform.assigned_users.all()
+                )
+                if applies:
+                    if (vol.id, cform.id) not in sig_set:
+                        missing_waiver = True
+                        break
+            waiver_status = "missing" if missing_waiver else "compliant"
+
+        vol_data = {
+            "user": vol,
+            "total_hours": round(total_hours, 1),
+            "target": target,
+            "pct": round(pct, 0),
+            "is_behind": is_behind,
+            "waiver_status": waiver_status,
+        }
+
+        group_key = (
+            mem.work_commitment.name if mem.work_commitment else "Standard Volunteers"
+        )
+        if group_key not in grouped_data:
+            grouped_data[group_key] = []
+        grouped_data[group_key].append(vol_data)
+
+    for key in grouped_data:
+        grouped_data[key].sort(key=lambda x: x["total_hours"])
+
     context = {
         "farm": my_farm,
+        "current_year": current_year,
+        "grouped_data": grouped_data,
+        "expected_pct": expected_pct,
         "farm_form": farm_form,
         "crop_form": crop_form,
         "volunteer_form": volunteer_form,

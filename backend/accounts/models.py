@@ -1,3 +1,4 @@
+import uuid
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
@@ -46,6 +47,23 @@ class CustomUser(AbstractUser):
         return membership.work_commitment if membership else None
 
     # -----------------------------------------------------------------------------
+
+    def anonymize_and_archive(self):
+        """
+        CCPA/GDPR compliant data scrub. Destroys the human identity
+        while preserving the relational footprint for system analytics.
+        """
+        self.first_name = "Anonymous"
+        self.last_name = "Volunteer"
+        self.email = f"redacted_{uuid.uuid4().hex[:8]}@deleted.local"
+        self.phone_number = None
+        self.address = "Redacted per privacy request"
+        self.username = f"archived_{uuid.uuid4().hex[:12]}"
+        self.is_active = False
+        self.role = "friend"  # Demote to lowest privilege
+        self.avatar = None
+        self.set_unusable_password()  # Cryptographically locks the account forever
+        self.save()
 
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"

@@ -48,7 +48,9 @@ def send_volunteer_welcome_email(user_id, farm_id, raw_password):
     return f"Welcome email sent to {user.email}"
 
 
-def send_broadcast_email(farm_id, subject, custom_body, audience_value):
+def send_broadcast_email(
+    farm_id, subject, custom_body, audience_value, specific_ids=None
+):
     """Compiles and mass-sends a broadcast email to a specific farm audience."""
     try:
         farm = Farm.objects.get(id=farm_id)
@@ -60,8 +62,12 @@ def send_broadcast_email(farm_id, subject, custom_body, audience_value):
         farm=farm, is_approved=True, user__is_active=True
     ).exclude(user__role="friend")
 
-    # 2. Filter down if a specific tier was selected
-    if audience_value != "all" and audience_value.startswith("tier_"):
+    # 2. Filter down based on audience selection
+    if audience_value == "specific" and specific_ids:
+        # Convert string IDs from the form into integers securely
+        valid_ids = [int(i) for i in specific_ids if i.isdigit()]
+        memberships = memberships.filter(user_id__in=valid_ids)
+    elif audience_value != "all" and audience_value.startswith("tier_"):
         try:
             tier_id = int(audience_value.split("_")[1])
             memberships = memberships.filter(work_commitment_id=tier_id)

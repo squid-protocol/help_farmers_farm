@@ -320,6 +320,8 @@ class ManagerDashboardActionTests(TestCase):
                 "submit_farm_settings": "true",
                 "name": "Updated Farm Name",
                 "phone_number": "(201) 555-0123",  # A structurally valid US number
+                "welcome_email_subject": "Welcome to the farm!",
+                "welcome_email_body": "We are glad to have you.",
                 "season_start": "2026-05-01",
                 "season_end": "2026-10-31",
             },
@@ -600,3 +602,113 @@ class WorkspaceSwitchTests(TestCase):
 
         self.assertRedirects(response, "/log-hours/")
         self.assertEqual(self.client.session["active_farm_id"], self.farm2.id)
+
+
+class FarmUnhappyPathTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.farm = Farm.objects.create(name="Secure Farm", subscription_tier="growth")
+        self.rival_farm = Farm.objects.create(name="Rival Farm")
+
+        self.manager = User.objects.create_user(
+            username="secure_manager",
+            email="sec@test.com",
+            password="p",
+            role="farm_manager",
+        )
+        FarmMembership.objects.create(
+            user=self.manager, farm=self.farm, is_approved=True
+        )
+
+        self.client.force_login(self.manager)
+        self.dashboard_url = reverse("manager_dashboard")
+
+    def test_workspace_hijacking_blocked(self):
+        """Ensure a user cannot switch their active session to a farm they do not belong to."""
+        url = reverse("switch_active_farm")
+
+        # Prime the session with the authorized farm
+        session = self.client.session
+        session["active_farm_id"] = self.farm.id
+        session.save()
+
+        # Attempt to hijack the session by injecting the Rival Farm ID
+        response = self.client.post(
+            url, {"farm_id": str(self.rival_farm.id), "next": "/log-hours/"}
+        )
+
+        self.assertRedirects(response, "/log-hours/")
+
+        # The session ID MUST remain the original farm, blocking the hijack
+        self.assertEqual(self.client.session["active_farm_id"], self.farm.id)
+
+    def test_manager_dashboard_broadcast_and_welcome_execution(self):
+        """Ensure the Comms panel successfully processes broadcasts and welcome template updates."""
+        from unittest.mock import patch
+
+        # 1. Update Welcome Template
+        response1 = self.client.post(
+            self.dashboard_url,
+            {
+                "submit_welcome_email": "true",
+                "welcome_email_subject": "New Subject!",
+                "welcome_email_body": "New Body!",
+            },
+        )
+        self.assertRedirects(response1, self.dashboard_url)
+        self.farm.refresh_from_db()
+        self.assertEqual(self.farm.welcome_email_subject, "New Subject!")
+
+        # 2. Fire Broadcast (Mocked to prevent actual SMTP connection)
+        with patch("farms.views.send_broadcast_email") as mock_send:
+            mock_send.return_value = "Success"
+            response2 = self.client.post(
+                self.dashboard_url,
+                {
+                    "submit_broadcast": "true",
+                    "broadcast_subject": "Hello",
+                    "broadcast_body": "World",
+                    "audience": "all",
+                },
+            )
+            self.assertRedirects(response2, self.dashboard_url)
+            mock_send.assert_called_once()
+
+    def test_edit_crop_invalid_data_graceful_fail(self):
+        """Ensure editing a crop with blank data safely re-renders the form with errors."""
+        from farms.models import Crop
+
+        crop = Crop.objects.create(farm=self.farm, crop_name="Valid Crop")
+        url = reverse("edit_crop", args=[crop.id])
+
+        # Submit an empty crop name
+        response = self.client.post(url, {"crop_name": "", "is_active": True})
+
+        # Should NOT redirect (302). Must return 200 OK and show errors.
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["form"].errors)
+
+        # Database should remain completely unchanged
+        crop.refresh_from_db()
+        self.assertEqual(crop.crop_name, "Valid Crop")
+
+    def test_compliance_form_invalid_data_graceful_fail(self):
+        """Ensure submitting a compliance form missing required legal text does not crash."""
+        from farms.models import ComplianceForm
+
+        response = self.client.post(
+            self.dashboard_url,
+            {
+                "submit_compliance_form": "true",
+                "name": "Bad Form",
+                "body_text": "",  # MISSING REQUIRED DATA
+                "assignment_type": "all",
+                "is_active": True,
+            },
+        )
+
+        # Falls through the if is_valid() block and re-renders dashboard
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("compliance_setup_form", response.context)
+        self.assertTrue(response.context["compliance_setup_form"].errors)
+        self.assertEqual(ComplianceForm.objects.count(), 0)

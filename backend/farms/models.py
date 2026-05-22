@@ -7,7 +7,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 class Farm(models.Model):
     name = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
 
     # --- NEW: Static System Identification ---
     account_number = models.CharField(
@@ -35,12 +35,23 @@ class Farm(models.Model):
     )
 
     # --- BILLING & SUBSCRIPTIONS ---
+    TIER_CHOICES = [
+        ("starter", "Starter Plan"),
+        ("growth", "Growth Plan"),
+        ("institutional", "Institutional Plan"),
+    ]
+
     is_paid = models.BooleanField(default=False)
     is_comped = models.BooleanField(
         default=False, help_text="Grants lifetime free access"
     )
-    subscription_tier = models.CharField(max_length=50, blank=True, null=True)
+    subscription_tier = models.CharField(
+        max_length=50, choices=TIER_CHOICES, default="starter", blank=True, null=True
+    )
     stripe_customer_id = models.CharField(max_length=255, blank=True, null=True)
+
+    welcome_email_subject = models.CharField(max_length=255, default="Welcome!")
+    welcome_email_body = models.TextField(default="Welcome to our farm!")
 
     def save(self, *args, **kwargs):
         # Auto-generate a secure, static account number if one doesn't exist
