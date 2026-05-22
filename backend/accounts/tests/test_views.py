@@ -533,3 +533,98 @@ class EmailVerificationTests(TestCase):
         self.assertEqual(
             str(sig2), f"Jane Doe (Guardian) signed {form2.name} for test_volunteer"
         )
+
+
+class SignatureEvasionTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        # 1. Build the target farm and form
+        self.farm_a = Farm.objects.create(
+            name="Authorized Farm", subscription_tier="growth"
+        )
+        self.form_a = ComplianceForm.objects.create(
+            farm=self.farm_a,
+            name="2026 Liability Waiver",
+            body_text="I agree to not sue.",
+            is_active=True,
+        )
+
+        # 2. Build a rival farm and form to test cross-tenant pollution
+        self.farm_b = Farm.objects.create(name="Rival Farm", subscription_tier="growth")
+        self.form_b = ComplianceForm.objects.create(
+            farm=self.farm_b,
+            name="Rival Liability Waiver",
+            body_text="I agree to not sue the rival.",
+            is_active=True,
+        )
+
+        # 3. Create our volunteer and link them ONLY to Farm A
+        # FIX: We must give them a full profile and verify their email,
+        # otherwise your security tollbooths will kick them out with a 302!
+        self.volunteer = User.objects.create_user(
+            username="sneaky_vol",
+            email="sneak@test.com",
+            password="p",
+            first_name="John",
+            last_name="Doe",
+            phone_number="(555) 123-4567",
+            address="123 Farm Lane",
+            is_email_verified=True,
+        )
+        FarmMembership.objects.create(
+            user=self.volunteer, farm=self.farm_a, is_approved=True
+        )
+
+        self.client.force_login(self.volunteer)
+
+        # The URL does NOT take an ID in the route based on accounts/urls.py
+        self.sign_url = reverse("sign_waiver")
+
+    def test_blank_signature_rejected_gracefully(self):
+        """Ensure an empty signature string fails backend form validation."""
+        response = self.client.post(
+            self.sign_url,
+            {
+                "form_id": self.form_a.id,
+                "digital_signature": "",
+                "agree_to_terms": True,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        # Check that the view generated an error message
+        messages = list(response.context["messages"])
+        self.assertTrue(any("required" in str(m.message) for m in messages))
+        self.assertEqual(FormSignature.objects.count(), 0)
+
+    def test_whitespace_only_signature_rejected(self):
+        """Ensure users cannot bypass the requirement by just typing spaces."""
+        response = self.client.post(
+            self.sign_url,
+            {
+                "form_id": self.form_a.id,
+                "digital_signature": "    ",
+                "agree_to_terms": True,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        messages = list(response.context["messages"])
+        self.assertTrue(any("required" in str(m.message) for m in messages))
+        self.assertEqual(FormSignature.objects.count(), 0)
+
+    def test_cannot_sign_rival_farm_waiver_idor(self):
+        """Ensure a user cannot submit a signature for a form belonging to a farm they aren't in."""
+        response = self.client.post(
+            self.sign_url,
+            {
+                "form_id": self.form_b.id,
+                "digital_signature": "John Doe",
+                "agree_to_terms": True,
+            },
+        )
+
+        # The new PermissionDenied exception will trigger a 403 Forbidden
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(FormSignature.objects.filter(form=self.form_b).count(), 0)
