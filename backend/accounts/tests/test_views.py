@@ -1,3 +1,4 @@
+import requests
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -5,6 +6,7 @@ from farms.models import Farm, ComplianceForm
 from accounts.models import FarmMembership, FormSignature
 from django.core import mail
 from django.core.signing import TimestampSigner
+from unittest.mock import patch
 
 User = get_user_model()
 
@@ -48,6 +50,10 @@ class ProfileViewsTests(TestCase):
             username="profile_tester",
             email="profile_tester@example.com",
             password="testpass123",
+            address_line1="123 Test Lane",
+            city="Farmingville",
+            state="MI",
+            postal_code="48103",
         )
         FarmMembership.objects.create(
             user=self.user, farm=self.farm, is_approved=True, agreed_to_waiver=True
@@ -65,8 +71,11 @@ class ProfileViewsTests(TestCase):
             "first_name": "Updated",
             "last_name": "Name",
             "email": "test@example.com",
-            "phone_number": "+12025550150",  # Using a valid fictional US number block
-            "address": "123 Test Lane",
+            "phone_number": "+12025550150",
+            "address_line1": "123 Test Lane",
+            "city": "Farmingville",
+            "state": "MI",
+            "postal_code": "48103",
         }
         response = self.client.post(reverse("profile"), post_data)
         self.assertRedirects(response, reverse("profile"))
@@ -108,7 +117,10 @@ class ProfileViewsTests(TestCase):
             "last_name": "Name",
             "email": "test@example.com",
             "phone_number": "Not a real number",
-            "address": "123 Test Lane",
+            "address_line1": "123 Test Lane",
+            "city": "Farmingville",
+            "state": "MI",
+            "postal_code": "48103",
         }
         response = self.client.post(reverse("profile"), post_data)
 
@@ -272,7 +284,10 @@ class ComplianceGateTests(TestCase):
             email="john@example.com",
             password="securepassword",
             phone_number="+15555555555",
-            address="123 Farm Way",
+            address_line1="123 Farm Way",
+            city="Farmingville",
+            state="MI",
+            postal_code="48103",
             is_email_verified=True,
         )
         self.membership = FarmMembership.objects.create(
@@ -405,7 +420,7 @@ class ComplianceGateTests(TestCase):
 
     def test_waiver_hard_blocks_incomplete_profile(self):
         """Ensure missing physical address redirects to profile."""
-        self.user.address = ""
+        self.user.address_line1 = ""
         self.user.save()
         response = self.client.get(reverse("sign_waiver"))
         self.assertRedirects(response, reverse("profile"))
@@ -452,7 +467,10 @@ class EmailVerificationTests(TestCase):
             email="john@example.com",
             password="securepassword",
             phone_number="+15555555555",
-            address="123 Farm Way",
+            address_line1="123 Farm Way",
+            city="Farmingville",
+            state="MI",
+            postal_code="48103",
             is_email_verified=False,
         )
         self.user.is_email_verified = False
@@ -596,9 +614,13 @@ class SignatureEvasionTests(TestCase):
             first_name="John",
             last_name="Doe",
             phone_number="(555) 123-4567",
-            address="123 Farm Lane",
+            address_line1="123 Farm Lane",
+            city="Farmingville",
+            state="MI",
+            postal_code="48103",
             is_email_verified=True,
         )
+
         FarmMembership.objects.create(
             user=self.volunteer, farm=self.farm_a, is_approved=True
         )
@@ -687,3 +709,133 @@ class AccountDeletionTests(TestCase):
         self.assertIn("deleted.local", self.user.email)
         self.assertEqual(self.user.role, "friend")
         self.assertFalse(self.user.has_usable_password())
+
+
+class RegistrationSecurityTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.vol_url = "/accounts/signup/volunteer/"
+        self.farm_url = "/accounts/signup/farm/"
+
+    def test_honeypot_trap_volunteer(self):
+        """Ensure bots filling out the hidden website_url field are dropped silently."""
+        response = self.client.post(
+            self.vol_url, {"website_url": "[http://spam.com](http://spam.com)"}
+        )
+        self.assertRedirects(response, "/")
+        self.assertEqual(User.objects.count(), 0)
+
+    def test_honeypot_trap_farm(self):
+        """Ensure farm registration honeypot works."""
+        response = self.client.post(
+            self.farm_url, {"website_url": "[http://spam.com](http://spam.com)"}
+        )
+        self.assertRedirects(response, "/")
+        self.assertEqual(Farm.objects.count(), 0)
+
+    def test_missing_turnstile_token_fails(self):
+        """Ensure submitting without JS/Turnstile fails the security check."""
+        response = self.client.post(self.vol_url, {"cf-turnstile-response": ""})
+        self.assertEqual(response.status_code, 200)
+        msgs = list(response.context["messages"])
+        self.assertTrue(any("Security check failed" in str(m.message) for m in msgs))
+
+    @patch("accounts.views.requests.post")
+    def test_turnstile_api_timeout_fails_securely(self, mock_post):
+        """Ensure a Cloudflare API outage defaults to failing the registration."""
+        mock_post.side_effect = requests.RequestException("Timeout")
+        response = self.client.post(
+            self.vol_url, {"cf-turnstile-response": "valid_token"}
+        )
+        self.assertEqual(response.status_code, 200)
+        msgs = list(response.context["messages"])
+        self.assertTrue(any("Security check failed" in str(m.message) for m in msgs))
+
+    @patch("accounts.views.VolunteerSignUpForm")
+    @patch("accounts.views.verify_turnstile", return_value=True)
+    def test_volunteer_signup_success(self, mock_turnstile, MockFormClass):
+        """Ensure volunteer registration assigns the correct role and logs them in."""
+        mock_form = MockFormClass.return_value
+        mock_form.is_valid.return_value = True
+
+        mock_user = User(username="new_vol", email="vol@test.com")
+        mock_user.backend = "django.contrib.auth.backends.ModelBackend"
+        mock_form.save.return_value = mock_user
+
+        response = self.client.post(self.vol_url, {"dummy": "data"})
+
+        self.assertRedirects(response, "/", fetch_redirect_response=False)
+        db_user = User.objects.get(username="new_vol")
+        self.assertEqual(db_user.role, "volunteer")
+
+    @patch("accounts.views.FarmSignUpForm")
+    @patch("accounts.views.verify_turnstile", return_value=True)
+    def test_farm_atomic_provisioning_success(self, mock_turnstile, MockFormClass):
+        """Ensure the Happy Path creates all three DB objects cleanly."""
+        mock_form = MockFormClass.return_value
+        mock_form.is_valid.return_value = True
+        mock_form.cleaned_data = {
+            "farm_name": "Atomic Farm",
+            "farm_phone": "(555) 123-4567",
+        }
+
+        # Form.save(commit=False) normally returns a new unsaved user object
+        mock_user = User(username="atomic_manager", email="atomic@example.com")
+        mock_user.backend = "django.contrib.auth.backends.ModelBackend"
+        mock_form.save.return_value = mock_user
+
+        response = self.client.post(self.farm_url, {"dummy": "data"})
+
+        # View redirects to manager_dashboard on success
+        self.assertRedirects(
+            response, reverse("manager_dashboard"), fetch_redirect_response=False
+        )
+
+        # Verify DB state
+        self.assertTrue(User.objects.filter(username="atomic_manager").exists())
+        self.assertTrue(Farm.objects.filter(name="Atomic Farm").exists())
+
+        # Ensure the user was elevated to a farm_manager
+        db_user = User.objects.get(username="atomic_manager")
+        self.assertEqual(db_user.role, "farm_manager")
+        self.assertTrue(
+            FarmMembership.objects.filter(user=db_user, is_approved=True).exists()
+        )
+
+    @patch("accounts.views.FarmMembership.objects.create")
+    @patch("accounts.views.FarmSignUpForm")
+    @patch("accounts.views.verify_turnstile", return_value=True)
+    def test_farm_atomic_provisioning_rollback(
+        self, mock_turnstile, MockFormClass, mock_membership_create
+    ):
+        """Ensure a failure mid-provisioning rolls back the ENTIRE transaction."""
+        mock_form = MockFormClass.return_value
+        mock_form.is_valid.return_value = True
+        mock_form.cleaned_data = {
+            "farm_name": "Rollback Farm",
+            "farm_phone": "(555) 000-0000",
+        }
+
+        # Simulate the user being saved to the database during the transaction
+        def fake_save(*args, **kwargs):
+            user = User(username="rollback_target", email="rollback@example.com")
+            user.save()
+            return user
+
+        mock_form.save.side_effect = fake_save
+
+        # Force the 3rd step (Membership) to crash the transaction
+        mock_membership_create.side_effect = Exception("Critical DB Failure")
+
+        response = self.client.post(self.farm_url, {"dummy": "data"})
+
+        # It should catch the exception and rerender the form
+        self.assertEqual(response.status_code, 200)
+        msgs = list(response.context["messages"])
+        self.assertTrue(
+            any("critical error provisioning your farm" in str(m.message) for m in msgs)
+        )
+
+        # CRITICAL ATOMIC CHECK: Neither the user nor the farm should exist in the DB!
+        self.assertFalse(User.objects.filter(username="rollback_target").exists())
+        self.assertFalse(Farm.objects.filter(name="Rollback Farm").exists())

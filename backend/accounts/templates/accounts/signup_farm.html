@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load tailwind_filters %}
+
+{% block content %}
+<div class="max-w-xl mx-auto mt-16 mb-20 px-4">
+    <div class="text-center mb-8">
+        <span class="text-5xl block mb-4">🚜</span>
+        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Register Your Farm</h1>
+        <p class="text-gray-500 mt-2">Start your 60-day free trial. No credit card required.</p>
+    </div>
+
+    <div class="bg-white p-8 md:p-10 rounded-2xl border border-gray-200 shadow-xl">
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+            
+            <div class="hidden" aria-hidden="true">
+                <label for="website_url">Personal Website</label>
+                <input type="text" name="website_url" id="website_url" tabindex="-1" autocomplete="off">
+            </div>
+            
+            <div class="bg-emerald-50 border border-emerald-100 p-4 rounded-xl mb-6">
+                <h3 class="font-bold text-emerald-900 mb-1">Manager Details</h3>
+                <p class="text-sm text-emerald-700">This will be the primary administrative account.</p>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-100 p-5 rounded-xl mb-6 shadow-inner">
+                <h3 class="font-bold text-blue-900 mb-2 flex items-center gap-2">
+                    <span class="text-xl">⏳</span> The 60-Day Trial Promise
+                </h3>
+                <p class="text-sm text-blue-800 leading-relaxed">
+                    You get <strong>full access</strong> to all features today—no credit card required. After 60 days, if you choose not to subscribe, your account simply shifts to "Read-Only" mode. 
+                    <br><br>
+                    You will never lose access to your historical data or analytics, but you won't be able to accept new volunteer logs or send waivers until you upgrade.
+                </p>
+            </div>
+
+            {{ form|crispy }}
+            
+            <div class="cf-turnstile mt-4" data-sitekey="0x4AAAAAADU_K4sBw06JNZlD"></div>
+            
+            <div class="pt-4">
+                <button type="submit" class="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-4 px-4 rounded-xl shadow-lg transition text-lg">
+                    Start 60-Day Trial
+                </button>
+            </div>
+        </form>
+        <div class="mt-6 text-center text-sm text-gray-500">
+            Already running a farm? <a href="{% url 'login' %}" class="text-emerald-600 hover:underline font-bold">Log in</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

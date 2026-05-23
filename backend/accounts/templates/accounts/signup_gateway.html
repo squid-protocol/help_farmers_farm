@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-16 mb-20 px-4">
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight">How do you want to use the platform?</h1>
+        <p class="text-gray-500 mt-4 text-lg">Choose your account type to get started.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <a href="{% url 'signup_volunteer' %}" class="block group">
+            <div class="bg-white p-10 rounded-3xl border border-gray-200 shadow-sm hover:shadow-xl hover:border-emerald-500 transition-all duration-300 h-full flex flex-col items-center text-center">
+                <span class="text-6xl mb-6 block group-hover:scale-110 transition-transform duration-300">🌾</span>
+                <h2 class="text-2xl font-bold text-gray-900 mb-3">I'm a Volunteer</h2>
+                <p class="text-gray-500 mb-8">I want to log my hours, track my personal impact, and join a local farm's roster.</p>
+                <span class="mt-auto bg-emerald-100 text-emerald-800 font-bold py-3 px-8 rounded-xl group-hover:bg-emerald-600 group-hover:text-white transition-colors w-full">
+                    Join as Volunteer
+                </span>
+            </div>
+        </a>
+
+        <a href="{% url 'signup_farm' %}" class="block group">
+            <div class="bg-white p-10 rounded-3xl border border-gray-200 shadow-sm hover:shadow-xl hover:border-emerald-500 transition-all duration-300 h-full flex flex-col items-center text-center">
+                <span class="text-6xl mb-6 block group-hover:scale-110 transition-transform duration-300">🚜</span>
+                <h2 class="text-2xl font-bold text-gray-900 mb-3">I'm a Farm Manager</h2>
+                <p class="text-gray-500 mb-8">I want to manage my volunteers, track seasonal labor, and handle legal liability waivers.</p>
+                <span class="mt-auto bg-gray-900 text-white font-bold py-3 px-8 rounded-xl group-hover:bg-emerald-600 transition-colors w-full">
+                    Register a Farm
+                </span>
+            </div>
+        </a>
+
+    </div>
+    
+    <div class="mt-12 text-center text-sm text-gray-500">
+        Already have an account? <a href="{% url 'login' %}" class="text-emerald-600 hover:underline font-bold">Log in</a>
+    </div>
+</div>
+{% endblock %}

@@ -22,8 +22,18 @@ class CustomUser(AbstractUser):
     phone_number = PhoneNumberField(blank=True, null=True)
 
     # --- NEW: Physical Address for Legal Identity ---
-    address = models.TextField(
-        blank=True, null=True, help_text="Required for legal waivers."
+    address_line1 = models.CharField(
+        max_length=255, blank=True, null=True, verbose_name="Street Address"
+    )
+    address_line2 = models.CharField(
+        max_length=255, blank=True, null=True, verbose_name="Apt/Suite/Other"
+    )
+    city = models.CharField(max_length=100, blank=True, null=True)
+    state = models.CharField(
+        max_length=2, blank=True, null=True, help_text="2-letter abbreviation"
+    )
+    postal_code = models.CharField(
+        max_length=20, blank=True, null=True, verbose_name="ZIP/Postal Code"
     )
 
     # --- NEW: Legal Verification ---
@@ -57,7 +67,14 @@ class CustomUser(AbstractUser):
         self.last_name = "Volunteer"
         self.email = f"redacted_{uuid.uuid4().hex[:8]}@deleted.local"
         self.phone_number = None
-        self.address = "Redacted per privacy request"
+
+        # Scrub the new address fields
+        self.address_line1 = "Redacted per privacy request"
+        self.address_line2 = None
+        self.city = "Redacted"
+        self.state = "XX"
+        self.postal_code = "00000"
+
         self.username = f"archived_{uuid.uuid4().hex[:12]}"
         self.is_active = False
         self.role = "friend"  # Demote to lowest privilege

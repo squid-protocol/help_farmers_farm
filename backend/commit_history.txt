@@ -1,0 +1,293 @@
+3558ea8 | 2026-05-23 | Merge pull request #40 from squid-protocol/feature/name_change
+f653b6d | 2026-05-23 | ci: inject github token for checkout authentication
+ccee109 | 2026-05-23 | style: compile latest tailwind css
+b0df1f9 | 2026-05-23 | style(admin): inject custom dense css for rapid ledger entry
+eaa89ab | 2026-05-23 | feat(admin): implement high-density spreadsheet mode and bulk actions
+648138e | 2026-05-23 | docs: update readme and content generator for new project nomenclature
+7fde873 | 2026-05-23 | refactor(core): update core configuration pointers for brand rename
+e4612c7 | 2026-05-23 | folder name change
+2d15191 | 2026-05-23 | updating name
+0b23bdb | 2026-05-23 | chore: flake
+4467c77 | 2026-05-23 | style: compile updated tailwind css output
+ccbcc3d | 2026-05-23 | feat(farms): implement view logic and corresponding test coverage
+1c4fd35 | 2026-05-23 | feat(farms): update models and validate with unit tests
+717054d | 2026-05-22 | Merge pull request #39 from squid-protocol/feature/membership_tier_status
+ddac6e8 | 2026-05-22 | Potential fix for pull request finding 'CodeQL / Variable defined multiple times'
+0e41ede | 2026-05-22 | Potential fix for pull request finding 'CodeQL / Empty except'
+6853bea | 2026-05-22 | Potential fix for pull request finding 'CodeQL / Imprecise assert'
+41564f1 | 2026-05-22 | chore: flake
+04f5b48 | 2026-05-22 | chore: compile tailwind css for profile danger zone
+09260ea | 2026-05-22 | feat(accounts): implement GDPR-compliant account anonymization and PII scrubbing
+0615086 | 2026-05-22 | chore: compile tailwind css
+170786f | 2026-05-22 | test(logs): add unhappy path coverage for pacing engine and invalid form payloads
+40a12ef | 2026-05-22 | test(analytics): add coverage for super admin dashboard and empty database states
+c2e38fe | 2026-05-22 | sec(accounts): harden waiver signatures against DOM-bypass and cross-tenant pollution
+573f6e4 | 2026-05-22 | test(farms): add coverage for background email tasks and manager edge cases
+4e07d23 | 2026-05-22 | feat(farms): implement automated welcome emails and targeted broadcasts
+4b5748c | 2026-05-22 | test(billing): migrate test file to directory structure and add webhook coverage
+447ee9e | 2026-05-22 | chore: compile tailwind css
+fca9003 | 2026-05-22 | ui(farms): update manager dashboard with communications panel
+834dec0 | 2026-05-22 | feat(analytics): build htmx system adoption report and super admin dashboard
+9da680d | 2026-05-22 | test: fix test suite failures caused by Farm schema changes and state leakage
+9af7bea | 2026-05-22 | feat(farms): add customizable welcome email schema and templates
+cf67c5d | 2026-05-22 | refactor(farms): merge progress report into manager dashboard tabs and update tailwind styles
+7b3c4cf | 2026-05-22 | fix(analytics): restore missing volunteer heatmap htmx endpoint
+d4a2343 | 2026-05-22 | feat(farms): add manual subscription tier control and trial reset actions to admin
+6a7e2ce | 2026-05-22 | add work committment to volunteer edit
+29fea90 | 2026-05-22 | chore:flake
+42c00e5 | 2026-05-22 | Un-ignore migrations, add M2M schema files, update tasks and scripts
+599467f | 2026-05-20 | Merge pull request #38 from squid-protocol/feature/waiver_tiering_system
+8c2fa51 | 2026-05-20 | test: update coverage for strict tier-based compliance routing
+8bd0fd3 | 2026-05-20 | feat(ui): lock compliance hub behind paywall and add upsell banner
+02ea9e4 | 2026-05-20 | feat(security): enforce waiver paywall in middleware and form processors
+a314c30 | 2026-05-20 | feat(billing): implement can_use_waivers feature flag and update pricing copy
+27f706b | 2026-05-20 | Merge pull request #37 from squid-protocol/feature/compliance-and-webhooks
+855c307 | 2026-05-20 | test(logs): add strict RBAC coverage and fix tollbooth test interceptions
+d6a8386 | 2026-05-20 | feat(logs): build master directory UI and interactive edit modals
+6de04b9 | 2026-05-20 | feat(logs): implement secure RBAC edit and delete views for volunteers and managers
+a6be0ac | 2026-05-20 | fix(billing): correct undefined variable in stripe webhook logger
+905765a | 2026-05-20 | chore: label empty exception block
+f11e117 | 2026-05-20 | test(compliance): add comprehensive coverage for email verification and waiver middleware
+ee46091 | 2026-05-20 | feat(admin): deploy God Mode dashboards with global ledgers and read-only WORM audit locks
+e4a0456 | 2026-05-20 | feat(compliance): build strict liability tollbooths, e-signatures, and async PDF workers
+da0a27e | 2026-05-20 | feat(core): implement WORM signature models, farm compliance toggles, and PDF settings
+37eeda9 | 2026-05-20 | chore(theme): recompile Tailwind CSS for updated templates
+ee9b7a9 | 2026-05-20 | feat(admin): deploy comprehensive God Mode dashboards with global ledgers and strict WORM audit locks
+6f66aa9 | 2026-05-20 | feat(farms): add allows_joint_accounts toggle to bypass WORM compliance for legacy families
+730a1b8 | 2026-05-20 | feat(accounts): generate immutable PDF receipts for ESIGN compliance and achieve 100% test coverage
+53b353c | 2026-05-20 | feat(accounts): implement cryptographic email verification and mandate physical address for waivers
+db3f4b2 | 2026-05-20 | feat(accounts): add strict legal identity fields and WORM document columns to schema
+e67d177 | 2026-05-20 | fix(farms): enforce Flake8 line length in forms and add missing farm membership safety catch
+5286c07 | 2026-05-20 | feat(accounts): implement asynchronous WORM-compliant PDF generation for waivers via django-q2
+7379b9b | 2026-05-20 | chore: compile tailwind CSS assets
+2b7e4e5 | 2026-05-20 | feat(farms): build printable compliance audit view for manager transparency
+807b24e | 2026-05-20 | feat(accounts): implement guardian signature bypass and volunteer document portal
+37e9c54 | 2026-05-20 | feat(accounts): add legal document portal for volunteers to review signed waivers
+00a5740 | 2026-05-20 | feat(accounts): implement guardian signature bypass UX for minor volunteers
+fb10988 | 2026-05-20 | feat(accounts): add guardian signature schema to FormSignature model for minors
+351f7ab | 2026-05-20 | chore: compile tailwind assets and finalize global settings
+097c166 | 2026-05-20 | feat(accounts): apply strict E.164 phone number validation to user profiles
+39b67f7 | 2026-05-20 | ux(forms): add phone number format placeholders and help text to prevent validation friction
+1e19d1b | 2026-05-20 | feat(farms): implement strict E.164 phone number validation and formatting
+844e8fd | 2026-05-20 | test(farms): achieve 100% coverage for manager dashboards, IDOR, and reporting
+b3cd274 | 2026-05-20 | test(accounts): achieve 100% coverage for identity flows and compliance middleware
+2636d0d | 2026-05-20 | fix(farms): correct capacity query related name and add model string representations
+ca7b15e | 2026-05-20 | chore: compile updated tailwind styles for manager dashboard
+a8ad494 | 2026-05-20 | refactor(farms): upgrade manager dashboard UI with targeted forms and new settings modal
+e8df9d6 | 2026-05-20 | feat(accounts): enforce targeted compliance forms in middleware and views
+ebae24c | 2026-05-20 | feat(data): add targeted compliance forms and update farm business schema
+7e8fd3b | 2026-05-20 | chore: compile updated tailwind styles and minor log view tweaks
+b93e334 | 2026-05-20 | feat(accounts): update middleware for dynamic waivers and add scroll-lock signature UI
+93f136b | 2026-05-20 | refactor(farms): convert manager dashboard to tabbed UI and integrate compliance hub
+8d9a8c7 | 2026-05-20 | feat(data): add dynamic compliance forms, signature tracking, and comped billing tier
+dfbbb68 | 2026-05-20 | style(farms): apply black formatting constraints to views
+0a0e198 | 2026-05-20 | chore(dev): refactor markdown f-string to resolve flake8 syntax and line length limits
+f003c45 | 2026-05-20 | fix(logs): resolve duplicate form instantiation and trailing whitespace in read-only tollbooth
+fd5d670 | 2026-05-20 | feat(billing): extend trial to 90 days, add comped status, and enable stripe promo codes
+8d4275a | 2026-05-20 | chore(git): ignore generated llm context markdown files
+f1d0dce | 2026-05-20 | chore(tools): refactor context generator to output subsystem markdown files
+4de67c5 | 2026-05-20 | chore: flake & black
+24fc18e | 2026-05-20 | feat(billing): map real Stripe products to DB and enforce tier capacity limits
+93669dc | 2026-05-20 | test(farms): add integration tests for manager command center modals
+803a817 | 2026-05-20 | test(accounts): lock in coverage for legacy claim flow and waiver compliance
+00e274a | 2026-05-20 | test(billing): establish complete coverage for checkout, portal, and webhooks
+3a84067 | 2026-05-20 | feat(billing): implement customer portal and enforce 303 checkout redirects
+adc6760 | 2026-05-20 | feat(compliance): implement liability waiver middleware and signature UI
+480e60d | 2026-05-20 | feat(billing): implement webhook handlers for failed payments and cancellations
+c5998ed | 2026-05-19 | Merge pull request #36 from squid-protocol/feature/stripe_customer_portal
+af088c0 | 2026-05-19 | fix: remove leftover merge conflict marker in 0007 migration
+c04aa89 | 2026-05-19 | chore: merge conflict resolution
+ad316ca | 2026-05-19 | chore: resolve final merge conflicts in urls.py
+4c66141 | 2026-05-19 | chore: resolve merge conflicts and preserve cookbooks app
+c0bcfc4 | 2026-05-19 | feat(ui): add pricing page and manager dashboard trial lockouts
+4004537 | 2026-05-19 | feat(billing): integrate stripe checkout, webhooks, and customer portal
+8db963b | 2026-05-19 | feat(admin): implement God Mode with inline memberships, advanced search, and billing fields
+8dc68f2 | 2026-05-19 | feat(farms): add billing fields and 60-day trial calculation logic
+f18a6d3 | 2026-05-19 | Merge pull request #35 from squid-protocol/feature/stripe
+863a399 | 2026-05-19 | feat(frontend): build pricing page UI and wire core billing routes
+26794e9 | 2026-05-19 | feat(billing): implement stripe checkout sessions and webhook verification
+6a01f2b | 2026-05-19 | feat(farms): add stripe subscription tracking fields to Farm model
+403f741 | 2026-05-19 | chore: add stripe dependency and register billing and cookbooks apps
+5f7cb19 | 2026-05-19 | Merge pull request #33 from squid-protocol/feature/password-reset-flow
+b02be56 | 2026-05-19 | feat(auth): migrate password reset flow to global templates and implement UI
+8c99550 | 2026-05-19 | Merge pull request #26 from squid-protocol/dependabot/pip/click-8.4.0
+cbcb3d6 | 2026-05-19 | Merge pull request #30 from squid-protocol/dependabot/pip/requests-2.34.2
+3b5dea5 | 2026-05-19 | Merge pull request #32 from squid-protocol/feature/workspace-switcher
+df31226 | 2026-05-19 | feat(ui): add multi-farm workspace switcher to global navigation
+73bfbab | 2026-05-19 | refactor(views): migrate to request.active_farm and add workspace switcher endpoint
+7772fef | 2026-05-19 | feat(core): implement active farm session middleware
+14a216b | 2026-05-19 | build(deps): bump requests from 2.34.1 to 2.34.2
+d6d847b | 2026-05-19 | Merge pull request #25 from squid-protocol/dependabot/pip/numpy-2.4.6
+cf6b5f6 | 2026-05-19 | build(deps): bump click from 8.3.3 to 8.4.0
+5bb69e2 | 2026-05-19 | Merge pull request #23 from squid-protocol/dependabot/github_actions/github/codeql-action-4
+dc45687 | 2026-05-19 | Merge pull request #27 from squid-protocol/dependabot/pip/black-26.5.1
+7a95882 | 2026-05-19 | build(deps): bump numpy from 2.4.4 to 2.4.6
+29f4736 | 2026-05-19 | Merge pull request #28 from squid-protocol/dependabot/pip/narwhals-2.21.2
+920c68c | 2026-05-19 | build(deps): bump github/codeql-action from 3 to 4
+d35645f | 2026-05-19 | build(deps): bump black from 26.3.1 to 26.5.1
+d40ac83 | 2026-05-19 | Merge pull request #22 from squid-protocol/dependabot/github_actions/actions/checkout-6
+3e39179 | 2026-05-19 | build(deps): bump narwhals from 2.21.0 to 2.21.2
+7e55e35 | 2026-05-19 | build(deps): bump actions/checkout from 4 to 6
+b5fe9e6 | 2026-05-19 | ci: resolve merge conflict and fix yaml formatting
+b2ee0c2 | 2026-05-19 | ci: fix postgres service container password initialization
+8428f8f | 2026-05-19 | Merge pull request #29 from squid-protocol/feature/m2m-database-pivot
+dae783d | 2026-05-19 | fix(lint): remove unused active_vols variable in manager_dashboard
+0740bd4 | 2026-05-19 | chore: black & flake
+c46ac00 | 2026-05-19 | test: update test suite for new M2M database architecture
+faa9832 | 2026-05-19 | refactor(core): update admin, forms, and views to use FarmMembership bridge
+9b4d72d | 2026-05-19 | feat(db): implement FarmMembership M2M architecture and live data migrations
+f1eceef | 2026-05-19 | Merge pull request #21 from squid-protocol/feature/codeql/dependabot/secrets
+46d306f | 2026-05-19 | chore: black and flake
+84b959b | 2026-05-19 | fix(seo): add missing url routes for static public pages
+bc621fc | 2026-05-19 | feat(seo): add public info pages and wire them into base layout
+35ea0bb | 2026-05-19 | ci: integrate Dependabot, CodeQL scanning, and GitHub Secrets
+c003dcb | 2026-05-18 | Merge pull request #20 from squid-protocol/feature/readmes
+8e5a2d7 | 2026-05-18 | documentation
+c3f3a01 | 2026-05-18 | chore: ignore all json files and clear from git cache
+33b83b6 | 2026-05-18 | Merge pull request #19 from squid-protocol/feature/stability_updates
+8afbb46 | 2026-05-18 | feat(etl): add persistent audit logging to legacy db import script
+a581874 | 2026-05-18 | feat(logs): implement graceful exception handling for shift submissions
+51b3654 | 2026-05-18 | feat(logging): configure persistent audit logger for administrative and background tasks
+e40fe0e | 2026-05-18 | fix(logs): remove unique_together constraint to allow multiple identical shifts per day
+55b7974 | 2026-05-18 | fix(auth): allow static and media files to bypass email verification middleware
+66c0a4f | 2026-05-18 | chore(sentry): dynamically set environment tag to prevent local dev spam
+eefd87a | 2026-05-18 | Merge pull request #18 from squid-protocol/feature/yearly_progress_edge_cases
+4cebbd8 | 2026-05-18 | Merge pull request #17 from squid-protocol/feature/sentry_fix
+a347c83 | 2026-05-18 | clearly show expected pacing progress
+0dfa760 | 2026-05-18 | fix: turn off sentry when server in testing
+5eddb4c | 2026-05-18 | Merge pull request #16 from squid-protocol/feature/volunteer_years_addition
+b2bc121 | 2026-05-18 | farmers can add in years volunteered that acts as an offset
+0dea6ac | 2026-05-18 | Merge pull request #15 from squid-protocol/feature/missing_volun_field_info
+3682635 | 2026-05-18 | Merge pull request #14 from squid-protocol/feature/voln_historical_view
+fe097d3 | 2026-05-18 | chore: black
+5256b72 | 2026-05-18 | added phone # & work commitment to user add form
+302373e | 2026-05-18 | show total veggie experience
+401a961 | 2026-05-18 | Merge pull request #13 from squid-protocol/feature/let_voln_see_past_logs
+f000dd7 | 2026-05-18 | volunteers can choose the year of their log view
+6c9bcff | 2026-05-18 | Merge pull request #12 from squid-protocol/feature/account-claim
+d5779df | 2026-05-18 | Fix CI: Update requirements.txt inside the backend directory
+dce63cc | 2026-05-18 | Update requirements.txt with sentry-sdk to fix CI
+d3c44fa | 2026-05-18 | sentry addition
+8664f50 | 2026-05-17 | Merge pull request #11 from squid-protocol/feature/account-claim
+ebb9b80 | 2026-05-17 | chore: black
+79afd04 | 2026-05-17 | fix(accounts): move AuthenticationForm import to top to satisfy flake8
+ad382f2 | 2026-05-17 | chore: black and flake
+113f6e9 | 2026-05-17 | feat(accounts): implement legacy account claim flow and dual email/username authentication
+fecad98 | 2026-05-17 | Merge pull request #10 from squid-protocol/feature/notes
+33e6f68 | 2026-05-17 | feat(core): add qualitative field notes to volunteer logs and manager dashboard
+717182f | 2026-05-17 | Merge pull request #9 from squid-protocol/feature/manager_dashboard
+0121e6e | 2026-05-17 | test(logs): fix assertion count to account for setup dummy data
+26a8a32 | 2026-05-17 | chore: black and flake corrections
+0ccb0fd | 2026-05-17 | test(core): add integration tests for manager dashboard and plotly chart generation
+69d0ac5 | 2026-05-17 | feat(farms): add summary stat widgets and tabbed filtering to manager dashboard
+11de38b | 2026-05-17 | Merge pull request #8 from squid-protocol/feature/volunteer_honoring
+7583857 | 2026-05-17 | chore: black correction
+454a094 | 2026-05-17 | feat(logs): add farm-wide crop comparison chart to volunteer dashboard
+5e766a2 | 2026-05-17 | Merge pull request #7 from squid-protocol/hotfix/dashboard-ui
+502b945 | 2026-05-17 | chore: flake
+8ecc738 | 2026-05-17 | flake 8
+c69987f | 2026-05-17 | Merge branch 'hotfix/dashboard-ui' of https://github.com/squid-protocol/help_farmers_farm into hotfix/dashboard-ui
+0ea58ce | 2026-05-17 | fix(core): restore missing forms, views, urls, and smart logging logic
+70798ca | 2026-05-17 | Merge branch 'main' into hotfix/dashboard-ui
+a0fb157 | 2026-05-17 | fix(farms): synthesize modal UI layout with updated form fields
+1a39f0f | 2026-05-17 | Merge pull request #6 from squid-protocol/feature/managing_farm
+437d3c6 | 2026-05-17 | feat(logs): add new activity choices and conditional crop requirement logic
+e5bee6d | 2026-05-17 | feat(farms): add email field and fix field order in volunteer creation modal
+84e7da7 | 2026-05-17 | Merge pull request #5 from squid-protocol/feature/managing_farm
+97e5ea5 | 2026-05-17 | test(farms): update security tests for soft-delete endpoints
+cc406ff | 2026-05-17 | style(farms): remove extra blank lines to resolve E303
+295ca88 | 2026-05-17 | fix(farms): move VolunteerEditForm import to top of file to resolve E402
+fc43c6e | 2026-05-17 | feat(accounts): add optional phone number field to volunteer profiles and admin views
+9c1d393 | 2026-05-17 | feat(farms): add visual symbol choices to work commitments
+5a6401e | 2026-05-17 | feat(farms): redesign manager dashboard with modals and inline edit workflows
+c939504 | 2026-05-17 | chore: ignore production data dumps
+16727e0 | 2026-05-17 | Merge pull request #4 from squid-protocol/feature/old_data_migration-ETL
+dc59cb5 | 2026-05-17 | chore: remove linting error from generate_content.py
+b8161a3 | 2026-05-17 | test: add mock emails to accounts and analytics to bypass tollbooth
+e16452c | 2026-05-17 | style: add missing EOF newlines to test files
+d0c6d6e | 2026-05-17 | style: fix PEP 8 linting errors in test files
+7bce261 | 2026-05-17 | test: add mock emails to test users to bypass middleware tollbooth
+6a2b35c | 2026-05-17 | chore: ignore database dump files
+6f3aa00 | 2026-05-17 | chore: add dummy db for testing env
+a6ec775 | 2026-05-17 | chore: black .
+2ec0f93 | 2026-05-17 | feat(accounts): add middleware tollbooth to require user emails
+23ef13c | 2026-05-17 | chore: ignore database dump files
+e7b2d51 | 2026-05-14 | Merge pull request #3 from squid-protocol/feature/old_data_migration-ETL
+d881265 | 2026-05-14 | chore: trailing white spaces
+d0db8a2 | 2026-05-14 | E501 (Line too long) and W293 (Trailing whitespace) errors corrections
+907cec8 | 2026-05-14 | chore: remove unused imports
+ca51507 | 2026-05-14 | chore: black correction
+5a05d8d | 2026-05-14 | fix(logs): set duration step to 0.25 for quarter-hour logging UX
+bca3d5c | 2026-05-14 | feat(analytics): overhaul impact dashboard, add KPI metrics, and fix plotly rendering gaps
+cd5860a | 2026-05-14 | feat(etl): add import_legacy_db management command for SQLite migration
+26f86eb | 2026-05-14 | Merge pull request #2 from squid-protocol/feature/documentation_updates
+b160a9a | 2026-05-14 | docs: implement LLM-optimized READMEs across core apps and project root
+b3a302e | 2026-05-14 | Merge pull request #1 from squid-protocol/feature/secrets_hiding
+8dcde3c | 2026-05-14 | test: disable ssl redirects and secure cookies during automated testing
+8fdeb65 | 2026-05-14 | fix(deps): correctly update backend requirements file
+0a4d54f | 2026-05-14 | build: add django-environ to requirements.txt
+ad89737 | 2026-05-14 | chore: reference env in helpfarmers/settings.py
+8c749ab | 2026-05-14 | chore(security): implement django-environ and secure hardcoded secrets
+600ad18 | 2026-05-14 | chore(dev): add honcho procfile and auto-launch browser on startup
+fbe80a1 | 2026-05-14 | build(ui): replace tailwind cdn with local node-based build pipeline
+e910a6c | 2026-05-14 | fix(farms): restore impact graphs and correct dashboard template routing
+0159719 | 2026-05-13 | refactor(farms): unify manager templates with global layout and tab navigation
+bf4747f | 2026-05-13 | feat(farms): create progress report view and routing
+9dca116 | 2026-05-13 | feat(logs): add dynamic weekly pacing engine to volunteer dashboard
+d08ab62 | 2026-05-13 | fix(accounts): add work commitment to user admin and update readme
+50c6c14 | 2026-05-13 | chore: black . corrections
+e8963b3 | 2026-05-13 | fix(logs): pass user to LogEntryForm to resolve crop filtering and fix tests
+1328ba5 | 2026-05-13 | feat(farms): add season start and end dates to manager dashboard
+af662f8 | 2026-05-13 | chore: black . corrections
+26004ed | 2026-05-13 | docs: add app-level readmes for accounts and farms
+0a0d7f4 | 2026-05-13 | refactor: migrate impact dashboard from profile to log hours view
+c0d3498 | 2026-05-13 | chore: flake 8 linter correction from tailwind CSS strings
+4b9c712 | 2026-05-13 | docs: update project readme
+20540a4 | 2026-05-13 | feat(accounts): link users to work commitments and add personal impact dashboard
+ae3877f | 2026-05-13 | feat(farms): add dynamic multi-tenant work commitments to manager dashboard
+0df7cf8 | 2026-05-13 | feat(analytics): add seasonal workflow timeline chart to farm impact dashboard
+ac6026f | 2026-05-13 | chore: black whitespace
+fb33903 | 2026-05-13 | style: fix pep8 line length error in avatar base64 test string
+31640ff | 2026-05-13 | style: apply Black auto-formatting to test and view files
+4d18780 | 2026-05-13 | test: expand view coverage for accounts and analytics to pass CI requirements
+14013f1 | 2026-05-13 | test: expand view coverage for analytics and accounts to pass CI requirements
+8fcd0e1 | 2026-05-13 | test(analytics): add basic view tests to satisfy coverage requirements
+bf691e7 | 2026-05-13 | chore(deps): add pandas and plotly to requirements for CI pipeline
+599dae3 | 2026-05-13 | style(analytics): remove unused import and fix pep8 line length in empty state
+b9eba1f | 2026-05-13 | style(analytics): apply Black auto-formatting
+a784ab8 | 2026-05-13 | feat(analytics): add term frequency heatmap and remove dependency on standalone python scripts
+a789a22 | 2026-05-13 | feat(analytics): implement dominant activity heatmap with dynamic HTMX filters
+43e5a0b | 2026-05-13 | fix(ui): upgrade globally loaded Plotly CDN and resolve partials directory structure
+fd74fdd | 2026-05-13 | style: remove trailing whitespace on blank line
+e25acae | 2026-05-13 | style: fix remaining pep8 linting errors
+acbce80 | 2026-05-13 | style: apply Black auto-formatting and remove unused imports
+0b7bed7 | 2026-05-13 | refactor(farms): strip chart logic and implement HTMX dynamic filters
+1712f5f | 2026-05-13 | feat(analytics): extract impact chart logic into dedicated analytics app
+18199f2 | 2026-05-13 | feat(logs): implement HTMX no-reload form and toast notification
+6d48ce2 | 2026-05-13 | fix(logs): filter crop dropdown by user's assigned farm
+a7eb391 | 2026-05-13 | feat(ui): implement interactive avatar cropper and update navbar
+e348a24 | 2026-05-13 | feat(accounts): add base64 avatar upload view and routing
+d27a0d5 | 2026-05-13 | feat(accounts): add avatar ImageField and configure media serving
+fad237a | 2026-05-13 | style: format remaining test suite files to clear flake8
+8b1ad2a | 2026-05-13 | style: format test_views.py to resolve flake8 linting errors
+093de81 | 2026-05-13 | ci: implement github actions workflow and requirements for automated testing
+41c89db | 2026-05-13 | chore: add flake8 configuration for standardized code linting
+f3cf70a | 2026-05-13 | test: refactor test architecture into modular directories and add comprehensive suites
+000d3d2 | 2026-05-13 | style: apply black auto-formatting and resolve flake8 linting errors
+0bf6a3f | 2026-05-13 | feat(auth): add self-service profile editing and password reset pipeline
+d129dc9 | 2026-05-13 | security: implement django-axes brute-force protection and fix IDOR in volunteer view
+617f990 | 2026-05-13 | feat(analytics): add live farm impact dashboard using optimized ORM and plotly
+fe918d0 | 2026-05-13 | feat(logs): implement robust data validation, safe deletions, and duplicate prevention
+a00030b | 2026-05-13 | feat(ui): add landing page, global footer, and styled login portal
+39bb16f | 2026-05-13 | feat(ui): integrate tailwind css and crispy forms with master layout
+b301f70 | 2026-05-13 | feat(farms): implement secure user deletion and detailed volunteer analytics view
+88c6530 | 2026-05-13 | feat(logs): display total hours and recent shifts on personal dashboard
+acd4aaf | 2026-05-13 | chore(logs): generate initial migrations for LogEntry model
+8f6df99 | 2026-05-13 | feat(farms): add self-serve volunteer management to manager dashboard
+42dcafd | 2026-05-13 | feat(core): configure authentication flow, login templates, and root routing
+d51c8df | 2026-05-13 | feat(logs): create frontend form and views for logging volunteer hours
+73f0730 | 2026-05-13 | feat(accounts): implement user role hierarchy and read-only friend status
+721d112 | 2026-05-13 | chore: configure gitignore and initialize utility directories
+2045035 | 2026-05-13 | feat: complete database models for Farm, Crop, and LogEntry with admin integration
+269605a | 2026-05-13 | feat: Initial Django setup with CustomUser and PostgreSQL integration
+be4c0e8 | 2026-05-13 | first commit

@@ -12,10 +12,10 @@
     
     <div class="flex justify-center gap-4">
         {% if user.is_authenticated %}
-            <a href="{% url 'log_hours' %}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-10 rounded-xl shadow-lg transition transform hover:-translate-y-1">Go to Dashboard</a>
+            <a href="{% url 'log_hours' %}" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-10 rounded-xl shadow-lg transition transform hover:-translate-y-1">Go to Dashboard</a>
         {% else %}
-            <a href="{% url 'login' %}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-10 rounded-xl shadow-lg transition transform hover:-translate-y-1">Log In</a>
-            <a href="#" class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-4 px-10 rounded-xl shadow-sm transition">Learn More</a>
+            <a href="{% url 'signup_gateway' %}" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-10 rounded-xl shadow-lg transition transform hover:-translate-y-1">Get Started for Free</a>
+            <a href="{% url 'pricing' %}" class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-4 px-10 rounded-xl shadow-sm transition">View Pricing</a>
         {% endif %}
     </div>
 </div>
