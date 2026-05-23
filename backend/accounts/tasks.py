@@ -56,14 +56,19 @@ def generate_pdf_receipt(signature_id, user_id, form_id, farm_id, ip_address):
 
 def purge_unverified_accounts():
     """
-    Nightly cron job: Deletes any account that is older than 7 days
-    and has not verified their email address.
+    Nightly cron job: Deletes any unattached volunteer account that is
+    older than 7 days and has not verified their email address.
     """
     # Set the grace period to 1 full week
     cutoff_time = timezone.now() - timedelta(days=7)
 
-    # Target users who are unverified AND whose accounts have aged past the cutoff
-    ghosts = User.objects.filter(is_email_verified=False, date_joined__lt=cutoff_time)
+    # Target ONLY volunteers who are unverified, past the cutoff, AND have no farm memberships
+    ghosts = User.objects.filter(
+        is_email_verified=False,
+        date_joined__lt=cutoff_time,
+        role="volunteer",
+        memberships__isnull=True,
+    )
 
     count = ghosts.count()
     if count > 0:
