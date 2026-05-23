@@ -23,4 +23,9 @@ urlpatterns = [
         views.admin_adoption_dashboard,
         name="admin_adoption_dashboard",
     ),
+    path(
+        "api/export/grant-report/",
+        views.export_grant_report_csv,
+        name="export_grant_report",
+    ),
 ]

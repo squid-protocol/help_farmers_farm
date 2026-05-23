@@ -1,9 +1,11 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
-from farms.models import Farm, Crop, WorkCommitment, ComplianceForm
+from farms.models import Farm, Crop, WorkCommitment, ComplianceForm, FarmProfile
 from accounts.models import FarmMembership
 from unittest.mock import patch
+
+User = get_user_model()
 
 User = get_user_model()
 
@@ -177,7 +179,7 @@ class ManagerDashboardActionTests(TestCase):
     def test_manager_can_create_volunteer(self):
         self.client.force_login(self.manager)
         response = self.client.post(
-            self.dashboard_url,
+            reverse("volunteer_roster"),
             {
                 "submit_volunteer": "true",
                 "username": "new_guy",
@@ -209,7 +211,7 @@ class ManagerDashboardActionTests(TestCase):
         mock_count.return_value = 50
 
         response = self.client.post(
-            self.dashboard_url,
+            reverse("volunteer_roster"),
             {
                 "submit_volunteer": "true",
                 "username": "too_many_guys",
@@ -231,7 +233,7 @@ class ManagerDashboardActionTests(TestCase):
         mock_count.return_value = 200
 
         response = self.client.post(
-            self.dashboard_url,
+            reverse("volunteer_roster"),
             {
                 "submit_volunteer": "true",
                 "username": "growth_overflow",
@@ -310,6 +312,47 @@ class ManagerDashboardActionTests(TestCase):
             ).exists()
         )
 
+    def test_manager_can_update_public_profile(self):
+        """Ensure managers can successfully update their marketing profile and tags."""
+        self.client.force_login(self.manager)
+
+        # Simulating Tagify's JSON payload
+        tagify_json = '[{"value":"USDA Organic"},{"value":"No-Till"}]'
+
+        response = self.client.post(
+            self.dashboard_url,
+            {
+                "submit_profile": "true",
+                "is_public": True,
+                # THE FIX: Simulating an unchecked box by omitting it entirely
+                "short_description": "We grow the best carrots.",
+                "about_us": "<div>Rich text content</div>",
+                "tags": tagify_json,
+                "website_url": "https://schulerfarms.com",
+            },
+        )
+
+        # THE FIX: If this fails, it will print the EXACT form errors to your console!
+        errors = (
+            response.context["profile_form"].errors
+            if response.status_code == 200
+            else ""
+        )
+        self.assertEqual(
+            response.status_code, 302, f"Form failed validation! Errors: {errors}"
+        )
+
+        # Verify it actually saved to the database correctly
+        profile = self.farm.profile
+        self.assertTrue(profile.is_public)
+        self.assertFalse(profile.is_accepting_volunteers)
+        self.assertEqual(profile.short_description, "We grow the best carrots.")
+        self.assertEqual(profile.website_url, "https://schulerfarms.com")
+
+        # Verify the custom clean_tags method properly parsed the JSON array
+        self.assertIn("USDA Organic", profile.tags)
+        self.assertIn("No-Till", profile.tags)
+
     def test_manager_can_update_farm_settings(self):
         """Ensure settings save, and phone numbers are normalized."""
         self.client.force_login(self.manager)
@@ -371,6 +414,27 @@ class ManagerDashboardActionTests(TestCase):
 
         self.assertNotIn("account_manager", edit_roles)
         self.assertNotIn("farm_manager", edit_roles)
+
+    def test_manager_can_update_profile_tags_without_javascript(self):
+        """STABILITY: Ensure the backend gracefully falls back to comma-separated strings if Tagify JS fails."""
+        self.client.force_login(self.manager)
+
+        response = self.client.post(
+            self.dashboard_url,
+            {
+                "submit_profile": "true",
+                "is_public": True,
+                "tags": "Heirloom, Hand-Picked, Pesticide Free",  # <-- Standard string, NOT JSON
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+        # Verify the custom clean_tags method caught the ValueError and split it by commas
+        self.farm.profile.refresh_from_db()
+        self.assertIn("Heirloom", self.farm.profile.tags)
+        self.assertIn("Hand-Picked", self.farm.profile.tags)
+        self.assertIn("Pesticide Free", self.farm.profile.tags)
 
 
 class FarmEditAndToggleTests(TestCase):
@@ -453,7 +517,7 @@ class FarmEditAndToggleTests(TestCase):
         response = self.client.post(
             url, {"username": "updated_vol", "role": "volunteer", "is_active": True}
         )
-        self.assertRedirects(response, reverse("manager_dashboard"))
+        self.assertRedirects(response, reverse("volunteer_roster"))
         self.volunteer.refresh_from_db()
         self.assertEqual(self.volunteer.username, "updated_vol")
 
@@ -717,3 +781,315 @@ class FarmUnhappyPathTests(TestCase):
         self.assertIn("compliance_setup_form", response.context)
         self.assertTrue(response.context["compliance_setup_form"].errors)
         self.assertEqual(ComplianceForm.objects.count(), 0)
+
+    def test_expired_trial_blocks_dashboard_modifications(self):
+        """BUSINESS LOGIC: Ensure an expired trial locks the command center into read-only mode."""
+        from datetime import timedelta
+        from django.utils import timezone
+
+        # Manually age the farm past the 60-day trial limit
+        self.farm.created_at = timezone.now() - timedelta(days=65)
+        self.farm.is_paid = False
+        self.farm.save()
+
+        self.client.force_login(self.manager)
+
+        # Attempt to bypass the UI and add a crop via POST
+        response = self.client.post(
+            self.dashboard_url,
+            {
+                "submit_crop": "true",
+                "crop_name": "Stolen Tomatoes",
+                "is_active": True,
+            },
+        )
+
+        # They should be bounced back to the dashboard with an error
+        self.assertRedirects(response, self.dashboard_url)
+
+        # Verify the database rejected the write
+        from farms.models import Crop
+
+        self.assertFalse(Crop.objects.filter(crop_name="Stolen Tomatoes").exists())
+
+
+class VolunteerOnboardingTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.farm = Farm.objects.create(
+            name="Public Test Farm", subscription_tier="growth"
+        )
+
+        # The Manager
+        self.manager = User.objects.create_user(
+            username="manager_bob",
+            email="bob@test.com",
+            password="p",
+            role="farm_manager",
+        )
+        FarmMembership.objects.create(
+            user=self.manager, farm=self.farm, is_approved=True
+        )
+
+        # The Unattached Volunteer
+        self.volunteer = User.objects.create_user(
+            username="new_vol", email="vol@test.com", password="p", role="volunteer"
+        )
+
+        # NEW: Ensure the test farm is actually public so it appears in search!
+        FarmProfile.objects.create(farm=self.farm, is_public=True)
+
+    def test_magic_invite_link_auto_approves(self):
+        """Ensure clicking the magic link bypasses the queue and auto-approves."""
+        self.client.force_login(self.volunteer)
+        url = reverse("invite_link", args=[self.farm.invite_token])
+
+        response = self.client.get(url)
+        self.assertRedirects(response, reverse("log_hours"))
+
+        # Verify they are officially on the roster
+        membership = FarmMembership.objects.get(user=self.volunteer, farm=self.farm)
+        self.assertTrue(membership.is_approved)
+
+    def test_farm_search_view(self):
+        """Ensure unattached volunteers can search for farms."""
+        self.client.force_login(self.volunteer)
+        response = self.client.get(reverse("farm_search") + "?q=Public")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.farm, response.context["farms"])
+
+    def test_farm_search_hides_private_farms(self):
+        """Ensure farms that have not opted into the public directory are hidden."""
+        private_farm = Farm.objects.create(name="Private Hidden Farm")
+        FarmProfile.objects.create(farm=private_farm, is_public=False)
+
+        self.client.force_login(self.volunteer)
+        response = self.client.get(reverse("farm_search") + "?q=Private")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn(private_farm, response.context["farms"])
+
+    def test_farm_search_respects_accepting_volunteers_toggle(self):
+        """Ensure the 'Request to Join' button is hidden if the farm disables it."""
+        self.farm.profile.is_accepting_volunteers = False
+        self.farm.profile.save()
+
+        self.client.force_login(self.volunteer)
+        response = self.client.get(reverse("farm_search") + "?q=Public")
+
+        # The farm should still show up in search
+        self.assertIn(self.farm, response.context["farms"])
+
+        # But the HTML should show the lockout message instead of the form
+        self.assertContains(response, "Not accepting volunteers")
+        self.assertNotContains(response, "Request to Join")
+
+    def test_request_join_creates_pending_membership(self):
+        """Ensure a public request puts the user in the pending queue."""
+        self.client.force_login(self.volunteer)
+        response = self.client.post(reverse("request_join", args=[self.farm.id]))
+
+        self.assertRedirects(response, reverse("farm_search"))
+
+        # Verify they are in the database, but NOT approved
+        membership = FarmMembership.objects.get(user=self.volunteer, farm=self.farm)
+        self.assertFalse(membership.is_approved)
+
+    @patch("farms.views.send_volunteer_welcome_email")
+    def test_manager_can_approve_request(self, mock_email):
+        """Ensure a manager can approve a pending request and fire the welcome email."""
+        # Setup a pending request
+        membership = FarmMembership.objects.create(
+            user=self.volunteer, farm=self.farm, is_approved=False
+        )
+
+        self.client.force_login(self.manager)
+        response = self.client.post(
+            reverse("approve_join", args=[membership.id]), {"action": "approve"}
+        )
+
+        self.assertRedirects(response, reverse("volunteer_roster"))
+        membership.refresh_from_db()
+        self.assertTrue(membership.is_approved)
+        self.assertTrue(mock_email.called)
+
+    def test_manager_can_deny_request(self):
+        """Ensure denying a request permanently deletes the pending membership."""
+        membership = FarmMembership.objects.create(
+            user=self.volunteer, farm=self.farm, is_approved=False
+        )
+
+        self.client.force_login(self.manager)
+        response = self.client.post(
+            reverse("approve_join", args=[membership.id]), {"action": "deny"}
+        )
+
+        self.assertRedirects(response, reverse("volunteer_roster"))
+        # The bridge record should be completely annihilated
+        self.assertFalse(FarmMembership.objects.filter(id=membership.id).exists())
+
+    def test_manager_cannot_approve_rival_farm_request(self):
+        """SECURITY: Ensure Manager A cannot approve a request for Farm B (Cross-Tenant IDOR)."""
+        # Create a rival farm and a pending request for it
+        rival_farm = Farm.objects.create(name="Rival Farm", subscription_tier="growth")
+        rival_membership = FarmMembership.objects.create(
+            user=self.volunteer, farm=rival_farm, is_approved=False
+        )
+
+        # Log in as Manager of Farm A
+        self.client.force_login(self.manager)
+
+        # Try to approve the membership belonging to Farm B
+        response = self.client.post(
+            reverse("approve_join", args=[rival_membership.id]), {"action": "approve"}
+        )
+
+        # The get_object_or_404(..., farm=request.active_farm) should block it
+        self.assertEqual(response.status_code, 404)
+
+        # Verify the volunteer is STILL not approved for the rival farm
+        rival_membership.refresh_from_db()
+        self.assertFalse(rival_membership.is_approved)
+
+    def test_volunteer_cannot_access_approval_queue(self):
+        """SECURITY: Ensure standard volunteers cannot approve their own requests."""
+        membership = FarmMembership.objects.create(
+            user=self.volunteer, farm=self.farm, is_approved=False
+        )
+
+        # Log in as the unapproved volunteer
+        self.client.force_login(self.volunteer)
+
+        # Try to approve their own request
+        response = self.client.post(
+            reverse("approve_join", args=[membership.id]), {"action": "approve"}
+        )
+
+        # Should redirect them away (to the login/log-hours fallback)
+        self.assertEqual(response.status_code, 302)
+        membership.refresh_from_db()
+        self.assertFalse(membership.is_approved)
+
+    def test_magic_link_handles_already_approved_users(self):
+        """STABILITY: Ensure clicking the invite link twice doesn't crash the database with UniqueConstraint errors."""
+        self.client.force_login(self.volunteer)
+        url = reverse("invite_link", args=[self.farm.invite_token])
+
+        # Click 1: Joins the farm
+        self.client.get(url)
+
+        # Click 2: Should safely handle the duplicate
+        response = self.client.get(url)
+
+        self.assertRedirects(response, reverse("log_hours"))
+        # Verify there is still only ONE membership record for this user/farm combo
+        self.assertEqual(
+            FarmMembership.objects.filter(user=self.volunteer, farm=self.farm).count(),
+            1,
+        )
+
+    def test_magic_link_404s_on_invalid_token(self):
+        """PRIVACY: Ensure guessing a random UUID doesn't grant access to a farm."""
+        import uuid
+
+        self.client.force_login(self.volunteer)
+
+        fake_token = uuid.uuid4()
+        url = reverse("invite_link", args=[fake_token])
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_request_join_with_message_saves_correctly(self):
+        """MARKETPLACE: Ensure a volunteer can send an introductory message with their application."""
+        self.client.force_login(self.volunteer)
+        application_message = (
+            "I have 3 years of organic farming experience and love tomatoes!"
+        )
+
+        response = self.client.post(
+            reverse("request_join", args=[self.farm.id]),
+            {"applicant_message": application_message},
+        )
+
+        self.assertRedirects(response, reverse("farm_search"))
+
+        # Verify the message reached the database
+        membership = FarmMembership.objects.get(user=self.volunteer, farm=self.farm)
+        self.assertEqual(membership.applicant_message, application_message)
+        self.assertFalse(membership.is_approved)
+
+    def test_reapplying_updates_applicant_message(self):
+        """MARKETPLACE: Ensure subsequent join requests update the message if the user is still pending."""
+        # Create an initial pending membership
+        FarmMembership.objects.create(
+            user=self.volunteer,
+            farm=self.farm,
+            is_approved=False,
+            applicant_message="Old message",
+        )
+
+        self.client.force_login(self.volunteer)
+        new_message = "Updated availability: I can now work weekends!"
+
+        self.client.post(
+            reverse("request_join", args=[self.farm.id]),
+            {"applicant_message": new_message},
+        )
+
+        membership = FarmMembership.objects.get(user=self.volunteer, farm=self.farm)
+        self.assertEqual(membership.applicant_message, new_message)
+
+    def test_manager_roster_displays_applicant_message(self):
+        """UI: Ensure the Farm Manager can physically see the applicant's message in the roster."""
+        # Create a pending applicant with a message
+        msg = "Hi, I am looking to fulfill my 80-hour commitment here."
+        FarmMembership.objects.create(
+            user=self.volunteer,
+            farm=self.farm,
+            is_approved=False,
+            applicant_message=msg,
+        )
+
+        self.client.force_login(self.manager)
+        # Set the session so the roster knows which farm we are managing
+        session = self.client.session
+        session["active_farm_id"] = self.farm.id
+        session.save()
+
+        response = self.client.get(reverse("volunteer_roster"))
+
+        # Verify the message appears in the HTML context
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, msg)
+        self.assertContains(response, self.volunteer.email)
+
+    def test_end_to_end_marketplace_application(self):
+        """STABILITY: Ensure a message-backed application flows perfectly to the Manager Roster."""
+        # 1. Setup a public farm
+        self.farm.profile.is_public = True
+        self.farm.profile.save()
+
+        # 2. Volunteer applies with a custom note
+        self.client.force_login(self.volunteer)
+        app_note = "I grew up on a cherry farm and want to help with your harvest."
+        self.client.post(
+            reverse("request_join", args=[self.farm.id]),
+            {"applicant_message": app_note},
+        )
+
+        # 3. Manager views the roster to see the 'package'
+        self.client.force_login(self.manager)
+        session = self.client.session
+        session["active_farm_id"] = self.farm.id
+        session.save()
+
+        response = self.client.get(reverse("volunteer_roster"))
+
+        # 4. Verify the Manager sees the pitch AND the volunteer details
+        self.assertContains(response, app_note)
+        self.assertContains(
+            response, self.volunteer.get_full_name() or self.volunteer.username
+        )
+        self.assertContains(response, "Applicants")

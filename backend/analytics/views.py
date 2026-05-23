@@ -1,4 +1,5 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from django.http import HttpResponse
@@ -8,7 +9,7 @@ import pandas as pd
 from django.utils import timezone
 from datetime import timedelta
 from accounts.models import CustomUser, Farm
-
+import csv
 from logs.models import LogEntry
 
 
@@ -865,3 +866,72 @@ def admin_adoption_dashboard(request):
     if not request.user.is_staff:
         raise PermissionDenied("You are not authorized to view this page.")
     return render(request, "analytics/admin_dashboard.html")
+
+
+@login_required
+def export_grant_report_csv(request):
+    farm = request.active_farm
+
+    # 1. THE ENTERPRISE TOLLBOOTH
+    # Only Institutional/Enterprise tier (or comped/staff) can download raw data
+    if (
+        farm.subscription_tier != "institutional"
+        and not farm.is_comped
+        and not request.user.is_staff
+    ):
+        messages.error(request, "Data Export is only available on the Enterprise tier.")
+        return redirect("manager_dashboard")
+
+    # 2. Setup the HTTP Response to trigger a file download
+    response = HttpResponse(
+        content_type="text/csv",
+        headers={
+            "Content-Disposition": f'attachment; filename="{farm.name}_Grant_Report.csv"'
+        },
+    )
+
+    writer = csv.writer(response)
+
+    # 3. Write the Header Row
+    writer.writerow(
+        [
+            "Date Logged",
+            "Volunteer Name",
+            "Email",
+            "Activity Type",
+            "Crop/Category",
+            "Hours Logged",
+            "Field Notes",
+        ]
+    )
+
+    # 4. Fetch and Write the Data
+    # Optimize the query with select_related so we don't hit the DB 10,000 times
+    logs = (
+        LogEntry.objects.filter(farm=farm)
+        .select_related("volunteer", "crop")
+        .order_by("-date_logged")
+    )
+
+    for log in logs:
+        vol_name = (
+            f"{log.volunteer.first_name} {log.volunteer.last_name}".strip()
+            if log.volunteer
+            else "Deleted User"
+        )
+        vol_email = log.volunteer.email if log.volunteer else "N/A"
+        crop_name = log.crop.crop_name if log.crop else "General/Deleted"
+
+        writer.writerow(
+            [
+                log.date_logged,
+                vol_name,
+                vol_email,
+                log.get_activity_display(),
+                crop_name,
+                log.duration_hours,
+                log.notes or "",
+            ]
+        )
+
+    return response
