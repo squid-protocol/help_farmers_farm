@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     "analytics",
     "tailwind",
     "theme",
-    "cookbooks",
     "billing",
 ]
 
