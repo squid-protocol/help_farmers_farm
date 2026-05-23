@@ -81,8 +81,6 @@ def billing_success(request):
         except Exception as e:
             # If the API ping fails for any reason, fail gracefully.
             # The background webhook will still eventually catch it.
-            import logging
-
             logger = logging.getLogger("django")
             logger.warning(
                 f"Active Stripe verification failed for Session {session_id}: {e}"
