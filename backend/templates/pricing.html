@@ -24,11 +24,17 @@
                 <li class="flex items-center gap-3">✅ Gamified Pacing & Seasonal Badges</li>
             </ul>
 
-            <form action="{% url 'create_checkout_session' %}" method="POST" class="mt-auto">
-                {% csrf_token %}
-                <input type="hidden" name="price_id" value="price_1TYsDw4Q1x6w9f8FBWp82g03">
-                <button type="submit" class="w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold py-3 rounded-xl transition">Select Starter</button>
-            </form>
+            <div class="mt-auto">
+                {% if user.is_authenticated %}
+                    <form action="{% url 'create_checkout_session' %}" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="price_id" value="price_1TYsDw4Q1x6w9f8FBWp82g03">
+                        <button type="submit" class="w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold py-3 rounded-xl transition">Select Starter</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'signup_farm' %}" class="block text-center w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold py-3 rounded-xl transition">Start 60-Day Free Trial</a>
+                {% endif %}
+            </div>
         </div>
 
         <div class="bg-emerald-600 rounded-3xl p-8 border border-emerald-700 shadow-xl transform md:-translate-y-4 flex flex-col h-full relative">
@@ -48,7 +54,15 @@
             </ul>
 
             <div class="mt-auto">
-                <a href="{% url 'signup_farm' %}" class="block text-center w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold py-3 rounded-xl transition">Start Free Trial</a>
+                {% if user.is_authenticated %}
+                    <form action="{% url 'create_checkout_session' %}" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="price_id" value="price_1TYsF54Q1x6w9f8FaXJmkcE1">
+                        <button type="submit" class="w-full bg-white hover:bg-gray-50 text-emerald-700 font-bold py-3 rounded-xl transition shadow-md">Select Professional</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'signup_farm' %}" class="block text-center w-full bg-white hover:bg-gray-50 text-emerald-700 font-bold py-3 rounded-xl transition shadow-md">Start 60-Day Free Trial</a>
+                {% endif %}
             </div>
         </div>
 
@@ -64,11 +78,17 @@
                 <li class="flex items-center gap-3">✅ 52-Week HTMX Activity Heatmaps</li>
             </ul>
 
-            <form action="{% url 'create_checkout_session' %}" method="POST" class="mt-auto">
-                {% csrf_token %}
-                <input type="hidden" name="price_id" value="price_1TYsJj4Q1x6w9f8FpRlCUh0j">
-                <button type="submit" class="w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold py-3 rounded-xl transition">Select Enterprise</button>
-            </form>
+            <div class="mt-auto">
+                {% if user.is_authenticated %}
+                    <form action="{% url 'create_checkout_session' %}" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="price_id" value="price_1TYsJj4Q1x6w9f8FpRlCUh0j">
+                        <button type="submit" class="w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold py-3 rounded-xl transition">Select Enterprise</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'signup_farm' %}" class="block text-center w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold py-3 rounded-xl transition">Start 60-Day Free Trial</a>
+                {% endif %}
+            </div>
         </div>
 
     </div>
