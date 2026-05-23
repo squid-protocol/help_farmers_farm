@@ -56,7 +56,7 @@ def manager_dashboard(request):
             messages.error(
                 request,
                 "🛑 Trial Expired: Your farm's account is in Read-Only mode. "
-                "Please upgrade your plan in the Billing portal to make changes or send communications."
+                "Please upgrade your plan in the Billing portal to make changes or send communications.",
             )
             return redirect("manager_dashboard")
         # --- END TOLLBOOTH ---
@@ -283,9 +283,8 @@ def manager_dashboard(request):
             total_hours=Sum(
                 "user__logs__duration_hours",
                 filter=Q(
-                    user__logs__date_logged__year=current_year, 
-                    user__logs__farm=my_farm
-                )
+                    user__logs__date_logged__year=current_year, user__logs__farm=my_farm
+                ),
             )
         )
     )
@@ -434,9 +433,8 @@ def progress_report_view(request):
             total_hours=Sum(
                 "user__logs__duration_hours",
                 filter=Q(
-                    user__logs__date_logged__year=current_year, 
-                    user__logs__farm=farm
-                )
+                    user__logs__date_logged__year=current_year, user__logs__farm=farm
+                ),
             )
         )
     )
