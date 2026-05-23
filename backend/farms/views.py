@@ -141,19 +141,24 @@ def manager_dashboard(request):
                 return redirect("manager_dashboard")
 
         elif "submit_broadcast" in request.POST:
+            from django_q.tasks import async_task
+            
             subject = request.POST.get("broadcast_subject")
             body = request.POST.get("broadcast_body")
             audience = request.POST.get("audience", "all")
             specific_ids = request.POST.getlist("specific_users")
 
-            status_msg = send_broadcast_email(
+            # Fire and forget: send the heavy lifting to the background worker
+            async_task(
+                "farms.tasks.send_broadcast_email",
                 farm_id=my_farm.id,
                 subject=subject,
                 custom_body=body,
                 audience_value=audience,
                 specific_ids=specific_ids,
             )
-            messages.success(request, status_msg)
+            
+            messages.success(request, "Broadcast queued! Emails are being securely dispatched in the background.")
             return redirect("manager_dashboard")
 
         elif "submit_welcome_email" in request.POST:

@@ -659,21 +659,21 @@ class FarmUnhappyPathTests(TestCase):
         self.farm.refresh_from_db()
         self.assertEqual(self.farm.welcome_email_subject, "New Subject!")
 
-        # 2. Fire Broadcast (Mocked to prevent actual SMTP connection)
-        with patch("farms.views.send_broadcast_email") as mock_send:
-            mock_send.return_value = "Success"
-            response2 = self.client.post(
-                self.dashboard_url,
-                {
-                    "submit_broadcast": "true",
-                    "broadcast_subject": "Hello",
-                    "broadcast_body": "World",
-                    "audience": "all",
-                },
-            )
+        # 2. Fire Broadcast (Mocked to prevent actual SMTP connection and async queueing)
+        with patch("django_q.tasks.async_task") as mock_async:
+            response2 = self.client.post(self.dashboard_url, {
+                "submit_broadcast": "true",
+                "broadcast_subject": "Hello",
+                "broadcast_body": "World",
+                "audience": "all"
+            })
             self.assertRedirects(response2, self.dashboard_url)
-            mock_send.assert_called_once()
-
+            
+            # Prove the handoff to the background worker succeeded
+            mock_async.assert_called_once()
+            # Verify the correct task was queued
+            self.assertEqual(mock_async.call_args[0][0], "farms.tasks.send_broadcast_email")
+            
     def test_edit_crop_invalid_data_graceful_fail(self):
         """Ensure editing a crop with blank data safely re-renders the form with errors."""
         from farms.models import Crop
