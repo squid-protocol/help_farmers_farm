@@ -82,7 +82,7 @@ def send_broadcast_email(
 
     # 4. Generate all email objects
     messages = []
-    
+
     # Establish the return routing
     reply_to_email = [farm.contact_email] if farm.contact_email else None
 
