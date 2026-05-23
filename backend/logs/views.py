@@ -21,6 +21,13 @@ def log_hours_view(request):
     user = request.user
     current_year = datetime.now().year
 
+    # --- NEW: The Unattached Volunteer Safety Net ---
+    if not hasattr(request, "active_farm") or not request.active_farm:
+        messages.info(
+            request, "Welcome! You need to join a farm before you can log hours."
+        )
+        return redirect("farm_search")
+
     # 1. Handle New Shift Submissions
     if request.method == "POST":
 

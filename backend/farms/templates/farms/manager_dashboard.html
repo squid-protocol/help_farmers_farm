@@ -45,9 +45,9 @@
         <button onclick="switchCommandTab('crops')" id="nav-crops" class="command-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
             🌱 Crops
         </button>
-        <button onclick="switchCommandTab('roster')" id="nav-roster" class="command-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+        <a href="{% url 'volunteer_roster' %}" id="nav-roster" class="command-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
             👥 Roster
-        </button>
+        </a>
         <button onclick="switchCommandTab('admin')" id="nav-admin" class="command-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
             ⚖️ Waivers
         </button>
@@ -131,6 +131,30 @@
                 </div>
             {% endif %}
         </div>
+    </div>
+
+    <div class="mb-8 border-t border-gray-200 pt-8 mt-8">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-gray-800">⏱️ Current Work Commitments</h3>
+            <button onclick="document.getElementById('commitment_modal').showModal()" class="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-bold py-2 px-4 rounded-lg shadow-sm transition">+ Add Commitment</button>
+        </div>
+        <ul class="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100 overflow-hidden">
+            {% for item in commitments %}
+                <li class="p-4 flex justify-between items-center group transition hover:bg-gray-50">
+                    <div>
+                        <strong class="text-gray-900">{% if item.symbol %}{{ item.symbol }} {% endif %}{{ item.name }}</strong>
+                        <span class="bg-emerald-100 text-emerald-800 font-bold px-3 py-1.5 rounded-lg text-sm ml-2">{{ item.required_hours }} Hours</span>
+                    </div>
+                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                        <a href="{% url 'edit_commitment' item.id %}" class="p-2 rounded-full text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition" title="Edit Commitment">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        </a>
+                    </div>
+                </li>
+            {% empty %}
+                <li class="p-4 text-gray-500 italic text-sm">No work commitments added yet.</li>
+            {% endfor %}
+        </ul>
     </div>
 </div>
 
@@ -315,105 +339,6 @@
             </form>
         </div>
 
-    </div>
-</div>
-
-<div id="tab-roster" class="command-panel hidden">
-    <div class="flex justify-start gap-2 mb-6 mt-4">
-        <button onclick="document.getElementById('volunteer_modal').showModal()" class="bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-2 px-4 rounded-lg shadow-sm transition">+ Add Volunteer</button>
-        <button onclick="document.getElementById('commitment_modal').showModal()" class="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-bold py-2 px-4 rounded-lg shadow-sm transition">+ Add Commitment</button>
-    </div>
-
-    <div>
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <span>👥</span> Volunteer Roster
-            </h3>
-            <div class="flex bg-gray-100 p-1 rounded-lg">
-                <button id="tab-active" onclick="switchRosterTab('active')" class="px-3 py-1 text-sm font-bold bg-white text-gray-800 rounded-md shadow-sm transition">Active This Year</button>
-                <button id="tab-total" onclick="switchRosterTab('total')" class="px-3 py-1 text-sm font-bold text-gray-500 hover:text-gray-700 rounded-md transition">Total Roster</button>
-            </div>
-        </div>
-        <ul class="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100 overflow-hidden mb-8">
-            {% for volunteer in volunteers %}
-                <li class="volunteer-row {% if not volunteer.is_active or volunteer.role == 'friend' %}legacy-volunteer{% endif %} p-4 flex justify-between items-center group transition {% if not volunteer.is_active %}bg-gray-50 opacity-60{% else %}hover:bg-gray-50{% endif %}" {% if not volunteer.is_active or volunteer.role == 'friend' %}style="display: none;"{% endif %}>
-                    
-                    <div class="flex items-center gap-3">
-                        <div class="hidden sm:flex h-10 w-10 rounded-full bg-emerald-100 text-emerald-700 items-center justify-center font-bold text-lg border border-emerald-200 shadow-sm">
-                             {{ volunteer.first_name|first|default:volunteer.username|first|upper }}
-                        </div>
-                        
-                        <div>
-                             <a href="{% url 'volunteer_detail' volunteer.id %}" class="text-gray-900 font-bold text-lg hover:text-emerald-600 transition flex items-center gap-2">
-                                {% if volunteer.work_commitment and volunteer.work_commitment.symbol %}
-                                    <span class="text-xl" title="{{ volunteer.work_commitment.name }}">{{ volunteer.work_commitment.symbol }}</span>
-                                {% endif %}
-                                <span>
-                                    {% if volunteer.first_name or volunteer.last_name %}
-                                        {{ volunteer.first_name }} {{ volunteer.last_name }}
-                                    {% else %}
-                                        {{ volunteer.username }}
-                                    {% endif %}
-                                </span>
-                            </a>
-                            
-                            <div class="flex flex-wrap items-center gap-2 mt-1">
-                                <span class="bg-gray-100 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded border border-gray-200">
-                                    {{ volunteer.get_role_display }}
-                                </span>
-
-                                {% if not volunteer.is_active %}
-                                    <span class="text-xs font-bold text-red-500 uppercase tracking-wider ml-1">Archived</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-
-                    {% if user.id != volunteer.id %}
-                        {% if user.is_staff or user.role == 'account_manager' or volunteer.role not in 'account_manager,farm_manager' %}
-                            <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                                <a href="{% url 'edit_volunteer' volunteer.id %}" class="p-2 rounded-full text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition" title="Edit Volunteer">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                                </a>
-                                <form action="{% url 'toggle_user_status' volunteer.id %}" method="POST" class="m-0">
-                                    {% csrf_token %}
-                                    <button type="submit" class="p-2 rounded-full transition {% if volunteer.is_active %}text-gray-400 hover:text-red-600 hover:bg-red-50{% else %}text-gray-400 hover:text-emerald-600 hover:bg-emerald-50{% endif %}" title="{% if volunteer.is_active %}Archive Volunteer{% else %}Restore Volunteer{% endif %}">
-                                        {% if volunteer.is_active %}
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
-                                        {% else %}
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
-                                        {% endif %}
-                                    </button>
-                                </form>
-                            </div>
-                        {% endif %}
-                    {% endif %}
-                </li>
-            {% empty %}
-                <li class="p-6 text-gray-500 italic text-center text-sm">No volunteers added yet.</li>
-            {% endfor %}
-        </ul>
-    </div>
-
-    <div class="mb-8 border-t border-gray-200 pt-8">
-        <h3 class="text-xl font-bold text-gray-800 mb-4">Current Work Commitments</h3>
-        <ul class="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100 max-w-2xl overflow-hidden">
-            {% for item in commitments %}
-                <li class="p-4 flex justify-between items-center group transition hover:bg-gray-50">
-                    <div>
-                        <strong class="text-gray-900">{% if item.symbol %}{{ item.symbol }} {% endif %}{{ item.name }}</strong>
-                        <span class="bg-emerald-100 text-emerald-800 font-bold px-3 py-1.5 rounded-lg text-sm ml-2">{{ item.required_hours }} Hours</span>
-                    </div>
-                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                        <a href="{% url 'edit_commitment' item.id %}" class="p-2 rounded-full text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition" title="Edit Commitment">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                        </a>
-                    </div>
-                </li>
-            {% empty %}
-                <li class="p-4 text-gray-500 italic text-sm">No work commitments added yet.</li>
-            {% endfor %}
-        </ul>
     </div>
 </div>
 
@@ -636,21 +561,6 @@
     </form>
 </dialog>
 
-<dialog id="volunteer_modal" class="p-8 rounded-2xl shadow-2xl border border-blue-100 backdrop:bg-slate-900/50 w-full max-w-md">
-    <div class="flex justify-between items-center mb-6">
-        <h3 class="text-2xl font-bold text-blue-900">👤 Add a Volunteer</h3>
-        <button onclick="document.getElementById('volunteer_modal').close()" class="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
-    </div>
-    <form method="POST" class="space-y-4">
-        {% csrf_token %}
-        {{ volunteer_form|crispy }}
-        <div class="flex justify-end gap-3 mt-8">
-            <button type="button" onclick="document.getElementById('volunteer_modal').close()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg transition">Cancel</button>
-            <button type="submit" name="submit_volunteer" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow transition">Create Volunteer</button>
-        </div>
-    </form>
-</dialog>
-
 <dialog id="commitment_modal" class="p-8 rounded-2xl shadow-2xl border border-yellow-100 backdrop:bg-slate-900/50 w-full max-w-md">
     <div class="flex justify-between items-center mb-6">
         <h3 class="text-2xl font-bold text-yellow-900">⏱️ Add Work Commitment</h3>
@@ -793,29 +703,21 @@
         
         // Highlight the active nav button
         document.getElementById('nav-' + tabId).className = "command-tab active-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-emerald-500 text-emerald-600";
+        
+        // Update URL hash so the browser history remembers the exact tab
+        window.history.replaceState(null, null, '#' + tabId);
     }
 
-    function switchRosterTab(tab) {
-        const activeTabBtn = document.getElementById('tab-active');
-        const totalTabBtn = document.getElementById('tab-total');
-        const legacyRows = document.querySelectorAll('.legacy-volunteer');
-
-        if (tab === 'active') {
-            activeTabBtn.className = "px-3 py-1 text-sm font-bold bg-white text-gray-800 rounded-md shadow-sm transition";
-            totalTabBtn.className = "px-3 py-1 text-sm font-bold text-gray-500 hover:text-gray-700 rounded-md transition";
-            
-            legacyRows.forEach(row => {
-                row.style.display = 'none';
-            });
-        } else {
-            totalTabBtn.className = "px-3 py-1 text-sm font-bold bg-white text-gray-800 rounded-md shadow-sm transition";
-            activeTabBtn.className = "px-3 py-1 text-sm font-bold text-gray-500 hover:text-gray-700 rounded-md transition";
-            
-            legacyRows.forEach(row => {
-                row.style.display = ''; // Resets back to default flex display
-            });
+    // Capture incoming links from the Roster page and instantly jump to the requested tab
+    document.addEventListener("DOMContentLoaded", function() {
+        if(window.location.hash) {
+            const tabId = window.location.hash.substring(1);
+            if(document.getElementById('nav-' + tabId)) {
+                switchCommandTab(tabId);
+            }
         }
-    }
+    });
+
 
     function switchCropTab(tab) {
         const activeTabBtn = document.getElementById('tab-crop-active');

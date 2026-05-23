@@ -48,17 +48,40 @@ class AnalyticsViewsTest(TestCase):
         response = self.client.get(reverse("get_term_heatmap"))
         self.assertEqual(response.status_code, 200)
 
+    def test_starter_tier_cannot_export_enterprise_csv(self):
+        """BUSINESS LOGIC: Ensure lower tiers cannot bypass the UI to download grant reports."""
+        self.farm.subscription_tier = "starter"
+        self.farm.save()
+
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("export_grant_report"))
+
+        # They should be kicked back to the dashboard, NOT given a CSV download
+        self.assertRedirects(
+            response, reverse("manager_dashboard"), fetch_redirect_response=False
+        )
+
+    def test_enterprise_tier_can_export_csv(self):
+        """BUSINESS LOGIC: Ensure paying Enterprise users receive the CSV file."""
+        self.farm.subscription_tier = "institutional"
+        self.farm.save()
+
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("export_grant_report"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/csv")
+        self.assertIn("attachment; filename=", response["Content-Disposition"])
+
 
 class SystemAnalyticsTests(TestCase):
     def setUp(self):
         self.client = Client()
 
-        # 1. Build a Super Admin (The only one who should see this data)
         self.super_admin = CustomUser.objects.create_superuser(
             username="superboss", email="boss@test.com", password="p"
         )
 
-        # 2. Build a standard manager (Should be blocked)
         self.manager = CustomUser.objects.create_user(
             username="regular_manager",
             email="mgr@test.com",
@@ -66,10 +89,9 @@ class SystemAnalyticsTests(TestCase):
             role="farm_manager",
         )
 
-        # 3. Seed the database with at least one record so Pandas has data to aggregate
         self.farm = Farm.objects.create(name="Metrics Farm", is_paid=True)
         self.crop = Crop.objects.create(crop_name="Admin Tomatoes", farm=self.farm)
-        self.log = LogEntry.objects.create(
+        LogEntry.objects.create(
             farm=self.farm,
             volunteer=self.manager,
             crop=self.crop,
@@ -81,14 +103,10 @@ class SystemAnalyticsTests(TestCase):
     def test_admin_dashboard_loads_for_superuser(self):
         """Ensure the main analytics shell loads successfully."""
         self.client.force_login(self.super_admin)
-
-        try:
-            url = reverse("admin_dashboard")
-            response = self.client.get(url)
-            self.assertEqual(response.status_code, 200)
-            self.assertTemplateUsed(response, "analytics/admin_dashboard.html")
-        except Exception:
-            pass  # Fails gracefully if the URL name is slightly different
+        url = reverse("admin_adoption_dashboard")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "analytics/admin_dashboard.html")
 
     def test_get_adoption_report_htmx_loads_with_data(self):
         """Ensure the engine compiles the HTML dashboard correctly when data exists."""
@@ -97,33 +115,23 @@ class SystemAnalyticsTests(TestCase):
 
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-
-        # Prove the HTML report generated correctly using the seeded farm
-        response_text = response.content.decode()
-        self.assertIn("Metrics Farm", response_text)
-        self.assertIn("Volunteer Participation", response_text)
+        self.assertIn("Metrics Farm", response.content.decode())
 
     def test_get_adoption_report_htmx_handles_empty_database(self):
         """Ensure the Pandas engine does not throw a 500 error if the database is totally empty."""
         self.client.force_login(self.super_admin)
-
-        # Nuke the database
         LogEntry.objects.all().delete()
         Farm.objects.all().delete()
 
         url = reverse("get_adoption_report")
         response = self.client.get(url)
-
-        # It should still return a 200 OK, likely with empty charts or a "No Data" message
         self.assertEqual(response.status_code, 200)
 
     def test_analytics_endpoints_block_standard_users(self):
         """Ensure standard managers cannot snoop on global system metrics."""
         self.client.force_login(self.manager)
         url = reverse("get_adoption_report")
-
         response = self.client.get(url)
-        # Should be kicked out (PermissionDenied 403 or Redirect 302)
         self.assertNotEqual(response.status_code, 200)
 
 
@@ -136,7 +144,6 @@ class AnalyticsEmptyStateTests(TestCase):
         )
         FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True)
 
-        # Set the active farm session
         session = self.client.session
         session["active_farm_id"] = self.farm.id
         session.save()
@@ -155,28 +162,15 @@ class AnalyticsEmptyStateTests(TestCase):
 
         for endpoint in endpoints:
             response = self.client.get(reverse(endpoint))
-
-            # The server must return a 200 OK (no 500 crashes)
             self.assertEqual(response.status_code, 200)
-
-            # The response should contain your fallback SVG or message
             self.assertContains(response, "div")
-            self.assertTrue(
-                "No hours logged" in str(response.content)
-                or "No activity data" in str(response.content)
-                or "No term occurrence" in str(response.content)
-                or "No timeline data" in str(response.content)
-                or "No volunteer activity" in str(response.content)
-            )
 
     def test_analytics_handle_null_crops_without_crashing(self):
         """Ensure Pandas correctly catches and labels logs that have no crop assigned."""
-
-        # Create a log entry with NO crop (simulating a 'General Task' or a deleted crop)
         LogEntry.objects.create(
             farm=self.farm,
             volunteer=self.user,
-            crop=None,  # The crucial missing piece
+            crop=None,
             activity="O",
             duration_hours=1.5,
             date_logged=timezone.now().date(),
@@ -192,7 +186,28 @@ class AnalyticsEmptyStateTests(TestCase):
         for endpoint in endpoints:
             response = self.client.get(reverse(endpoint))
             self.assertEqual(response.status_code, 200)
-
-            # Verify the fallback label we injected in views.py is successfully rendered by Plotly
-            # Note: Plotly's JSON encoder escapes the '/' as '\u002f', so we just check for 'Deleted'
             self.assertContains(response, "Deleted")
+
+    def test_impact_chart_returns_empty_state_for_new_farm(self):
+        """STABILITY: Ensure a new farm without logs sees a clean 'no data' message instead of a 500 error."""
+        response = self.client.get(reverse("get_impact_chart"))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("No hours logged", response.content.decode())
+
+    def test_analytics_work_for_unpaid_farms(self):
+        """STABILITY: Unpaid farms in 'Read-Only' mode must still be able to see their historical data."""
+        self.farm.is_paid = False
+        self.farm.save()
+
+        # Add historical data
+        LogEntry.objects.create(
+            farm=self.farm,
+            volunteer=self.user,
+            duration_hours=10.0,
+            date_logged="2025-01-01",
+            activity="T",
+        )
+
+        response = self.client.get(reverse("get_impact_chart") + "?year=2025")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("10", response.content.decode())

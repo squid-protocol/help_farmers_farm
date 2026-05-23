@@ -191,6 +191,29 @@ class BillingWebhookTests(TestCase):
         # Should silently ignore it and return 200 to Stripe
         self.assertEqual(response.status_code, 200)
 
+    def test_webhook_rejects_forged_payloads(self):
+        """SECURITY: Ensure hackers cannot fake successful payment webhooks."""
+        # Create a farm to test against
+        farm = Farm.objects.create(name="Webhook Farm", stripe_customer_id="cus_123")
+
+        fake_payload = (
+            '{"type": "checkout.session.completed", "data": {"object": {"client_reference_id": "'
+            + str(farm.id)
+            + '"}}}'
+        )
+
+        # Send the payload WITHOUT the cryptographic Stripe-Signature header
+        response = self.client.post(
+            reverse("stripe_webhook"),
+            data=fake_payload,
+            content_type="application/json",
+        )
+
+        # The system must aggressively reject it
+        self.assertEqual(response.status_code, 400)
+        farm.refresh_from_db()
+        self.assertFalse(farm.is_paid)
+
 
 class BillingPortalTests(TestCase):
     def setUp(self):

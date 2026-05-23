@@ -76,6 +76,16 @@ class LogHoursIntegrationTests(TestCase):
         self.assertEqual(saved_log.duration_hours, 4.00)
         self.assertEqual(saved_log.activity, "T")
 
+    def test_unattached_volunteer_redirected_to_search(self):
+        """Ensure a volunteer without a farm cannot access the log hours dashboard."""
+        unattached_user = User.objects.create_user(
+            username="floater", email="float@test.com", password="p"
+        )
+        self.client.force_login(unattached_user)
+
+        response = self.client.get(reverse("log_hours"))
+        self.assertRedirects(response, reverse("farm_search"))
+
 
 class LogManagementTests(TestCase):
 

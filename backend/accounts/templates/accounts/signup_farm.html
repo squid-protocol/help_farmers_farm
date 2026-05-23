@@ -10,6 +10,15 @@
     </div>
 
     <div class="bg-white p-8 md:p-10 rounded-2xl border border-gray-200 shadow-xl">
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="bg-red-50 border-l-4 border-red-500 text-red-800 p-4 rounded-r-lg shadow-sm font-medium mb-6">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
         <form method="POST" class="space-y-4">
             {% csrf_token %}
             

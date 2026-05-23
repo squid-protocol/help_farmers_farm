@@ -1,5 +1,8 @@
 import requests
-from django.test import TestCase, Client
+from decimal import Decimal  # <-- Missing Decimal
+from django.db.models import Sum
+from django.utils import timezone
+from django.test import TestCase, Client, RequestFactory
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from farms.models import Farm, ComplianceForm
@@ -7,6 +10,8 @@ from accounts.models import FarmMembership, FormSignature
 from django.core import mail
 from django.core.signing import TimestampSigner
 from unittest.mock import patch
+from django.contrib.auth import authenticate
+from logs.models import LogEntry
 
 User = get_user_model()
 
@@ -188,7 +193,9 @@ class LegacyClaimFlowTests(TestCase):
                 "confirm_password": "newsecurepassword123",
             },
         )
-        self.assertRedirects(response, reverse("log_hours"))
+        self.assertRedirects(
+            response, reverse("log_hours"), fetch_redirect_response=False
+        )
         self.ghost_user.refresh_from_db()
         self.assertEqual(self.ghost_user.email, "john.doe@newemail.com")
         self.assertTrue(self.ghost_user.has_usable_password())
@@ -839,3 +846,237 @@ class RegistrationSecurityTests(TestCase):
         # CRITICAL ATOMIC CHECK: Neither the user nor the farm should exist in the DB!
         self.assertFalse(User.objects.filter(username="rollback_target").exists())
         self.assertFalse(Farm.objects.filter(name="Rollback Farm").exists())
+
+    @patch("farms.models.Farm.objects.create")
+    @patch("accounts.views.verify_turnstile", return_value=True)
+    def test_farm_creation_failure_rolls_back_user(
+        self, mock_turnstile, mock_farm_create
+    ):
+        """STABILITY: Ensure a database failure during registration doesn't leave orphaned users."""
+        # Force the database to crash when trying to create the Farm
+        mock_farm_create.side_effect = Exception("Database Outage Simulation")
+
+        response = self.client.post(
+            reverse("signup_farm"),
+            {
+                "farm_name": "Rollback Farm",
+                "farm_phone": "(201) 555-0199",
+                "username": "unlucky_manager",
+                "first_name": "Unlucky",
+                "last_name": "Guy",
+                "email": "unlucky@test.com",
+                "phone_number": "(201) 555-0100",
+                "address_line1": "123 Fail St",
+                "city": "Failville",
+                "state": "MI",
+                "postal_code": "48103",
+                "password1": "securepassword123",
+                "password2": "securepassword123",
+            },
+        )
+
+        # It should catch the error and re-render the form
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("There was a critical error", str(response.content))
+
+        # CRITICAL: The user 'unlucky_manager' must NOT exist in the database
+        self.assertFalse(User.objects.filter(username="unlucky_manager").exists())
+
+    def test_honeypot_blocks_bot_registration(self):
+        """SECURITY: Ensure bots that fill out the hidden website_url field are silently rejected."""
+        response = self.client.post(
+            reverse("signup_volunteer"),
+            {
+                "first_name": "Bad",
+                "last_name": "Bot",
+                "email": "bot@spam.com",
+                "phone_number": "(555) 555-5555",
+                "password": "securepassword123",
+                "website_url": "http://spambot.com",  # <-- THE TRAP
+            },
+        )
+
+        # It should pretend everything went fine and bounce them to the home page
+        self.assertRedirects(response, reverse("home"))
+
+        # CRITICAL: The user must NOT exist in the database
+        self.assertFalse(User.objects.filter(email="bot@spam.com").exists())
+
+
+class AvatarUploadTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        # Ensure we have a valid logged-in user to test with
+        self.user = User.objects.create_user(
+            username="avatar_user", email="avatar@test.com", password="password123"
+        )
+
+    def test_avatar_upload_handles_missing_data(self):
+        """Unhappy Path: Submit the avatar form with an empty payload."""
+        self.client.force_login(self.user)
+        response = self.client.post(reverse("upload_avatar"), {"avatar_base64": ""})
+
+        # Should redirect back to profile without crashing
+        self.assertRedirects(response, reverse("profile"))
+
+        # Verify the error message was attached
+        messages = list(response.wsgi_request._messages)
+        self.assertTrue(any("No image data was received" in str(m) for m in messages))
+
+    def test_avatar_upload_handles_corrupted_base64(self):
+        """Unhappy Path: Submit garbage data that cannot be decoded."""
+        self.client.force_login(self.user)
+        response = self.client.post(
+            reverse("upload_avatar"),
+            {"avatar_base64": "data:image/png;base64,NOT_A_REAL_IMAGE!@#$"},
+        )
+
+        self.assertRedirects(response, reverse("profile"))
+        messages = list(response.wsgi_request._messages)
+        self.assertTrue(any("error updating your avatar" in str(m) for m in messages))
+
+
+class CustomAuthenticationTests(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()  # <-- NEW: Simulate HTTP Requests
+        self.user = User.objects.create_user(
+            username="real_user", email="real@test.com", password="correct_password"
+        )
+
+    def test_auth_backend_rejects_unknown_user(self):
+        """Unhappy Path: Logging in with an email that doesn't exist."""
+        request = self.factory.get("/login/")
+        user = authenticate(
+            request=request, username="nobody@test.com", password="password"
+        )
+        self.assertIsNone(user)
+
+    def test_auth_backend_rejects_bad_password(self):
+        """Unhappy Path: Valid email, wrong password."""
+        request = self.factory.get("/login/")
+        user = authenticate(
+            request=request, username="real@test.com", password="wrong_password"
+        )
+        self.assertIsNone(user)
+
+    def test_auth_backend_accepts_valid_email(self):
+        """Happy Path: Ensure the custom backend actually works for emails."""
+        request = self.factory.get("/login/")
+        user = authenticate(
+            request=request, username="real@test.com", password="correct_password"
+        )
+        self.assertIsNotNone(user)
+        self.assertEqual(user.username, "real_user")
+
+
+class AccountSecurityIntegrityTests(TestCase):
+    def setUp(self):
+        self.farm = Farm.objects.create(name="Privacy Test Farm")
+        self.user = User.objects.create_user(
+            username="sensitive_user",
+            email="private@test.com",
+            first_name="Joseph",
+            last_name="Esquibel",
+            address_line1="8171 Country Pine Dr",
+            city="Alto",
+            state="MI",
+            postal_code="49302",
+            password="password123",
+        )
+        FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True)
+
+        # Log a shift so we can prove it survives the deletion
+        from logs.models import LogEntry
+
+        LogEntry.objects.create(
+            farm=self.farm,
+            volunteer=self.user,
+            duration_hours=5.0,
+            date_logged="2026-05-20",
+            activity="P",
+        )
+
+    def test_account_anonymization_scrubs_pii_but_preserves_logs(self):
+        """SECURITY: Verify that PII is destroyed while relational data remains for farm analytics."""
+        self.client.force_login(self.user)
+
+        # Trigger the anonymization protocol via the POST view
+        response = self.client.post(reverse("delete_account"))
+
+        self.assertRedirects(response, reverse("home"))
+
+        # Refresh user from database
+        self.user.refresh_from_db()
+
+        # Verify PII is gone
+        self.assertEqual(self.user.first_name, "Anonymous")
+        self.assertEqual(self.user.last_name, "Volunteer")
+        self.assertIn("redacted", self.user.email)
+        self.assertEqual(self.user.address_line1, "Redacted per privacy request")
+        self.assertEqual(self.user.postal_code, "00000")
+        self.assertFalse(self.user.is_active)
+
+        # Verify the Log remains in the database (SET_NULL)
+        from logs.models import LogEntry
+
+        log = LogEntry.objects.get(farm=self.farm)
+        self.assertEqual(log.duration_hours, 5.0)
+        self.assertEqual(log.volunteer, self.user)
+
+
+class AccountAnonymizationTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.farm = Farm.objects.create(name="Security Audit Farm")
+
+        self.user = User.objects.create_user(
+            username="joseph_e",
+            email="private_data@example.com",
+            first_name="Joseph",
+            last_name="Esquibel",
+            address_line1="8171 Country Pine Dr",
+            city="Alto",
+            state="MI",
+            postal_code="49302",
+            phone_number="+15551234567",
+            password="secure-password-123",
+        )
+        FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True)
+
+        # LogEntry is now correctly imported and available here
+        self.log_entry = LogEntry.objects.create(
+            farm=self.farm,
+            volunteer=self.user,
+            duration_hours=Decimal("4.50"),
+            date_logged=timezone.now().date(),
+            activity="H",
+        )
+
+    def test_delete_account_view_scrubs_pii_correctly(self):
+        """SECURITY: Verify that the anonymization protocol destroys PII but preserves analytics."""
+        self.client.force_login(self.user)
+        response = self.client.post(reverse("delete_account"))
+
+        self.assertRedirects(response, reverse("home"))
+        self.user.refresh_from_db()
+
+        self.assertEqual(self.user.first_name, "Anonymous")
+        self.assertEqual(self.user.last_name, "Volunteer")
+        self.assertIn("redacted_", self.user.email)
+        self.assertIsNone(self.user.phone_number)
+        self.assertEqual(self.user.address_line1, "Redacted per privacy request")
+        self.assertFalse(self.user.is_active)
+
+    def test_logs_persist_after_user_anonymization(self):
+        """DATA INTEGRITY: Ensure farm hours are NOT lost when a user is anonymized."""
+        self.client.force_login(self.user)
+        self.client.post(reverse("delete_account"))
+
+        self.log_entry.refresh_from_db()
+        self.assertIsNotNone(self.log_entry)
+        self.assertEqual(self.log_entry.volunteer, self.user)
+
+        total_hours = LogEntry.objects.filter(farm=self.farm).aggregate(
+            Sum("duration_hours")
+        )["duration_hours__sum"]
+        self.assertEqual(total_hours, Decimal("4.50"))
