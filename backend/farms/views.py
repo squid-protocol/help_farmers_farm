@@ -111,6 +111,9 @@ def manager_dashboard(request):
                 new_user.set_password(volunteer_form.cleaned_data["password"])
                 # Ensure they are saved as a volunteer
                 new_user.role = "volunteer"
+                new_user.is_email_verified = (
+                    True  # Auto-verify manager-created accounts
+                )
                 new_user.save()
 
                 # --- NEW: Create the Bridge Record! ---

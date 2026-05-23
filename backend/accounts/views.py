@@ -486,6 +486,7 @@ def farm_signup_view(request):
                     # 1. Create the Manager Account
                     user = form.save(commit=False)
                     user.role = "farm_manager"
+                    user.is_email_verified = True  # Auto-verify the primary admin
                     user.save()
 
                     # 2. Provision the Farm Workspace & Start the 60-Day Trial
