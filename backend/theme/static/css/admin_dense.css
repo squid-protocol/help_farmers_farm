@@ -1,0 +1,13 @@
+cat << 'EOF' > theme/static/css/admin_dense.css
+/* Squish the table rows together */
+#changelist-form .results td, #changelist-form .results th {
+    padding: 4px 8px !important;
+    font-size: 13px !important;
+}
+/* Make inputs smaller so they fit cleanly in the table */
+#changelist-form input[type=number], #changelist-form select {
+    padding: 2px !important;
+    height: auto !important;
+    font-size: 13px !important;
+}
+EOF

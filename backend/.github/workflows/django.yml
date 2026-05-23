@@ -28,6 +28,9 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     # Dropped the Matrix. Just use 3.12.
     - name: Set up Python 3.12

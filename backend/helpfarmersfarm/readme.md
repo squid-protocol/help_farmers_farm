@@ -1,6 +1,6 @@
-# HelpFarmers Core Configuration ⚙️
+# Helping Farmers Farm Core Configuration ⚙️
 
-This directory (`helpfarmers/`) acts as the root command center for the entire Django project. It dictates the global settings, security policies, error tracking, installed applications, and root URL routing. 
+This directory (`Helping Farmers Farm/`) acts as the root command center for the entire Django project. It dictates the global settings, security policies, error tracking, installed applications, and root URL routing. 
 
 **This is not a functional app; it is the infrastructure that holds the apps together.**
 

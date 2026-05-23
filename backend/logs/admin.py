@@ -6,8 +6,11 @@ from .models import LogEntry
 class LogEntryAdmin(admin.ModelAdmin):
     """Global master ledger of every single hour logged across the platform."""
 
-    # What you see on the main list page
+    # -------------------------------------------------------------------------
+    # 1. THE SPREADSHEET VIEW (High Density)
+    # -------------------------------------------------------------------------
     list_display = (
+        "id",
         "volunteer",
         "farm",
         "date_logged",
@@ -17,14 +20,30 @@ class LogEntryAdmin(admin.ModelAdmin):
         "get_notes_snippet",
     )
 
-    # Sidebar filters for slicing data
+    list_display_links = ("id", "volunteer")
+    list_editable = ("duration_hours", "activity")
+    list_per_page = 200
+    date_hierarchy = "date_logged"
+    save_on_top = True
+
+    # CRITICAL: Prevents N+1 query lag when rendering 200 rows at once
+    list_select_related = ("volunteer", "farm", "crop")
+
+    # -------------------------------------------------------------------------
+    # 2. CSS INJECTION (The Squish)
+    # -------------------------------------------------------------------------
+    class Media:
+        css = {"all": ("css/admin_dense.css",)}
+
+    # -------------------------------------------------------------------------
+    # 3. FILTERS & SEARCH
+    # -------------------------------------------------------------------------
     list_filter = (
         "farm",
-        "date_logged",
         "activity",
+        "date_logged",
     )
 
-    # Search bar targets
     search_fields = (
         "volunteer__username",
         "volunteer__first_name",
@@ -34,12 +53,15 @@ class LogEntryAdmin(admin.ModelAdmin):
         "notes",
     )
 
-    # CRITICAL: Changes massive, page-crashing dropdowns into highly optimized search bars
     autocomplete_fields = ["volunteer", "farm", "crop"]
-
     readonly_fields = ("created_at",)
 
-    # Organize the actual detail page into beautiful, logical blocks
+    # -------------------------------------------------------------------------
+    # 4. DETAIL PAGE LAYOUT
+    # -------------------------------------------------------------------------
+    # Transforms the activity dropdown into a fast, horizontal radio button array
+    radio_fields = {"activity": admin.HORIZONTAL}
+
     fieldsets = (
         (
             "Identity & Location",
@@ -69,7 +91,29 @@ class LogEntryAdmin(admin.ModelAdmin):
     )
 
     # -------------------------------------------------------------------------
-    # CUSTOM CALCULATED METRICS & FORMATTERS
+    # 5. CUSTOM BULK ACTIONS
+    # -------------------------------------------------------------------------
+    actions = ["bulk_set_planting", "bulk_set_tending", "bulk_set_harvesting"]
+
+    @admin.action(description="BULK ACTION: Change Activity to Planting")
+    def bulk_set_planting(self, request, queryset):
+        updated = queryset.update(activity="P")
+        self.message_user(request, f"Successfully updated {updated} logs to Planting.")
+
+    @admin.action(description="BULK ACTION: Change Activity to Tending")
+    def bulk_set_tending(self, request, queryset):
+        updated = queryset.update(activity="T")
+        self.message_user(request, f"Successfully updated {updated} logs to Tending.")
+
+    @admin.action(description="BULK ACTION: Change Activity to Harvesting")
+    def bulk_set_harvesting(self, request, queryset):
+        updated = queryset.update(activity="H")
+        self.message_user(
+            request, f"Successfully updated {updated} logs to Harvesting."
+        )
+
+    # -------------------------------------------------------------------------
+    # 6. CUSTOM CALCULATED METRICS
     # -------------------------------------------------------------------------
     def get_notes_snippet(self, obj):
         """Prevents massive note blocks from stretching and breaking the admin table UI."""

@@ -7,7 +7,7 @@ This directory (`/backend`) is the root of the HelpFarmers Django application. I
 ## 🏗 The App Ecosystem (Domain Map)
 The platform is strictly divided into domain-specific applications. **For deep technical details, architectural rules, and LLM directives, please read the `readme.md` located inside each app's folder.**
 
-* ⚙️ **`helpfarmers/`**: The core configuration folder (Settings, Security Headers, Root URLs, Sentry, and Audit Logging).
+* ⚙️ **`helpingfarmersfarm/`**: The core configuration folder (Settings, Security Headers, Root URLs, Sentry, and Audit Logging).
 * 👤 **`accounts/`**: Identity engine (Custom Users, RBAC roles, Cropper.js Avatars, and the Legacy Claim flow).
 * 🌾 **`farms/`**: Multi-tenant boundaries, CRM-style Manager Dashboards, and the Global Pacing Engine.
 * 🕒 **`logs/`**: The transactional core (Shift logging, double-click prevention, personal pacing, and badges).
@@ -31,7 +31,7 @@ Used in conjunction with **Honcho** to manage multiple local development process
 * [cite_start]**Filters:** Intelligently ignores massive, machine-generated folders (`__pycache__`, `node_modules`/`theme`, `farm_venv`, `.git`, `migrations`) and binary file extensions (`.sqlite3`, `.png`, etc.) to keep the token count lean and relevant. [cite: 3, 4, 5]
 
 ### `manage.py`
-[cite_start]The standard Django command-line utility. [cite: 1] [cite_start]It dynamically sets the `DJANGO_SETTINGS_MODULE` to `helpfarmers.settings` and executes administrative tasks (migrations, superuser creation, shell access). [cite: 1]
+[cite_start]The standard Django command-line utility. [cite: 1] [cite_start]It dynamically sets the `DJANGO_SETTINGS_MODULE` to `helpingfarmersfarm.settings` and executes administrative tasks (migrations, superuser creation, shell access). [cite: 1]
 
 ---
 
