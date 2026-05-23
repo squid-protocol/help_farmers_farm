@@ -495,6 +495,23 @@ def toggle_crop_status_view(request, crop_id):
 
 
 @login_required
+@require_POST
+@user_passes_test(is_manager, login_url="/log-hours/")
+def toggle_compliance_status_view(request, form_id):
+    """Allows managers to archive old waivers so new volunteers don't have to sign them."""
+    compliance_form = get_object_or_404(
+        ComplianceForm, id=form_id, farm=request.active_farm
+    )
+    compliance_form.is_active = not compliance_form.is_active
+    compliance_form.save()
+    messages.success(
+        request,
+        f"Compliance Form '{compliance_form.name}' is now {'Active' if compliance_form.is_active else 'Archived'}.",
+    )
+    return redirect("manager_dashboard")
+
+
+@login_required
 @user_passes_test(is_manager, login_url="/log-hours/")
 def edit_crop_view(request, crop_id):
     crop = get_object_or_404(Crop, id=crop_id, farm=request.active_farm)
