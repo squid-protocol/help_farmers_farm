@@ -48,21 +48,74 @@ class FormSignatureInline(admin.TabularInline):
 class CustomUserAdmin(UserAdmin):
     list_display = (
         "username",
-        "email",
         "first_name",
         "last_name",
+        "get_associated_farms",
         "role",
+        "get_waiver_status",
         "is_email_verified",
         "is_active",
     )
 
-    list_filter = ("role", "is_email_verified", "is_active", "is_staff")
+    list_display_links = ("username", "first_name", "last_name")
+
+    # NEW: The Spreadsheet Mode
+    list_editable = ("role", "is_email_verified", "is_active")
+    list_per_page = 200
+    save_on_top = True
+    date_hierarchy = "date_joined"
+
+    # NEW: High Density CSS Injection
+    class Media:
+        css = {"all": ("css/admin_dense.css",)}
+
+    list_filter = (
+        "memberships__farm",
+        "memberships__agreed_to_waiver",
+        "role",
+        "is_email_verified",
+        "is_active",
+    )
     search_fields = ("username", "first_name", "last_name", "email", "phone_number")
 
-    # Inject the Farm connections and the Legal Signatures directly into the profile
     inlines = [FarmMembershipInline, FormSignatureInline]
 
-    # Reorganize the profile layout to expose all the new compliance fields
+    actions = [
+        "mark_email_verified",
+        "mark_as_legacy_friend",
+        "mark_as_active_volunteer",
+    ]
+
+    @admin.action(description="BULK ACTION: Mark selected as Email Verified")
+    def mark_email_verified(self, request, queryset):
+        updated = queryset.update(is_email_verified=True)
+        self.message_user(request, f"Successfully verified {updated} users.")
+
+    @admin.action(description="BULK ACTION: Downgrade Role to Friend (Legacy)")
+    def mark_as_legacy_friend(self, request, queryset):
+        updated = queryset.update(role="friend")
+        self.message_user(request, f"Successfully changed {updated} users to Friend.")
+
+    @admin.action(description="BULK ACTION: Upgrade Role to Active Volunteer")
+    def mark_as_active_volunteer(self, request, queryset):
+        updated = queryset.update(role="volunteer")
+        self.message_user(
+            request, f"Successfully changed {updated} users to Active Volunteer."
+        )
+
+    @admin.display(description="Farms")
+    def get_associated_farms(self, obj):
+        farms = [m.farm.name for m in obj.memberships.all()]
+        return ", ".join(farms)
+
+    @admin.display(description="Waiver Checkbox", boolean=True)
+    def get_waiver_status(self, obj):
+        return obj.memberships.filter(agreed_to_waiver=True).exists()
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.prefetch_related("memberships__farm")
+
     fieldsets = UserAdmin.fieldsets + (
         (
             "Contact & Identity",
@@ -77,7 +130,6 @@ class CustomUserAdmin(UserAdmin):
         ),
     )
 
-    # Required for when you manually click "Add User" in the admin
     add_fieldsets = UserAdmin.add_fieldsets + (
         (
             "Custom App Details",
@@ -92,11 +144,26 @@ class CustomUserAdmin(UserAdmin):
 @admin.register(FarmMembership)
 class FarmMembershipAdmin(admin.ModelAdmin):
     list_display = (
+        "id",
         "user",
         "farm",
         "work_commitment",
         "is_approved",
     )
+
+    list_display_links = ("id", "user")
+
+    # NEW: The Spreadsheet Mode
+    list_editable = ("work_commitment", "is_approved")
+    list_per_page = 200
+    save_on_top = True
+
+    # NEW: SQL Optimizer for mass list views
+    list_select_related = ("user", "farm", "work_commitment")
+
+    class Media:
+        css = {"all": ("css/admin_dense.css",)}
+
     list_filter = ("farm", "is_approved", "work_commitment")
     search_fields = (
         "user__username",
@@ -125,6 +192,15 @@ class FormSignatureAdmin(admin.ModelAdmin):
         "signed_at",
         "has_pdf",
     )
+
+    # NEW: Vault Optimizations
+    list_per_page = 200
+    date_hierarchy = "signed_at"
+    list_select_related = ("user", "form", "form__farm")
+
+    class Media:
+        css = {"all": ("css/admin_dense.css",)}
+
     list_filter = ("form__farm", "signed_at", "is_guardian_signature")
     search_fields = (
         "user__username",
@@ -134,7 +210,6 @@ class FormSignatureAdmin(admin.ModelAdmin):
         "signer_ip_address",
     )
 
-    # Lock down ALL fields. This is an audit log, not an editable table.
     readonly_fields = (
         "user",
         "form",
@@ -178,7 +253,6 @@ class FormSignatureAdmin(admin.ModelAdmin):
     has_pdf.boolean = True
     has_pdf.short_description = "PDF Generated"
 
-    # Security Overrides: Prevent forging or editing signatures from the Admin
     def has_add_permission(self, request):
         return False
 
