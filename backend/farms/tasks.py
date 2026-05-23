@@ -82,6 +82,9 @@ def send_broadcast_email(
 
     # 4. Generate all email objects
     messages = []
+    
+    # Establish the return routing
+    reply_to_email = [farm.contact_email] if farm.contact_email else None
 
     for user in users:
         # Render the custom HTML wrapper
@@ -96,6 +99,7 @@ def send_broadcast_email(
             body=plain_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[user.email],
+            reply_to=reply_to_email,
         )
         email.attach_alternative(html_message, "text/html")
         messages.append(email)
