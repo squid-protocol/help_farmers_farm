@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.conf import settings
+from django.core.exceptions import ValidationError
 import uuid
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -157,6 +158,19 @@ class ComplianceForm(models.Model):
             if timezone.now().date() > self.expiration_date:
                 return False
         return True
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            orig = ComplianceForm.objects.get(pk=self.pk)
+            # If the core legal text or name is changed, check for existing signatures
+            if self.body_text != orig.body_text or self.name != orig.name:
+                if self.signatures.exists():
+                    raise ValidationError(
+                        "IMMUTABILITY LOCK: You cannot alter the legal text or name of a "
+                        "document that has already been signed. Please archive this form "
+                        "and create a new one to preserve the audit trail."
+                    )
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.name} - {self.farm.name}"
