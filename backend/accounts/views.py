@@ -59,13 +59,12 @@ def upload_avatar(request):
         avatar_base64 = request.POST.get("avatar_base64")
         if avatar_base64:
             try:
-                # The string looks like "data:image/jpeg;base64,/9j/4AAQSkZJRg..."
-                # We need to split it to get just the extension and the raw data
+                # Split the header from the raw data
                 format_header, img_str = avatar_base64.split(";base64,")
-                ext = format_header.split("/")[-1]
 
-                # Generate a unique filename so browsers don't cache old avatars
-                filename = f"avatar_{request.user.id}_{uuid.uuid4().hex[:8]}.{ext}"
+                # THE FIX: Never trust the client-provided MIME type!
+                # Hardcode the extension to jpg to prevent Stored XSS attacks.
+                filename = f"avatar_{request.user.id}_{uuid.uuid4().hex[:8]}.jpg"
 
                 # Decode the base64 string into actual image bytes
                 data = ContentFile(base64.b64decode(img_str), name=filename)
