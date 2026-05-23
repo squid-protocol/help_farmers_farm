@@ -64,7 +64,7 @@ MIDDLEWARE = [
     "accounts.middleware.RequireWaiverMiddleware",
 ]
 
-ROOT_URLCONF = "helpfarmers.urls"
+ROOT_URLCONF = "helpfarmersfarm.urls"
 
 TEMPLATES = [
     {
@@ -82,7 +82,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "helpfarmers.wsgi.application"
+WSGI_APPLICATION = "helpfarmersfarm.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
