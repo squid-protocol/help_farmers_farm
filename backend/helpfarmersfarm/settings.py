@@ -239,3 +239,5 @@ Q_CLUSTER = {
     "label": "Django Q",
     "orm": "default",  # Use your existing PostgreSQL database as the broker
 }
+
+TURNSTILE_SECRET_KEY = env("TURNSTILE_SECRET_KEY", default=None)
