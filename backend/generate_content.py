@@ -2,7 +2,7 @@ import os
 
 # Configuration
 # The 6 distinct SaaS subsystems we want to generate separate markdown files for.
-SUBSYSTEMS = {"accounts", "analytics", "billing", "farms", "helpfarmers", "logs"}
+SUBSYSTEMS = {"accounts", "analytics", "billing", "farms", "helpingfarmersfarm", "logs"}
 
 # Folders we want to completely skip
 IGNORE_DIRS = {
