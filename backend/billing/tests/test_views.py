@@ -315,8 +315,8 @@ class WebhookSubscriptionUpdatedTests(TestCase):
         self.assertTrue(self.farm.is_paid)
 
     @patch("stripe.Webhook.construct_event")
-    def test_webhook_upgrades_tier_to_premium(self, mock_construct):
-        """Ensure the new premium tier maps correctly."""
+    def test_webhook_upgrades_tier_to_institutional(self, mock_construct):
+        """Ensure the new institutional tier maps correctly."""
         mock_construct.return_value = {
             "type": "customer.subscription.updated",
             "data": {
@@ -333,7 +333,7 @@ class WebhookSubscriptionUpdatedTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
         self.farm.refresh_from_db()
-        self.assertEqual(self.farm.subscription_tier, "premium")
+        self.assertEqual(self.farm.subscription_tier, "institutional")
 
     @patch("stripe.Webhook.construct_event")
     def test_webhook_unpaid_status_revokes_access(self, mock_construct):
