@@ -173,7 +173,8 @@ def get_activity_heatmap(request):
     year = request.GET.get("year", "all")
 
     # 1. FETCH DATA
-    logs = LogEntry.objects.filter(farm=farm).exclude(crop__isnull=True)
+    # THE FIX: Allow null crops to pass through to Pandas
+    logs = LogEntry.objects.filter(farm=farm)
     if year != "all":
         logs = logs.filter(date_logged__year=int(year))
 
@@ -202,8 +203,9 @@ def get_activity_heatmap(request):
     )
 
     # THE FIX: Force empty strings to become proper nulls before filling
+    # Add a final fallback to catch deleted crops and general tasks
     df["Display_Veggie"] = (
-        df["crop__category"].replace("", pd.NA).fillna(df["crop__crop_name"])
+        df["crop__category"].replace("", pd.NA).fillna(df["crop__crop_name"]).fillna("General / Deleted")
     )
 
     activity_priority = {"O": 0, "T": 1, "P": 2, "H": 3}
@@ -342,7 +344,8 @@ def get_term_heatmap(request):
     year = request.GET.get("year", "all")
 
     # 1. FETCH DATA
-    logs = LogEntry.objects.filter(farm=farm).exclude(crop__isnull=True)
+    # THE FIX: Allow null crops to pass through
+    logs = LogEntry.objects.filter(farm=farm)
     if year != "all":
         logs = logs.filter(date_logged__year=int(year))
 
@@ -366,6 +369,7 @@ def get_term_heatmap(request):
     df["Activity_Label"] = df["activity"].map(activity_names)
 
     # 3. SPLIT AND STACK
+    df["crop__crop_name"] = df["crop__crop_name"].fillna("General / Deleted")
     df_veggies = df[["WeekOfYear", "crop__crop_name"]].rename(
         columns={"crop__crop_name": "Term"}
     )
@@ -488,7 +492,8 @@ def get_seasonal_timeline(request):
     year = request.GET.get("year", "all")
 
     # 1. FETCH DATA
-    logs = LogEntry.objects.filter(farm=farm).exclude(crop__isnull=True)
+    # THE FIX: Allow null crops to pass through
+    logs = LogEntry.objects.filter(farm=farm)
     if year != "all":
         logs = logs.filter(date_logged__year=int(year))
 
@@ -508,6 +513,7 @@ def get_seasonal_timeline(request):
         return render(request, "analytics/partials/chart.html", {"chart": empty_html})
 
     df = pd.DataFrame(data)
+    df["crop__crop_name"] = df["crop__crop_name"].fillna("General / Deleted")
 
     # 2. CALCULATE START AND END WEEKS
     df["WeekOfYear"] = (
@@ -616,7 +622,7 @@ def get_volunteer_heatmap(request):
         try:
             logs = logs.filter(date_logged__year=int(year))
         except ValueError:
-            year = "all"
+            pass
 
     data = list(
         logs.values(
