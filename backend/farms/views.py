@@ -22,7 +22,7 @@ from .forms import (
 # --- Other App Imports ---
 from logs.models import LogEntry
 from accounts.models import FarmMembership, FormSignature  # <-- UPDATED IMPORT
-from farms.tasks import send_volunteer_welcome_email, send_broadcast_email
+from farms.tasks import send_volunteer_welcome_email
 
 User = get_user_model()
 
@@ -142,7 +142,7 @@ def manager_dashboard(request):
 
         elif "submit_broadcast" in request.POST:
             from django_q.tasks import async_task
-            
+
             subject = request.POST.get("broadcast_subject")
             body = request.POST.get("broadcast_body")
             audience = request.POST.get("audience", "all")
@@ -157,8 +157,11 @@ def manager_dashboard(request):
                 audience_value=audience,
                 specific_ids=specific_ids,
             )
-            
-            messages.success(request, "Broadcast queued! Emails are being securely dispatched in the background.")
+
+            messages.success(
+                request,
+                "Broadcast queued! Emails are being securely dispatched in the background.",
+            )
             return redirect("manager_dashboard")
 
         elif "submit_welcome_email" in request.POST:
