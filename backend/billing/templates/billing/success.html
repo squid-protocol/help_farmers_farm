@@ -1,22 +1,20 @@
 {% extends "base.html" %}
-<<<<<<< HEAD
 
-=======
->>>>>>> main
 {% block content %}
 <div class="max-w-3xl mx-auto py-20 text-center">
     <div class="text-7xl mb-6">🎉</div>
     <h1 class="text-4xl font-extrabold text-gray-900 mb-4">Payment Successful!</h1>
-<<<<<<< HEAD
-    <p class="text-xl text-gray-600 mb-8">
+    
+    <p class="text-xl text-gray-600 mb-6">
         Thank you for subscribing to Helping Farmers Farm. Your farm's account has been upgraded, and your receipt is on its way to your inbox.
     </p>
+    
+    <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 max-w-lg mx-auto mb-8 text-blue-800 text-sm font-medium">
+        It may take up to 60 seconds for your new features to fully unlock while we sync with the billing server.
+    </div>
+
     <a href="{% url 'manager_dashboard' %}" class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-8 rounded-xl shadow transition">
         Go to Manager Command Center
     </a>
-=======
-    <p class="text-xl text-gray-600 mb-8">Thank you for subscribing to Helping Farmers Farm. Your farm's account has been upgraded, and your receipt is on its way to your inbox.</p>
-    <a href="{% url 'manager_dashboard' %}" class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-8 rounded-xl shadow transition">Go to Manager Command Center</a>
->>>>>>> main
 </div>
 {% endblock %}
