@@ -205,7 +205,10 @@ def get_activity_heatmap(request):
     # THE FIX: Force empty strings to become proper nulls before filling
     # Add a final fallback to catch deleted crops and general tasks
     df["Display_Veggie"] = (
-        df["crop__category"].replace("", pd.NA).fillna(df["crop__crop_name"]).fillna("General / Deleted")
+        df["crop__category"]
+        .replace("", pd.NA)
+        .fillna(df["crop__crop_name"])
+        .fillna("General / Deleted")
     )
 
     activity_priority = {"O": 0, "T": 1, "P": 2, "H": 3}
