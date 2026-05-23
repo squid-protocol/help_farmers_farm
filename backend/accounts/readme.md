@@ -1,6 +1,6 @@
 # Accounts App 👤
 
-The `accounts` app is the central identity and authentication engine of the HelpFarmers platform. It handles custom user modeling, role-based access control (RBAC), multi-tenant farm routing, and specialized onboarding flows for legacy volunteers.
+The `accounts` app is the central identity and authentication engine of the Helping Farmers Farm platform. It handles custom user modeling, role-based access control (RBAC), multi-tenant farm routing, and specialized onboarding flows for legacy volunteers.
 
 ---
 
