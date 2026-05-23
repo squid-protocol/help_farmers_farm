@@ -47,11 +47,9 @@
                 <li class="flex items-center gap-3">✅ Manager Command Center & Roster Analytics</li>
             </ul>
 
-            <form action="{% url 'create_checkout_session' %}" method="POST" class="mt-auto">
-                {% csrf_token %}
-                <input type="hidden" name="price_id" value="price_1TYsF54Q1x6w9f8FaXJmkcE1">
-                <button type="submit" class="w-full bg-white hover:bg-gray-50 text-emerald-700 font-bold py-3 rounded-xl shadow transition">Select Professional</button>
-            </form>
+            <div class="mt-auto">
+                <a href="{% url 'signup_farm' %}" class="block text-center w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold py-3 rounded-xl transition">Start Free Trial</a>
+            </div>
         </div>
 
         <div class="bg-white rounded-3xl p-8 border border-gray-200 shadow-sm hover:shadow-lg transition flex flex-col h-full">
