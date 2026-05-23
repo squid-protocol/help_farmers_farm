@@ -102,6 +102,14 @@ class FarmMembership(models.Model):
     )
 
     custom_answers = models.JSONField(default=dict, blank=True)
+
+    # --- NEW: Applicant Message ---
+    applicant_message = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Message sent by volunteer when requesting to join.",
+    )
+
     agreed_to_waiver = models.BooleanField(default=False)
     digital_signature = models.CharField(max_length=255, null=True, blank=True)
     signed_at = models.DateTimeField(null=True, blank=True)
