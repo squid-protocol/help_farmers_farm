@@ -9,14 +9,15 @@ from django.contrib import messages
 from django.utils import timezone
 
 # --- Local App Imports (Farms) ---
-from .models import Crop, WorkCommitment, ComplianceForm  # <-- ADDED ComplianceForm
+from .models import Farm, Crop, WorkCommitment, ComplianceForm, FarmProfile
 from .forms import (
     CropForm,
     VolunteerCreationForm,
     WorkCommitmentForm,
     FarmSettingsForm,
     VolunteerEditForm,
-    ComplianceFormSetup,  # <-- ADDED ComplianceFormSetup
+    ComplianceFormSetup,
+    FarmProfileForm,
 )
 
 # --- Other App Imports ---
@@ -50,6 +51,9 @@ def manager_dashboard(request):
     farm_form = FarmSettingsForm(instance=my_farm)
     compliance_setup_form = ComplianceFormSetup(farm=my_farm)
 
+    profile, _ = FarmProfile.objects.get_or_create(farm=my_farm)
+    profile_form = FarmProfileForm(instance=profile)
+
     if request.method == "POST":
         # --- THE READ-ONLY TOLLBOOTH (Anti-Spam & Security Lock) ---
         if not my_farm.is_active_account:
@@ -68,73 +72,6 @@ def manager_dashboard(request):
                 new_crop.farm = my_farm
                 new_crop.save()
                 messages.success(request, "Crop added successfully!")
-                return redirect("manager_dashboard")
-
-        elif "submit_volunteer" in request.POST:
-            # --- THE CAPACITY TOLLBOOTH ---
-            # 1. Count how many active standard volunteers this farm currently has
-            current_volunteers = User.objects.filter(
-                memberships__farm=my_farm,
-                is_active=True,
-            ).count()
-
-            # 2. Check the capacity limits based on their Stripe tier
-            tier = getattr(
-                my_farm, "subscription_tier", "starter"
-            )  # Default to starter if missing
-            capacity_reached = False
-            limit = 0
-
-            if tier == "starter" and current_volunteers >= 50:
-                capacity_reached = True
-                limit = 50
-            elif tier == "growth" and current_volunteers >= 200:
-                capacity_reached = True
-                limit = 200
-
-            # 3. Drop the gate if they are full
-            if capacity_reached:
-                messages.error(
-                    request,
-                    f"🛑 Limit Reached: The {tier.title()} plan allows a maximum of {limit} "
-                    "active volunteers. Please archive old volunteers or upgrade your "
-                    "plan in the Billing portal.",
-                )
-                return redirect("manager_dashboard")
-
-            # If they pass the tollbooth, process the form...
-            volunteer_form = VolunteerCreationForm(
-                request.POST, request_user=request.user, farm=my_farm
-            )
-            if volunteer_form.is_valid():
-                new_user = volunteer_form.save(commit=False)
-                new_user.set_password(volunteer_form.cleaned_data["password"])
-                # Ensure they are saved as a volunteer
-                new_user.role = "volunteer"
-                new_user.is_email_verified = (
-                    True  # Auto-verify manager-created accounts
-                )
-                new_user.save()
-
-                # --- NEW: Create the Bridge Record! ---
-                FarmMembership.objects.create(
-                    user=new_user,
-                    farm=my_farm,
-                    is_approved=True,
-                    agreed_to_waiver=True,
-                    work_commitment=volunteer_form.cleaned_data.get("work_commitment"),
-                )
-
-                # --- TRIGGER: Fire the Automated Welcome Email ---
-                email_status = send_volunteer_welcome_email(
-                    user_id=new_user.id,
-                    farm_id=my_farm.id,
-                    raw_password=volunteer_form.cleaned_data["password"],
-                )
-
-                messages.success(
-                    request, f"Volunteer created successfully! {email_status}"
-                )
                 return redirect("manager_dashboard")
 
         elif "submit_commitment" in request.POST:
@@ -210,6 +147,15 @@ def manager_dashboard(request):
                 messages.success(
                     request, f"Compliance Form '{new_cform.name}' added successfully!"
                 )
+                return redirect("manager_dashboard")
+
+        elif "submit_profile" in request.POST:
+            profile_form = FarmProfileForm(
+                request.POST, request.FILES, instance=profile
+            )
+            if profile_form.is_valid():
+                profile_form.save()
+                messages.success(request, "Public Profile updated successfully!")
                 return redirect("manager_dashboard")
 
     # Fetch data using the membership bridge
@@ -355,6 +301,7 @@ def manager_dashboard(request):
         "grouped_data": grouped_data,
         "expected_pct": expected_pct,
         "farm_form": farm_form,
+        "profile_form": profile_form,
         "crop_form": crop_form,
         "volunteer_form": volunteer_form,
         "commitment_form": commitment_form,
@@ -504,7 +451,7 @@ def toggle_user_status_view(request, user_id):
 
     user_to_toggle.is_active = not user_to_toggle.is_active
     user_to_toggle.save()
-    return redirect("manager_dashboard")
+    return redirect("volunteer_roster")
 
 
 @login_required
@@ -589,7 +536,7 @@ def edit_volunteer_view(request, volunteer_id):
             membership.save()
 
             messages.success(request, f"{volunteer.username} updated successfully!")
-            return redirect("manager_dashboard")
+            return redirect("volunteer_roster")
     else:
         form = VolunteerEditForm(
             instance=volunteer,
@@ -667,3 +614,207 @@ def compliance_audit_view(request, form_id):
         "signatures": signatures,
     }
     return render(request, "farms/compliance_audit.html", context)
+
+
+@login_required
+def invite_link_view(request, token):
+    """Path 1: The Magic Link (Zero Friction)"""
+    farm = get_object_or_404(Farm, invite_token=token)
+
+    # Create the bridge record. If they are already pending, this updates them to approved.
+    membership, created = FarmMembership.objects.get_or_create(
+        user=request.user, farm=farm
+    )
+
+    if created or not membership.is_approved:
+        membership.is_approved = True
+        membership.save()
+        messages.success(request, f"You have successfully joined {farm.name}!")
+    else:
+        messages.info(request, f"You are already on the roster for {farm.name}.")
+
+    # Set this farm as their active dashboard context
+    request.session["active_farm_id"] = farm.id
+    return redirect("log_hours")
+
+
+@login_required
+def farm_search_view(request):
+    """Path 3: The Public Search Directory"""
+    query = request.GET.get("q", "").strip()
+
+    # 1. Base Query: ONLY show farms that have actively opted into the public directory
+    farms = Farm.objects.filter(profile__is_public=True).select_related("profile")
+
+    if query:
+        farms = farms.filter(name__icontains=query)
+
+    farms = farms[:15]  # Limit results to keep UI fast
+
+    # 2. Get a list of IDs for farms they've already requested to join
+    pending_requests = FarmMembership.objects.filter(
+        user=request.user, is_approved=False
+    ).values_list("farm_id", flat=True)
+
+    return render(
+        request,
+        "farms/farm_search.html",
+        {"farms": farms, "query": query, "pending_requests": pending_requests},
+    )
+
+
+@login_required
+@require_POST
+def request_join_farm_view(request, farm_id):
+    """Path 3: Submit the Join Request with a Message"""
+    farm = get_object_or_404(Farm, id=farm_id)
+    message = request.POST.get("applicant_message", "").strip()
+
+    membership, created = FarmMembership.objects.get_or_create(
+        user=request.user,
+        farm=farm,
+        defaults={"is_approved": False, "applicant_message": message},
+    )
+
+    # If they somehow request again while pending, update their message
+    if not created and not membership.is_approved and message:
+        membership.applicant_message = message
+        membership.save()
+
+    messages.success(
+        request, f"Your application to join {farm.name} has been sent to the manager!"
+    )
+    return redirect("farm_search")
+
+
+@login_required
+@require_POST
+@user_passes_test(is_manager, login_url="/log-hours/")
+def approve_membership_view(request, membership_id):
+    """Manager Control: Approve or Deny pending volunteers"""
+    membership = get_object_or_404(
+        FarmMembership, id=membership_id, farm=request.active_farm
+    )
+    action = request.POST.get("action")
+
+    if action == "approve":
+        membership.is_approved = True
+        membership.save()
+        messages.success(
+            request,
+            f"Approved {membership.user.first_name}'s request to join the farm.",
+        )
+
+        # Fire the automated welcome email since they are now officially on the roster
+        send_volunteer_welcome_email(
+            membership.user.id, request.active_farm.id, raw_password="Set during signup"
+        )
+
+    elif action == "deny":
+        membership.delete()
+        messages.success(request, "Request denied and removed from the queue.")
+
+    return redirect("volunteer_roster")
+
+
+@login_required
+@user_passes_test(is_manager, login_url="/log-hours/")
+def volunteer_roster_view(request):
+    my_farm = request.active_farm
+    volunteer_form = VolunteerCreationForm(request_user=request.user, farm=my_farm)
+
+    if request.method == "POST":
+        # --- THE READ-ONLY TOLLBOOTH ---
+        if not my_farm.is_active_account:
+            messages.error(
+                request,
+                "🛑 Trial Expired: Your farm's account is in Read-Only mode. "
+                "Please upgrade your plan in the Billing portal to make changes.",
+            )
+            return redirect("volunteer_roster")
+
+        if "submit_volunteer" in request.POST:
+            current_volunteers = User.objects.filter(
+                memberships__farm=my_farm,
+                is_active=True,
+            ).count()
+
+            tier = getattr(my_farm, "subscription_tier", "starter")
+            capacity_reached = False
+            limit = 0
+
+            if tier == "starter" and current_volunteers >= 50:
+                capacity_reached = True
+                limit = 50
+            elif tier == "growth" and current_volunteers >= 200:
+                capacity_reached = True
+                limit = 200
+
+            if capacity_reached:
+                messages.error(
+                    request,
+                    f"🛑 Limit Reached: The {tier.title()} plan allows a maximum of {limit} "
+                    "active volunteers. Please archive old volunteers or upgrade.",
+                )
+                return redirect("volunteer_roster")
+
+            volunteer_form = VolunteerCreationForm(
+                request.POST, request_user=request.user, farm=my_farm
+            )
+            if volunteer_form.is_valid():
+                new_user = volunteer_form.save(commit=False)
+                new_user.set_password(volunteer_form.cleaned_data["password"])
+                new_user.role = "volunteer"
+                new_user.is_email_verified = (
+                    True  # Auto-verify manager-created accounts
+                )
+                new_user.save()
+
+                FarmMembership.objects.create(
+                    user=new_user,
+                    farm=my_farm,
+                    is_approved=True,
+                    agreed_to_waiver=True,
+                    work_commitment=volunteer_form.cleaned_data.get("work_commitment"),
+                )
+
+                email_status = send_volunteer_welcome_email(
+                    user_id=new_user.id,
+                    farm_id=my_farm.id,
+                    raw_password=volunteer_form.cleaned_data["password"],
+                )
+
+                messages.success(
+                    request, f"Volunteer created successfully! {email_status}"
+                )
+                return redirect("volunteer_roster")
+
+    # Fetch all memberships in one optimized query
+    all_memberships = (
+        FarmMembership.objects.filter(farm=my_farm)
+        .select_related("user", "work_commitment")
+        .order_by("user__first_name", "user__username")
+    )
+
+    applicants = []
+    active_vols = []
+    past_vols = []
+
+    # Sort them into their respective tabs
+    for m in all_memberships:
+        if not m.is_approved:
+            applicants.append(m)
+        else:
+            if m.user.is_active and m.user.role != "friend":
+                active_vols.append(m)
+            else:
+                past_vols.append(m)
+
+    context = {
+        "farm": my_farm,
+        "applicants": applicants,
+        "active_vols": active_vols,
+        "past_vols": past_vols,
+        "volunteer_form": volunteer_form,
+    }
+    return render(request, "farms/volunteer_roster.html", context)

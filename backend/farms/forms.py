@@ -1,6 +1,7 @@
+import json
 from django import forms
 from django.contrib.auth import get_user_model
-from .models import Crop, WorkCommitment, Farm, ComplianceForm
+from .models import Crop, WorkCommitment, Farm, ComplianceForm, FarmProfile
 
 # Fetch your CustomUser model
 User = get_user_model()
@@ -333,3 +334,63 @@ class ComplianceFormSetup(forms.ModelForm):
             )
 
             self.fields["assigned_users"].queryset = valid_users
+
+
+class FarmProfileForm(forms.ModelForm):
+    # THE FIX: These must sit ABOVE the Meta class to override strict validation
+    is_public = forms.BooleanField(required=False)
+    is_accepting_volunteers = forms.BooleanField(required=False)
+
+    # We use a standard text input for tags, which Tagify will hijack on the frontend
+    tags = forms.CharField(
+        required=False,
+        help_text="Type a tag (e.g., 'USDA Organic') and press Enter.",
+        widget=forms.TextInput(
+            attrs={
+                "class": "tagify-input bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5",
+                "placeholder": "Add tags...",
+            }
+        ),
+    )
+
+    # We hide the actual textarea because the Trix editor will write directly into it
+    about_us = forms.CharField(
+        required=False, widget=forms.HiddenInput(attrs={"id": "id_about_us"})
+    )
+
+    class Meta:
+        model = FarmProfile
+        fields = [
+            "is_public",
+            "is_accepting_volunteers",
+            "short_description",
+            "about_us",
+            "tags",
+            "logo",
+            "cover_photo",
+            "website_url",
+            "facebook_url",
+            "instagram_url",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # If the farm already has tags stored as a JSON array, convert them to a
+        # comma-separated string so the HTML input can render them properly for Tagify.
+        if self.instance and self.instance.pk and self.instance.tags:
+            if isinstance(self.instance.tags, list):
+                self.initial["tags"] = ",".join(self.instance.tags)
+
+    def clean_tags(self):
+        """Extracts the Tagify JSON string back into a clean Python list of strings."""
+        tags_data = self.cleaned_data.get("tags", "")
+        if not tags_data:
+            return []
+
+        # Tagify sends data like: '[{"value":"Organic"},{"value":"No-Till"}]'
+        try:
+            parsed = json.loads(tags_data)
+            return [item["value"] for item in parsed if "value" in item]
+        except (ValueError, TypeError):
+            # Fallback just in case standard comma-separated text got through
+            return [t.strip() for t in tags_data.split(",") if t.strip()]

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto mt-12 mb-20 px-4">
+    
+    <div class="text-center mb-10">
+        <span class="text-6xl mb-4 block">🔎</span>
+        <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight">Find Your Farm</h1>
+        <p class="text-lg text-gray-500 mt-2">Search for your farm to request access to their volunteer roster.</p>
+    </div>
+
+    <div class="bg-white p-6 rounded-3xl border border-gray-200 shadow-xl mb-10">
+        <form method="GET" action="{% url 'farm_search' %}" class="flex gap-2">
+            <input type="text" name="q" value="{{ query }}" placeholder="Search by farm name..." class="flex-grow bg-gray-50 border border-gray-300 text-gray-900 text-lg rounded-xl block p-4 focus:ring-emerald-500 focus:border-emerald-500 shadow-sm" required>
+            <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-8 rounded-xl shadow transition text-lg">Search</button>
+        </form>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl mb-8 font-bold text-center shadow-sm">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if query %}
+        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">Search Results</h3>
+        
+        {% if farms %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {% for farm in farms %}
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col hover:shadow-lg transition duration-300">
+                    
+                    <div class="h-32 bg-emerald-600 relative">
+                        {% if farm.profile.cover_photo %}
+                            <img src="{{ farm.profile.cover_photo.url }}" class="w-full h-full object-cover">
+                        {% endif %}
+                        
+                        <div class="absolute -bottom-8 left-6">
+                            {% if farm.profile.logo %}
+                                <img src="{{ farm.profile.logo.url }}" class="w-16 h-16 rounded-xl border-4 border-white shadow-sm object-cover bg-white">
+                            {% else %}
+                                <div class="w-16 h-16 rounded-xl border-4 border-white shadow-sm bg-white flex items-center justify-center text-2xl">🌾</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="p-6 pt-10 flex-grow flex flex-col">
+                        <h2 class="text-xl font-extrabold text-gray-900">{{ farm.name }}</h2>
+                        <p class="text-sm text-gray-500 mt-1">{{ farm.address|default:"Location not provided" }}</p>
+                        
+                        {% if farm.profile.short_description %}
+                            <p class="text-gray-700 mt-3 text-sm italic font-serif">"{{ farm.profile.short_description }}"</p>
+                        {% endif %}
+
+                        {% if farm.profile.tags %}
+                            <div class="flex flex-wrap gap-2 mt-4">
+                                {% for tag in farm.profile.tags %}
+                                    <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded border border-emerald-100 uppercase tracking-wider">{{ tag }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="mt-auto pt-6 border-t border-gray-100 mt-6">
+                            {% if not farm.profile.is_accepting_volunteers %}
+                                <div class="bg-gray-50 text-gray-500 text-center font-bold py-2 rounded-lg border border-gray-200 text-sm cursor-not-allowed">
+                                    🛑 Not accepting volunteers
+                                </div>
+                            {% elif farm.id in pending_requests %}
+                                <div class="bg-amber-100 text-amber-800 text-center font-bold py-2 rounded-lg border border-amber-200 shadow-sm text-sm cursor-not-allowed">
+                                    ⏳ Request Pending
+                                </div>
+                            {% else %}
+                                <button onclick="document.getElementById('join_modal_{{ farm.id }}').showModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg shadow-sm transition text-sm">
+                                    Request to Join
+                                </button>
+                                
+                                <dialog id="join_modal_{{ farm.id }}" class="p-8 rounded-2xl shadow-2xl border border-blue-100 backdrop:bg-slate-900/50 w-full max-w-md">
+                                    <div class="flex justify-between items-center mb-6">
+                                        <h3 class="text-2xl font-bold text-blue-900">Join {{ farm.name }}</h3>
+                                        <button type="button" onclick="document.getElementById('join_modal_{{ farm.id }}').close()" class="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
+                                    </div>
+                                    <form action="{% url 'request_join' farm.id %}" method="POST">
+                                        {% csrf_token %}
+                                        <div class="mb-6">
+                                            <label class="block text-sm font-bold text-gray-700 mb-2">Message to the Farm Manager</label>
+                                            <textarea name="applicant_message" rows="4" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 custom-scrollbar" placeholder="Briefly explain your experience, availability, or why you want to volunteer..."></textarea>
+                                        </div>
+                                        <div class="flex justify-end gap-3">
+                                            <button type="button" onclick="document.getElementById('join_modal_{{ farm.id }}').close()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg transition">Cancel</button>
+                                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow transition">Send Application</button>
+                                        </div>
+                                    </form>
+                                </dialog>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-gray-50 p-10 rounded-2xl border border-gray-200 text-center">
+                <p class="text-gray-500 text-lg">We couldn't find a farm matching "<strong>{{ query }}</strong>".</p>
+                <p class="text-sm text-gray-400 mt-2">Try checking the spelling or contact your Farm Manager for an invite link.</p>
+            </div>
+        {% endif %}
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path("dashboard/", views.manager_dashboard, name="manager_dashboard"),
+    path("roster/", views.volunteer_roster_view, name="volunteer_roster"),
     # --- NEW: The Compliance Audit Trail ---
     path(
         "compliance/<int:form_id>/audit/",
@@ -46,4 +47,15 @@ urlpatterns = [
         name="toggle_compliance_status",
     ),
     path("switch-workspace/", views.switch_active_farm, name="switch_active_farm"),
+    # --- NEW: ONBOARDING ROUTES ---
+    path("invite/<uuid:token>/", views.invite_link_view, name="invite_link"),
+    path("search/", views.farm_search_view, name="farm_search"),
+    path(
+        "request-join/<int:farm_id>/", views.request_join_farm_view, name="request_join"
+    ),
+    path(
+        "approve-join/<int:membership_id>/",
+        views.approve_membership_view,
+        name="approve_join",
+    ),
 ]
