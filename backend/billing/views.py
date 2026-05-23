@@ -82,8 +82,9 @@ def billing_success(request):
             # If the API ping fails for any reason, fail gracefully.
             # The background webhook will still eventually catch it.
             logger = logging.getLogger("django")
+            safe_session_id = str(session_id).replace("\r", "").replace("\n", "")
             logger.warning(
-                f"Active Stripe verification failed for Session {session_id}: {e}"
+                f"Active Stripe verification failed for Session {safe_session_id}: {e}"
             )
 
     return render(request, "billing/success.html")
