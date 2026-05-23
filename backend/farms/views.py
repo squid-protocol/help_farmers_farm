@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.utils import timezone
@@ -279,6 +279,15 @@ def manager_dashboard(request):
         FarmMembership.objects.filter(farm=my_farm, user__is_active=True)
         .exclude(user__role="friend")
         .select_related("user", "work_commitment")
+        .annotate(
+            total_hours=Sum(
+                "user__logs__duration_hours",
+                filter=Q(
+                    user__logs__date_logged__year=current_year, 
+                    user__logs__farm=my_farm
+                )
+            )
+        )
     )
 
     requires_waivers = my_farm.can_use_waivers
@@ -300,10 +309,7 @@ def manager_dashboard(request):
 
     for mem in prog_memberships:
         vol = mem.user
-        logs = LogEntry.objects.filter(
-            volunteer=vol, date_logged__year=current_year, farm=my_farm
-        )
-        total_hours = logs.aggregate(total=Sum("duration_hours"))["total"] or 0.0
+        total_hours = mem.total_hours or 0.0
 
         target = mem.work_commitment.required_hours if mem.work_commitment else 0
         pct = min((total_hours / target) * 100, 100) if target > 0 else 0
@@ -424,15 +430,21 @@ def progress_report_view(request):
         FarmMembership.objects.filter(farm=farm, user__is_active=True)
         .exclude(user__role="friend")
         .select_related("user", "work_commitment")
+        .annotate(
+            total_hours=Sum(
+                "user__logs__duration_hours",
+                filter=Q(
+                    user__logs__date_logged__year=current_year, 
+                    user__logs__farm=farm
+                )
+            )
+        )
     )
     grouped_data = {}
 
     for mem in memberships:
         vol = mem.user
-        logs = LogEntry.objects.filter(
-            volunteer=vol, date_logged__year=current_year, farm=farm
-        )
-        total_hours = logs.aggregate(total=Sum("duration_hours"))["total"] or 0.0
+        total_hours = mem.total_hours or 0.0
 
         target = mem.work_commitment.required_hours if mem.work_commitment else 0
         pct = min((total_hours / target) * 100, 100) if target > 0 else 0
