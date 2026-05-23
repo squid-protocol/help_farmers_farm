@@ -1,4 +1,5 @@
 import base64
+import requests
 import uuid
 from django.core.files.base import ContentFile
 from django.shortcuts import render, redirect, get_object_or_404
@@ -16,6 +17,10 @@ from django.urls import reverse
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth import logout
 from django.views.decorators.http import require_POST
+from django.db import transaction
+from .forms import VolunteerSignUpForm, FarmSignUpForm
+from .models import FarmMembership
+from farms.models import Farm
 import logging
 
 from .forms import ProfileUpdateForm, AccountClaimForm
@@ -171,13 +176,16 @@ def sign_waiver_view(request):
         not request.user.first_name
         or not request.user.last_name
         or not request.user.phone_number
-        or not request.user.address
+        or not request.user.address_line1
+        or not request.user.city
+        or not request.user.state
+        or not request.user.postal_code
     ):
         messages.warning(
             request,
             (
                 "⚠️ Legal Requirement: You must provide your First Name, Last Name, "
-                "Phone Number, and Physical Address before signing documents."
+                "Phone Number, and a complete Physical Address before signing documents."
             ),
         )
         return redirect("profile")
@@ -374,3 +382,145 @@ def delete_account_view(request):
         request, "Your account has been permanently anonymized and deleted."
     )
     return redirect("home")
+
+
+def signup_gateway_view(request):
+    """Displays the choice between Volunteer or Farm Manager registration."""
+    if request.user.is_authenticated:
+        return redirect("home")
+    return render(request, "accounts/signup_gateway.html")
+
+
+def verify_turnstile(request):
+    """Helper function to validate the Cloudflare Turnstile token."""
+    turnstile_response = request.POST.get("cf-turnstile-response")
+    if not turnstile_response:
+        return False
+
+    verify_url = "[https://challenges.cloudflare.com/turnstile/v0/siteverify](https://challenges.cloudflare.com/turnstile/v0/siteverify)"
+    data = {
+        "secret": settings.TURNSTILE_SECRET_KEY,
+        "response": turnstile_response,
+        "remoteip": request.META.get("REMOTE_ADDR"),
+    }
+
+    try:
+        response = requests.post(verify_url, data=data, timeout=5)
+        outcome = response.json()
+        return outcome.get("success", False)
+    except requests.RequestException:
+        # If Cloudflare's API is down or times out, fail secure
+        return False
+
+
+def volunteer_signup_view(request):
+    """Registers a new volunteer without an attached farm."""
+    if request.user.is_authenticated:
+        return redirect("home")
+
+    if request.method == "POST":
+        # 0. The Honeypot Trap
+        if request.POST.get("website_url"):
+            # Bot detected: fake a success message and silently drop the request
+            messages.success(request, "Welcome! You can now apply to join a farm.")
+            return redirect("home")
+
+        # 1. Cloudflare Turnstile Check
+        if not verify_turnstile(request):
+            messages.error(
+                request,
+                "Security check failed. Please ensure JavaScript is enabled and try again.",
+            )
+            return render(
+                request,
+                "accounts/signup_volunteer.html",
+                {"form": VolunteerSignUpForm(request.POST)},
+            )
+
+        # 2. Process the Form
+        form = VolunteerSignUpForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.role = "volunteer"  # Enforce the role
+            user.save()
+
+            login(request, user)
+            messages.success(request, "Welcome! You can now apply to join a farm.")
+            return redirect("home")  # Redirect to their unattached dashboard
+    else:
+        form = VolunteerSignUpForm()
+
+    return render(request, "accounts/signup_volunteer.html", {"form": form})
+
+
+def farm_signup_view(request):
+    """Registers a manager, provisions a farm, sets the 60-day trial, and links them."""
+    if request.user.is_authenticated:
+        return redirect("home")
+
+    if request.method == "POST":
+        # 0. The Honeypot Trap
+        if request.POST.get("website_url"):
+            # Bot detected: fake a success message and silently drop the request
+            messages.success(request, "Welcome! Your 60-day free trial starts today.")
+            return redirect("home")
+
+        # 1. Cloudflare Turnstile Check
+        if not verify_turnstile(request):
+            messages.error(
+                request,
+                "Security check failed. Please ensure JavaScript is enabled and try again.",
+            )
+            return render(
+                request,
+                "accounts/signup_farm.html",
+                {"form": FarmSignUpForm(request.POST)},
+            )
+
+        # 2. Process the Form
+        form = FarmSignUpForm(request.POST)
+        if form.is_valid():
+            try:
+                # Wrap all three database creations in an atomic transaction
+                with transaction.atomic():
+                    # 1. Create the Manager Account
+                    user = form.save(commit=False)
+                    user.role = "farm_manager"
+                    user.save()
+
+                    # 2. Provision the Farm Workspace & Start the 60-Day Trial
+                    new_farm = Farm.objects.create(
+                        name=form.cleaned_data["farm_name"],
+                        phone_number=form.cleaned_data["farm_phone"],
+                        is_paid=False,  # Trial mode active
+                        subscription_tier="trial",
+                    )
+
+                    # 3. Create the God-Mode Membership Link
+                    FarmMembership.objects.create(
+                        user=user,
+                        farm=new_farm,
+                        is_approved=True,  # Managers are auto-approved for their own farm
+                    )
+
+                # If we made it here, the transaction was a complete success
+                login(request, user)
+
+                # Set the active session so the middleware knows which dashboard to load
+                request.session["active_farm_id"] = new_farm.id
+
+                messages.success(
+                    request,
+                    f"Welcome to {new_farm.name}! Your 60-day free trial starts today.",
+                )
+                return redirect("manager_dashboard")
+
+            except Exception:
+                messages.error(
+                    request,
+                    "There was a critical error provisioning your farm. Please try again.",
+                )
+    else:
+        form = FarmSignUpForm()
+
+    return render(request, "accounts/signup_farm.html", {"form": form})
