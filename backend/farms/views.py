@@ -51,6 +51,16 @@ def manager_dashboard(request):
     compliance_setup_form = ComplianceFormSetup(farm=my_farm)
 
     if request.method == "POST":
+        # --- THE READ-ONLY TOLLBOOTH (Anti-Spam & Security Lock) ---
+        if not my_farm.is_active_account:
+            messages.error(
+                request,
+                "🛑 Trial Expired: Your farm's account is in Read-Only mode. "
+                "Please upgrade your plan in the Billing portal to make changes or send communications."
+            )
+            return redirect("manager_dashboard")
+        # --- END TOLLBOOTH ---
+
         if "submit_crop" in request.POST:
             crop_form = CropForm(request.POST)
             if crop_form.is_valid():
