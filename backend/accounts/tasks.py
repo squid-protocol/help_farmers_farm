@@ -1,12 +1,16 @@
 import hashlib
+import logging
+from datetime import timedelta
 from django.template.loader import render_to_string
 from django.core.files.base import ContentFile
+from django.utils import timezone
 from weasyprint import HTML
 from django.contrib.auth import get_user_model
 from accounts.models import FormSignature
 from farms.models import Farm, ComplianceForm
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 def generate_pdf_receipt(signature_id, user_id, form_id, farm_id, ip_address):
@@ -48,3 +52,25 @@ def generate_pdf_receipt(signature_id, user_id, form_id, farm_id, ip_address):
     sig_record.pdf_receipt.save(filename, ContentFile(pdf_bytes), save=True)
 
     return f"Secured PDF for Signature {signature_id}"
+
+
+def purge_unverified_accounts():
+    """
+    Nightly cron job: Deletes any account that is older than 7 days
+    and has not verified their email address.
+    """
+    # Set the grace period to 1 full week
+    cutoff_time = timezone.now() - timedelta(days=7)
+
+    # Target users who are unverified AND whose accounts have aged past the cutoff
+    ghosts = User.objects.filter(is_email_verified=False, date_joined__lt=cutoff_time)
+
+    count = ghosts.count()
+    if count > 0:
+        # Django's .delete() on a queryset is highly efficient
+        ghosts.delete()
+        logger.info(
+            f"Nightly Purge: Successfully deleted {count} unverified ghost accounts."
+        )
+    else:
+        logger.info("Nightly Purge: No unverified ghost accounts found.")
