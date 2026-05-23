@@ -37,3 +37,4 @@ pristine_schuler_data.json
 llm_context.txt
 *.json
 *_context.md
+static/
