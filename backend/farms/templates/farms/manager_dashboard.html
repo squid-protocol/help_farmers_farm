@@ -2,7 +2,7 @@
 {% load tailwind_filters %}
 
 {% block content %}
-{% if not farm.is_paid %}
+{% if not farm.is_paid and not farm.is_comped %}
     {% if farm.trial_days_remaining > 0 %}
         <div class="mb-6 bg-indigo-50 border border-indigo-200 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
             <div>
