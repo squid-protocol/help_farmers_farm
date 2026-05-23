@@ -272,7 +272,7 @@ def sign_waiver_view(request):
         if is_valid:
             # --- THE FIX: Prioritize Cloudflare's verified IP to prevent spoofing ---
             cf_ip = request.META.get("HTTP_CF_CONNECTING_IP")
-            
+
             if cf_ip:
                 ip_address = cf_ip
             else:
