@@ -88,6 +88,18 @@ class ProfileViewsTests(TestCase):
         response = self.client.post(reverse("upload_avatar"), {})
         self.assertRedirects(response, reverse("profile"))
 
+    def test_upload_avatar_blocks_xss_file_extension(self):
+        """Ensure the backend hardcodes .jpg and ignores forged HTML MIME types."""
+        malicious_base64 = "data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg=="
+        response = self.client.post(
+            reverse("upload_avatar"), {"avatar_base64": malicious_base64}
+        )
+        self.assertRedirects(response, reverse("profile"))
+        self.user.refresh_from_db()
+        self.assertTrue(bool(self.user.avatar))
+        self.assertTrue(self.user.avatar.name.endswith(".jpg"))
+        self.assertFalse(self.user.avatar.name.endswith(".html"))
+
     def test_profile_view_rejects_invalid_phone(self):
         """Ensure the profile form strictly validates phone numbers."""
         post_data = {
@@ -506,6 +518,21 @@ class EmailVerificationTests(TestCase):
         sig = FormSignature.objects.first()
         self.assertEqual(sig.signer_ip_address, "192.168.1.1")
 
+    def test_signature_prioritizes_cloudflare_ip(self):
+        """Ensure Cloudflare's secure header overrides the easily spoofable X-Forwarded-For."""
+        self.user.is_email_verified = True
+        self.user.save()
+
+        self.client.post(
+            reverse("sign_waiver"),
+            {"signature": "John Doe", "sign_document": "true"},
+            HTTP_CF_CONNECTING_IP="203.0.113.1",
+            HTTP_X_FORWARDED_FOR="192.168.1.1, 10.0.0.1",  # Spoofed payload
+        )
+        sig = FormSignature.objects.first()
+        # Should ignore the 192.168.1.1 and grab the Cloudflare header
+        self.assertEqual(sig.signer_ip_address, "203.0.113.1")
+
     def test_form_signature_str_methods(self):
         """Ensure the string representations for the WORM database audit logs format correctly."""
         self.user.is_email_verified = True
@@ -628,3 +655,35 @@ class SignatureEvasionTests(TestCase):
         # The new PermissionDenied exception will trigger a 403 Forbidden
         self.assertEqual(response.status_code, 403)
         self.assertEqual(FormSignature.objects.filter(form=self.form_b).count(), 0)
+
+
+class AccountDeletionTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.farm = Farm.objects.create(name="Test Farm")
+        self.user = User.objects.create_user(
+            username="delete_me",
+            first_name="John",
+            last_name="Doe",
+            email="john@test.com",
+            phone_number="+15555555555",
+            password="securepassword",
+        )
+        self.client.force_login(self.user)
+
+    def test_delete_account_triggers_anonymization(self):
+        """Ensure the CCPA/GDPR protocol strips identity but keeps the DB shell."""
+        response = self.client.post(reverse("delete_account"))
+
+        # User should be redirected home and logged out
+        self.assertRedirects(response, reverse("home"))
+
+        # Pull the user back from the DB and verify destruction
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.is_active)
+        self.assertEqual(self.user.first_name, "Anonymous")
+        self.assertEqual(self.user.last_name, "Volunteer")
+        self.assertIn("redacted_", self.user.email)
+        self.assertIn("deleted.local", self.user.email)
+        self.assertEqual(self.user.role, "friend")
+        self.assertFalse(self.user.has_usable_password())

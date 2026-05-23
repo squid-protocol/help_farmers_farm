@@ -125,3 +125,74 @@ class SystemAnalyticsTests(TestCase):
         response = self.client.get(url)
         # Should be kicked out (PermissionDenied 403 or Redirect 302)
         self.assertNotEqual(response.status_code, 200)
+
+
+class AnalyticsEmptyStateTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.farm = Farm.objects.create(name="Empty Farm")
+        self.user = CustomUser.objects.create_user(
+            username="manager", email="manager@test.com", password="p"
+        )
+        FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True)
+
+        # Set the active farm session
+        session = self.client.session
+        session["active_farm_id"] = self.farm.id
+        session.save()
+
+        self.client.force_login(self.user)
+
+    def test_all_charts_handle_empty_data_gracefully(self):
+        """Ensure Pandas does not crash when a farm has zero logs."""
+        endpoints = [
+            "get_impact_chart",
+            "get_activity_heatmap",
+            "get_term_heatmap",
+            "get_seasonal_timeline",
+            "get_volunteer_heatmap",
+        ]
+
+        for endpoint in endpoints:
+            response = self.client.get(reverse(endpoint))
+
+            # The server must return a 200 OK (no 500 crashes)
+            self.assertEqual(response.status_code, 200)
+
+            # The response should contain your fallback SVG or message
+            self.assertContains(response, "div")
+            self.assertTrue(
+                "No hours logged" in str(response.content)
+                or "No activity data" in str(response.content)
+                or "No term occurrence" in str(response.content)
+                or "No timeline data" in str(response.content)
+                or "No volunteer activity" in str(response.content)
+            )
+
+    def test_analytics_handle_null_crops_without_crashing(self):
+        """Ensure Pandas correctly catches and labels logs that have no crop assigned."""
+
+        # Create a log entry with NO crop (simulating a 'General Task' or a deleted crop)
+        LogEntry.objects.create(
+            farm=self.farm,
+            volunteer=self.user,
+            crop=None,  # The crucial missing piece
+            activity="O",
+            duration_hours=1.5,
+            date_logged=timezone.now().date(),
+        )
+
+        endpoints = [
+            "get_impact_chart",
+            "get_activity_heatmap",
+            "get_term_heatmap",
+            "get_seasonal_timeline",
+        ]
+
+        for endpoint in endpoints:
+            response = self.client.get(reverse(endpoint))
+            self.assertEqual(response.status_code, 200)
+
+            # Verify the fallback label we injected in views.py is successfully rendered by Plotly
+            # Note: Plotly's JSON encoder escapes the '/' as '\u002f', so we just check for 'Deleted'
+            self.assertContains(response, "Deleted")

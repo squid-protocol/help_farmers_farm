@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.utils import timezone
@@ -51,6 +51,16 @@ def manager_dashboard(request):
     compliance_setup_form = ComplianceFormSetup(farm=my_farm)
 
     if request.method == "POST":
+        # --- THE READ-ONLY TOLLBOOTH (Anti-Spam & Security Lock) ---
+        if not my_farm.is_active_account:
+            messages.error(
+                request,
+                "🛑 Trial Expired: Your farm's account is in Read-Only mode. "
+                "Please upgrade your plan in the Billing portal to make changes or send communications.",
+            )
+            return redirect("manager_dashboard")
+        # --- END TOLLBOOTH ---
+
         if "submit_crop" in request.POST:
             crop_form = CropForm(request.POST)
             if crop_form.is_valid():
@@ -269,6 +279,14 @@ def manager_dashboard(request):
         FarmMembership.objects.filter(farm=my_farm, user__is_active=True)
         .exclude(user__role="friend")
         .select_related("user", "work_commitment")
+        .annotate(
+            total_hours=Sum(
+                "user__logs__duration_hours",
+                filter=Q(
+                    user__logs__date_logged__year=current_year, user__logs__farm=my_farm
+                ),
+            )
+        )
     )
 
     requires_waivers = my_farm.can_use_waivers
@@ -290,10 +308,7 @@ def manager_dashboard(request):
 
     for mem in prog_memberships:
         vol = mem.user
-        logs = LogEntry.objects.filter(
-            volunteer=vol, date_logged__year=current_year, farm=my_farm
-        )
-        total_hours = logs.aggregate(total=Sum("duration_hours"))["total"] or 0.0
+        total_hours = mem.total_hours or 0.0
 
         target = mem.work_commitment.required_hours if mem.work_commitment else 0
         pct = min((total_hours / target) * 100, 100) if target > 0 else 0
@@ -414,15 +429,20 @@ def progress_report_view(request):
         FarmMembership.objects.filter(farm=farm, user__is_active=True)
         .exclude(user__role="friend")
         .select_related("user", "work_commitment")
+        .annotate(
+            total_hours=Sum(
+                "user__logs__duration_hours",
+                filter=Q(
+                    user__logs__date_logged__year=current_year, user__logs__farm=farm
+                ),
+            )
+        )
     )
     grouped_data = {}
 
     for mem in memberships:
         vol = mem.user
-        logs = LogEntry.objects.filter(
-            volunteer=vol, date_logged__year=current_year, farm=farm
-        )
-        total_hours = logs.aggregate(total=Sum("duration_hours"))["total"] or 0.0
+        total_hours = mem.total_hours or 0.0
 
         target = mem.work_commitment.required_hours if mem.work_commitment else 0
         pct = min((total_hours / target) * 100, 100) if target > 0 else 0
@@ -491,6 +511,23 @@ def toggle_crop_status_view(request, crop_id):
     crop_to_toggle = get_object_or_404(Crop, id=crop_id, farm=request.active_farm)
     crop_to_toggle.is_active = not crop_to_toggle.is_active
     crop_to_toggle.save()
+    return redirect("manager_dashboard")
+
+
+@login_required
+@require_POST
+@user_passes_test(is_manager, login_url="/log-hours/")
+def toggle_compliance_status_view(request, form_id):
+    """Allows managers to archive old waivers so new volunteers don't have to sign them."""
+    compliance_form = get_object_or_404(
+        ComplianceForm, id=form_id, farm=request.active_farm
+    )
+    compliance_form.is_active = not compliance_form.is_active
+    compliance_form.save()
+    messages.success(
+        request,
+        f"Compliance Form '{compliance_form.name}' is now {'Active' if compliance_form.is_active else 'Archived'}.",
+    )
     return redirect("manager_dashboard")
 
 

@@ -40,5 +40,10 @@ urlpatterns = [
         views.edit_commitment_view,
         name="edit_commitment",
     ),
+    path(
+        "compliance/<int:form_id>/toggle/",
+        views.toggle_compliance_status_view,
+        name="toggle_compliance_status",
+    ),
     path("switch-workspace/", views.switch_active_farm, name="switch_active_farm"),
 ]

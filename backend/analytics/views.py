@@ -97,12 +97,25 @@ def get_impact_chart(request):
     """
 
     # --- PART 2: THE CROP BAR CHART DATA ---
-    crop_logs = global_logs.exclude(crop__isnull=True)
-    aggregated_data = (
-        crop_logs.values("crop__crop_name", "activity")
-        .annotate(total_hours=Sum("duration_hours"))
-        .order_by("crop__crop_name")
+    # Fetch raw IDs to prevent Django from dropping rows with null crops
+    aggregated_data = list(
+        global_logs.values("crop", "activity").annotate(
+            total_hours=Sum("duration_hours")
+        )
     )
+
+    # Map the crop names in Python, injecting our generic label for nulls
+    from farms.models import Crop
+
+    crop_dict = {c.id: c.crop_name for c in Crop.objects.filter(farm=farm)}
+
+    for item in aggregated_data:
+        crop_id = item.pop("crop", None)
+        item["crop__crop_name"] = (
+            crop_dict.get(crop_id, "General / Deleted")
+            if crop_id
+            else "General / Deleted"
+        )
 
     if not aggregated_data and total_hours == 0:
         empty_html = (
@@ -173,13 +186,11 @@ def get_activity_heatmap(request):
     year = request.GET.get("year", "all")
 
     # 1. FETCH DATA
-    logs = LogEntry.objects.filter(farm=farm).exclude(crop__isnull=True)
+    logs = LogEntry.objects.filter(farm=farm)
     if year != "all":
         logs = logs.filter(date_logged__year=int(year))
 
-    data = list(
-        logs.values("date_logged", "crop__crop_name", "crop__category", "activity")
-    )
+    data = list(logs.values("date_logged", "crop", "activity"))
 
     if not data:
         empty_html = (
@@ -194,16 +205,31 @@ def get_activity_heatmap(request):
         )
         return render(request, "analytics/partials/chart.html", {"chart": empty_html})
 
+    # Secure dictionary mapping
+    from farms.models import Crop
+
+    crop_dict = {
+        c.id: (c.crop_name, c.category) for c in Crop.objects.filter(farm=farm)
+    }
+    for item in data:
+        crop_id = item.pop("crop", None)
+        if crop_id and crop_id in crop_dict:
+            item["crop_name"], item["crop_category"] = crop_dict[crop_id]
+        else:
+            item["crop_name"] = "General / Deleted"
+            item["crop_category"] = None
+
     df = pd.DataFrame(data)
 
     # 2. CLEAN AND PREPARE DATA
     df["WeekOfYear"] = (
         pd.to_datetime(df["date_logged"]).dt.isocalendar().week.astype(int)
     )
-
-    # THE FIX: Force empty strings to become proper nulls before filling
     df["Display_Veggie"] = (
-        df["crop__category"].replace("", pd.NA).fillna(df["crop__crop_name"])
+        df["crop_category"]
+        .replace("", pd.NA)
+        .fillna(df["crop_name"])
+        .fillna("General / Deleted")
     )
 
     activity_priority = {"O": 0, "T": 1, "P": 2, "H": 3}
@@ -342,11 +368,12 @@ def get_term_heatmap(request):
     year = request.GET.get("year", "all")
 
     # 1. FETCH DATA
-    logs = LogEntry.objects.filter(farm=farm).exclude(crop__isnull=True)
+    # THE FIX: Allow null crops to pass through
+    logs = LogEntry.objects.filter(farm=farm)
     if year != "all":
         logs = logs.filter(date_logged__year=int(year))
 
-    data = list(logs.values("date_logged", "crop__crop_name", "activity"))
+    data = list(logs.values("date_logged", "crop", "activity"))
 
     if not data:
         empty_html = """
@@ -355,6 +382,17 @@ def get_term_heatmap(request):
         </div>
         """
         return render(request, "analytics/partials/chart.html", {"chart": empty_html})
+
+    from farms.models import Crop
+
+    crop_dict = {c.id: c.crop_name for c in Crop.objects.filter(farm=farm)}
+    for item in data:
+        crop_id = item.pop("crop", None)
+        item["crop_name"] = (
+            crop_dict.get(crop_id, "General / Deleted")
+            if crop_id
+            else "General / Deleted"
+        )
 
     df = pd.DataFrame(data)
 
@@ -366,9 +404,7 @@ def get_term_heatmap(request):
     df["Activity_Label"] = df["activity"].map(activity_names)
 
     # 3. SPLIT AND STACK
-    df_veggies = df[["WeekOfYear", "crop__crop_name"]].rename(
-        columns={"crop__crop_name": "Term"}
-    )
+    df_veggies = df[["WeekOfYear", "crop_name"]].rename(columns={"crop_name": "Term"})
     df_activities = df[["WeekOfYear", "Activity_Label"]].rename(
         columns={"Activity_Label": "Term"}
     )
@@ -488,11 +524,12 @@ def get_seasonal_timeline(request):
     year = request.GET.get("year", "all")
 
     # 1. FETCH DATA
-    logs = LogEntry.objects.filter(farm=farm).exclude(crop__isnull=True)
+    # THE FIX: Allow null crops to pass through
+    logs = LogEntry.objects.filter(farm=farm)
     if year != "all":
         logs = logs.filter(date_logged__year=int(year))
 
-    data = list(logs.values("date_logged", "crop__crop_name", "activity"))
+    data = list(logs.values("date_logged", "crop", "activity"))
 
     if not data:
         empty_html = (
@@ -507,6 +544,17 @@ def get_seasonal_timeline(request):
         )
         return render(request, "analytics/partials/chart.html", {"chart": empty_html})
 
+    from farms.models import Crop
+
+    crop_dict = {c.id: c.crop_name for c in Crop.objects.filter(farm=farm)}
+    for item in data:
+        crop_id = item.pop("crop", None)
+        item["crop_name"] = (
+            crop_dict.get(crop_id, "General / Deleted")
+            if crop_id
+            else "General / Deleted"
+        )
+
     df = pd.DataFrame(data)
 
     # 2. CALCULATE START AND END WEEKS
@@ -515,9 +563,9 @@ def get_seasonal_timeline(request):
     )
     activity_names = dict(LogEntry.ACTIVITY_CHOICES)
 
-    # Group by crop and activity to find the absolute min and max week (recreating your ETL logic)
+    # Group by crop and activity to find the absolute min and max week
     agg_df = (
-        df.groupby(["crop__crop_name", "activity"])
+        df.groupby(["crop_name", "activity"])
         .agg(StartWeek=("WeekOfYear", "min"), EndWeek=("WeekOfYear", "max"))
         .reset_index()
     )
@@ -526,7 +574,7 @@ def get_seasonal_timeline(request):
     agg_df["Duration"] = agg_df["EndWeek"] - agg_df["StartWeek"] + 1
 
     # Sort crops alphabetically for the Y-axis
-    unique_crops = sorted(agg_df["crop__crop_name"].unique().tolist(), reverse=True)
+    unique_crops = sorted(agg_df["crop_name"].unique().tolist(), reverse=True)
 
     # 3. BUILD THE PLOTLY GANTT CHART
     fig = go.Figure()
@@ -539,7 +587,7 @@ def get_seasonal_timeline(request):
                 go.Bar(
                     name=act_label,
                     x=act_data["Duration"],
-                    y=act_data["crop__crop_name"],
+                    y=act_data["crop_name"],
                     base=act_data[
                         "StartWeek"
                     ],  # This is the magic trick! Pushes the bar to the Start Week
@@ -616,7 +664,7 @@ def get_volunteer_heatmap(request):
         try:
             logs = logs.filter(date_logged__year=int(year))
         except ValueError:
-            year = "all"
+            pass
 
     data = list(
         logs.values(

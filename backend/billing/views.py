@@ -59,6 +59,34 @@ def create_checkout_session(request):
 
 @login_required
 def billing_success(request):
+    session_id = request.GET.get("session_id")
+    farm = request.active_farm
+
+    # If Stripe passed us a session ID, actively verify it right now
+    if session_id and farm:
+        try:
+            session = stripe.checkout.Session.retrieve(session_id)
+
+            # If Stripe confirms they paid, preemptively upgrade the database
+            # This beats the webhook race condition entirely!
+            if session.payment_status == "paid":
+                farm.is_paid = True
+
+                # Capture the customer ID here as a failsafe
+                if session.customer and not farm.stripe_customer_id:
+                    farm.stripe_customer_id = session.customer
+
+                farm.save()
+
+        except Exception as e:
+            # If the API ping fails for any reason, fail gracefully.
+            # The background webhook will still eventually catch it.
+            logger = logging.getLogger("django")
+            safe_session_id = str(session_id).replace("\r", "").replace("\n", "")
+            logger.warning(
+                f"Active Stripe verification failed for Session {safe_session_id}: {e}"
+            )
+
     return render(request, "billing/success.html")
 
 
@@ -201,7 +229,7 @@ def stripe_webhook(request):
                 elif (
                     new_price_id == "price_1TYsJj4Q1x6w9f8FpRlCUh0j"
                 ):  # <-- PREMIUM ADDED
-                    farm.subscription_tier = "premium"
+                    farm.subscription_tier = "institutional"
 
                 # Ensure their paid status matches the new subscription state
                 # 'past_due' occurs during the dunning grace period

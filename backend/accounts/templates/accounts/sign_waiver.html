@@ -112,7 +112,9 @@
                 }
             });
 
-            if (textBox.scrollHeight <= textBox.clientHeight) {
+            // THE FIX: Unlock immediately if the text is short OR if the browser 
+            // restored their scroll position to the bottom after a page reload
+            if (textBox.scrollHeight - textBox.scrollTop <= textBox.clientHeight + 5) {
                 unlockForm();
             }
         }

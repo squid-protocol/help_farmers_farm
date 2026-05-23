@@ -526,10 +526,21 @@
                             </p>
                         </div>
                         
-                        <div class="mt-4 sm:mt-0">
+                        <div class="mt-4 sm:mt-0 flex items-center gap-2">
                             <a href="{% url 'compliance_audit' form.id %}" class="inline-flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-2 px-4 rounded-xl shadow-sm transition text-sm">
                                 🖨️ View Signatures
                             </a>
+                            
+                            <form action="{% url 'toggle_compliance_status' form.id %}" method="POST" class="m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="p-2 rounded-xl border border-gray-300 transition shadow-sm {% if form.is_active %}bg-white text-gray-400 hover:text-red-600 hover:bg-red-50 hover:border-red-200{% else %}bg-gray-100 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-200{% endif %}" title="{% if form.is_active %}Archive Form{% else %}Restore Form{% endif %}">
+                                    {% if form.is_active %}
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                                    {% else %}
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                                    {% endif %}
+                                </button>
+                            </form>
                         </div>
                     </li>
                 {% empty %}
