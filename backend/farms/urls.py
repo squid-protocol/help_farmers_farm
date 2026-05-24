@@ -58,4 +58,7 @@ urlpatterns = [
         views.approve_membership_view,
         name="approve_join",
     ),
+    path(
+        "fragments/live-stats/", views.live_stats_fragment, name="live_stats_fragment"
+    ),
 ]
