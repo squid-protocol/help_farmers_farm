@@ -21,18 +21,21 @@ def log_hours_view(request):
     user = request.user
     current_year = datetime.now().year
 
-    # --- NEW: The Unattached Volunteer Safety Net ---
-    if not hasattr(request, "active_farm") or not request.active_farm:
-        messages.info(
-            request, "Welcome! You need to join a farm before you can log hours."
-        )
-        return redirect("farm_search")
+    # Safely get the active farm (will be None if they are a brand new user)
+    active_farm = getattr(request, "active_farm", None)
+
+    # --- NEW: Redirect Unassigned to Profile ---
+    if not active_farm:
+        return redirect("profile")
 
     # 1. Handle New Shift Submissions
     if request.method == "POST":
+        # --- NEW: Redirect Unassigned to Profile ---
+        if not hasattr(request, "active_farm") or not request.active_farm:
+            return redirect("profile")
 
         # --- THE READ-ONLY TOLLBOOTH ---
-        if not request.active_farm.is_active_account:
+        if not active_farm.is_active_account:
             messages.error(
                 request,
                 "🛑 Trial Expired: Your farm's account is in Read-Only mode. "
@@ -45,7 +48,7 @@ def log_hours_view(request):
         if form.is_valid():
             new_log = form.save(commit=False)
             new_log.volunteer = user
-            new_log.farm = request.active_farm
+            new_log.farm = active_farm
 
             # Wrap the database hit in a try/except for stability
             try:
@@ -95,21 +98,8 @@ def log_hours_view(request):
 
     history_shifts = all_logs.filter(date_logged__year=history_year)
 
-    # 3. Calculate Core Stats & Emoji Badges
-    lifetime_hours = all_logs.aggregate(total=Sum("duration_hours"))["total"] or 0
+    # 3. Calculate Core Stats
     season_hours = season_logs.aggregate(total=Sum("duration_hours"))["total"] or 0
-
-    # Count distinct years they have logged hours in the database
-    active_seasons = all_logs.dates("date_logged", "year").count()
-
-    # Calculate Total Seasons = Legacy Offset + Active Database Seasons
-    total_seasons = max(user.legacy_years_volunteered + active_seasons, 1)
-
-    # Generate the Star Badges with Overflow Protection
-    if total_seasons <= 5:
-        season_badges = "⭐" * total_seasons
-    else:
-        season_badges = f"{total_seasons}x ⭐"
 
     # 4. Calculate Commitment Progress & Pacing
     if user.work_commitment:
@@ -172,7 +162,6 @@ def log_hours_view(request):
     veggie_chart_html = None
     activity_chart_html = None
     comparison_chart_html = None
-    lifetime_crop_chart_html = None  # <-- NEW: Lifetime Mastery Chart
 
     if season_hours > 0:
         # Veggie Chart
@@ -324,58 +313,10 @@ def log_hours_view(request):
                 full_html=False, include_plotlyjs=False
             )
 
-    # --- NEW: Lifetime Crop Mastery Chart ---
-    if lifetime_hours > 0:
-        lifetime_crop_data = (
-            all_logs.exclude(crop__isnull=True)
-            .values("crop__crop_name")
-            .annotate(total=Sum("duration_hours"))
-            .order_by(
-                "total"
-            )  # Ascending so Plotly puts the largest at the top of the Y-axis
-        )
-
-        if lifetime_crop_data:
-            lt_crop_names = [item["crop__crop_name"] for item in lifetime_crop_data]
-            lt_hours_list = [float(item["total"] or 0) for item in lifetime_crop_data]
-
-            fig_lt = go.Figure(
-                data=[
-                    go.Bar(
-                        name="Lifetime Hours",
-                        y=lt_crop_names,
-                        x=lt_hours_list,
-                        orientation="h",
-                        marker_color="#10b981",  # Emerald green leveling up bar
-                        hovertemplate="<b>%{y}</b><br>Lifetime Hours: %{x} hrs<extra></extra>",
-                    )
-                ]
-            )
-            fig_lt.update_layout(
-                plot_bgcolor="rgba(250,250,250,1)",
-                paper_bgcolor="white",
-                margin=dict(t=30, b=30, l=10, r=20),
-                height=max(300, len(lt_crop_names) * 35 + 100),
-                showlegend=False,
-                hoverlabel=dict(bgcolor="white", font_size=13, font_color="black"),
-                xaxis=dict(
-                    title="Lifetime Hours",
-                    showgrid=True,
-                    gridcolor="rgba(200,200,200,0.3)",
-                ),
-                yaxis=dict(title="", tickfont=dict(size=12), automargin=True),
-            )
-            lifetime_crop_chart_html = fig_lt.to_html(
-                full_html=False, include_plotlyjs=False
-            )
-
     context = {
         "form": form,
         "current_year": current_year,
-        "lifetime_hours": round(lifetime_hours, 1),
         "season_hours": round(season_hours, 1),
-        "seasons_volunteered": total_seasons,
-        "season_badges": season_badges,
         "target_hours": target_hours,
         "tier_name": tier_name,
         "progress_pct": progress_pct,
@@ -386,7 +327,6 @@ def log_hours_view(request):
         "veggie_chart": veggie_chart_html,
         "activity_chart": activity_chart_html,
         "comparison_chart": comparison_chart_html,
-        "lifetime_crop_chart": lifetime_crop_chart_html,  # Added to context
         "history_year": history_year,
         "prev_year": prev_year,
         "next_year": next_year,
