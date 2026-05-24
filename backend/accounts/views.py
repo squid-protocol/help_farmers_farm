@@ -104,7 +104,18 @@ def profile_view(request):
             lt_hours_list = [float(item["total"] or 0) for item in lifetime_crop_data]
     else:
         # Expanded Zero-state placeholder data
-        lt_crop_names = ["Onions", "Lettuce", "Carrots", "Peppers", "Tomatoes", "Garlic", "Cucumbers", "Zucchini", "Radishes", "Peas"]
+        lt_crop_names = [
+            "Onions",
+            "Lettuce",
+            "Carrots",
+            "Peppers",
+            "Tomatoes",
+            "Garlic",
+            "Cucumbers",
+            "Zucchini",
+            "Radishes",
+            "Peas",
+        ]
         lt_hours_list = [0.0] * 10
         marker_color = "#e2e8f0"
 
@@ -146,34 +157,38 @@ def profile_view(request):
 
     # 5. Lifetime Activity Chart
     lifetime_activity_chart_html = None
-    
+
     # Safely initialize fallback variables to prevent UnboundLocalErrors
     act_names = ["No Hours Logged"]
     act_hours = [1]
     marker_colors = ["#e2e8f0"]
-    
+
     if lifetime_hours > 0:
         activity_data = (
             all_logs.values("activity")
             .annotate(total=Sum("duration_hours"))
             .order_by("-total")
         )
-        
+
         if activity_data:
             activity_map = dict(LogEntry.ACTIVITY_CHOICES)
             color_map = {
-                "P": "#10b981", # Planting
-                "T": "#f59e0b", # Tending
-                "H": "#ef4444", # Harvesting
-                "C": "#8b5cf6", # Cultivating
-                "O": "#94a3b8", # Off Season
-                "M": "#78350f", # Move Dirt
+                "P": "#10b981",  # Planting
+                "T": "#f59e0b",  # Tending
+                "H": "#ef4444",  # Harvesting
+                "C": "#8b5cf6",  # Cultivating
+                "O": "#94a3b8",  # Off Season
+                "M": "#78350f",  # Move Dirt
             }
-            
-            act_names = [activity_map.get(item["activity"], "Other") for item in activity_data]
+
+            act_names = [
+                activity_map.get(item["activity"], "Other") for item in activity_data
+            ]
             act_hours = [float(item["total"] or 0) for item in activity_data]
             # Map the exact color to the specific activity returned
-            marker_colors = [color_map.get(item["activity"], "#94a3b8") for item in activity_data]
+            marker_colors = [
+                color_map.get(item["activity"], "#94a3b8") for item in activity_data
+            ]
 
     fig_act = go.Figure(
         data=[
@@ -186,7 +201,7 @@ def profile_view(request):
             )
         ]
     )
-    
+
     fig_act.update_layout(
         margin=dict(t=20, b=20, l=20, r=20),
         height=350,
@@ -194,12 +209,12 @@ def profile_view(request):
         legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5),
         hoverlabel=dict(bgcolor="white", font_size=14, font_color="black"),
     )
-    
+
     if lifetime_hours > 0:
         fig_act.update_traces(
-            textposition="inside", 
+            textposition="inside",
             textinfo="percent",
-            hovertemplate="<b>%{label}</b><br>%{value} hrs (%{percent})<extra></extra>"
+            hovertemplate="<b>%{label}</b><br>%{value} hrs (%{percent})<extra></extra>",
         )
     else:
         # Hide the hover tooltip for the empty zero-state ring
