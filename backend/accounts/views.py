@@ -55,6 +55,7 @@ def profile_view(request):
     # 3. Generate Trading Card Stats
     all_logs = LogEntry.objects.filter(volunteer=user)
     lifetime_hours = all_logs.aggregate(total=Sum("duration_hours"))["total"] or 0
+    total_shifts = all_logs.count()
 
     active_seasons = all_logs.dates("date_logged", "year").count()
     total_seasons = max(user.legacy_years_volunteered + active_seasons, 1)
@@ -85,7 +86,7 @@ def profile_view(request):
         activity_map.get(top_act_data["activity"], "N/A") if top_act_data else "N/A"
     )
 
-    # 4. Lifetime Crop Chart (With Gamified Zero-State)
+    # 4. Lifetime Crop Chart (With Expanded Gamified Zero-State)
     lt_crop_names = []
     lt_hours_list = []
     marker_color = "#10b981"
@@ -102,9 +103,9 @@ def profile_view(request):
             lt_crop_names = [item["crop__crop_name"] for item in lifetime_crop_data]
             lt_hours_list = [float(item["total"] or 0) for item in lifetime_crop_data]
     else:
-        # Zero state placeholder data
-        lt_crop_names = ["Onions", "Lettuce", "Carrots", "Peppers", "Tomatoes"]
-        lt_hours_list = [0.0, 0.0, 0.0, 0.0, 0.0]
+        # Expanded Zero-state placeholder data
+        lt_crop_names = ["Onions", "Lettuce", "Carrots", "Peppers", "Tomatoes", "Garlic", "Cucumbers", "Zucchini", "Radishes", "Peas"]
+        lt_hours_list = [0.0] * 10
         marker_color = "#e2e8f0"
 
     lifetime_crop_chart_html = None
@@ -143,16 +144,83 @@ def profile_view(request):
             full_html=False, include_plotlyjs=False
         )
 
+    # 5. Lifetime Activity Chart
+    lifetime_activity_chart_html = None
+    
+    # Safely initialize fallback variables to prevent UnboundLocalErrors
+    act_names = ["No Hours Logged"]
+    act_hours = [1]
+    marker_colors = ["#e2e8f0"]
+    
+    if lifetime_hours > 0:
+        activity_data = (
+            all_logs.values("activity")
+            .annotate(total=Sum("duration_hours"))
+            .order_by("-total")
+        )
+        
+        if activity_data:
+            activity_map = dict(LogEntry.ACTIVITY_CHOICES)
+            color_map = {
+                "P": "#10b981", # Planting
+                "T": "#f59e0b", # Tending
+                "H": "#ef4444", # Harvesting
+                "C": "#8b5cf6", # Cultivating
+                "O": "#94a3b8", # Off Season
+                "M": "#78350f", # Move Dirt
+            }
+            
+            act_names = [activity_map.get(item["activity"], "Other") for item in activity_data]
+            act_hours = [float(item["total"] or 0) for item in activity_data]
+            # Map the exact color to the specific activity returned
+            marker_colors = [color_map.get(item["activity"], "#94a3b8") for item in activity_data]
+
+    fig_act = go.Figure(
+        data=[
+            go.Pie(
+                labels=act_names,
+                values=act_hours,
+                hole=0.5,
+                marker_colors=marker_colors,
+                sort=False,
+            )
+        ]
+    )
+    
+    fig_act.update_layout(
+        margin=dict(t=20, b=20, l=20, r=20),
+        height=350,
+        showlegend=True if lifetime_hours > 0 else False,
+        legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5),
+        hoverlabel=dict(bgcolor="white", font_size=14, font_color="black"),
+    )
+    
+    if lifetime_hours > 0:
+        fig_act.update_traces(
+            textposition="inside", 
+            textinfo="percent",
+            hovertemplate="<b>%{label}</b><br>%{value} hrs (%{percent})<extra></extra>"
+        )
+    else:
+        # Hide the hover tooltip for the empty zero-state ring
+        fig_act.update_traces(textinfo="none", hoverinfo="skip")
+
+    lifetime_activity_chart_html = fig_act.to_html(
+        full_html=False, include_plotlyjs=False
+    )
+
     context = {
         "form": form,
         "signatures": signatures,
         "lifetime_hours": round(lifetime_hours, 1),
+        "total_shifts": total_shifts,
         "seasons_volunteered": total_seasons,
         "season_badges": season_badges,
         "total_farms_helped": total_farms_helped,
         "top_veggie": top_veggie,
         "top_act": top_act,
         "lifetime_crop_chart": lifetime_crop_chart_html,
+        "lifetime_activity_chart": lifetime_activity_chart_html,
     }
     return render(request, "accounts/profile.html", context)
 
@@ -497,7 +565,7 @@ def verify_turnstile(request):
     if not turnstile_response:
         return False
 
-    verify_url = "[https://challenges.cloudflare.com/turnstile/v0/siteverify](https://challenges.cloudflare.com/turnstile/v0/siteverify)"
+    verify_url = "https://challenges.cloudflare.com/turnstile/v0/siteverifyf"
     data = {
         "secret": settings.TURNSTILE_SECRET_KEY,
         "response": turnstile_response,
