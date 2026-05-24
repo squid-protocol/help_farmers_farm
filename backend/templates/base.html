@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Helping Farmers Farm</title>
     {% tailwind_css %}
-    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
-    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js" charset="utf-8"></script>
+    <script src="[https://unpkg.com/htmx.org@1.9.12](https://unpkg.com/htmx.org@1.9.12)"></script>
+    <script src="[https://cdn.plot.ly/plotly-2.32.0.min.js](https://cdn.plot.ly/plotly-2.32.0.min.js)" charset="utf-8"></script>
 </head>
 <body class="bg-white text-gray-800 min-h-screen flex flex-col">
 
@@ -47,25 +47,31 @@
                 <div class="flex items-center space-x-6">
                     {% if user.is_authenticated %}
                         
-                        <a href="{% url 'profile' %}" class="flex items-center gap-2 hover:opacity-80 transition-opacity" title="Edit Profile & Password">
-                            <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.first_name|default:user.username }}&background=10b981&color=fff&size=64{% endif %}" 
-                                 class="w-8 h-8 rounded-full object-cover border border-green-500 shadow-sm" alt="{{ user.username }}">
+                        {% if request.resolver_match.url_name != 'log_hours' and request.resolver_match.url_name != 'farm_impact' %}
+                            <a href="{% url 'farm_search' %}" class="text-blue-600 hover:text-blue-800 font-bold transition flex items-center gap-1">🔎 Find Farms</a>
+                        {% endif %}
+
+                        {% if request.active_farm %}
+                            <a href="{% url 'log_hours' %}" class="text-gray-600 hover:text-emerald-600 font-medium transition">Log Hours</a>
+                            
+                            <a href="{% url 'farm_impact' %}" class="text-gray-600 hover:text-emerald-600 font-medium transition flex items-center gap-1">
+                                📊 Farm Impact
+                            </a>
+                        {% endif %}
+                        
+                        {% if user.is_staff or user.role == 'account_manager' or user.role == 'farm_manager' %}
+                            <a href="{% url 'manager_dashboard' %}" class="text-emerald-600 hover:text-emerald-800 font-semibold transition">Manage Farm</a>
+                        {% endif %}
+
+                        <a href="{% url 'profile' %}" class="flex items-center gap-2 hover:opacity-80 transition-opacity ml-2 border-l border-gray-200 pl-4" title="View Global Persona">
+                            <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}[https://ui-avatars.com/api/?name=](https://ui-avatars.com/api/?name=){{ user.first_name|default:user.username }}&background=10b981&color=fff&size=64{% endif %}" 
+                                 class="w-8 h-8 rounded-full object-cover border border-emerald-500 shadow-sm" alt="{{ user.username }}">
                             <span class="hidden sm:block text-sm font-bold text-gray-900">{{ user.username }}</span>
                         </a>
                         
-                        <a href="{% url 'log_hours' %}" class="text-gray-600 hover:text-green-600 font-medium transition">Log Hours</a>
-                        
-                        <a href="{% url 'farm_impact' %}" class="text-gray-600 hover:text-green-600 font-medium transition flex items-center gap-1">
-                            📊 Farm Impact
-                        </a>
-                        
-                        {% if user.is_staff or user.role == 'account_manager' or user.role == 'farm_manager' %}
-                            <a href="{% url 'manager_dashboard' %}" class="text-green-600 hover:text-green-800 font-semibold transition">Manage Farm</a>
-                        {% endif %}
-                        
                         <form action="{% url 'logout' %}" method="post" class="m-0">
                             {% csrf_token %}
-                            <button type="submit" class="text-red-500 hover:text-red-700 font-medium transition">Log Out</button>
+                            <button type="submit" class="text-red-500 hover:text-red-700 font-medium transition ml-2">Log Out</button>
                         </form>
                     {% else %}
                         <a href="{% url 'login' %}" class="text-gray-600 font-medium hover:text-emerald-600 transition">Log In</a>

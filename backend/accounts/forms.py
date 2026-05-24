@@ -13,6 +13,7 @@ class ProfileUpdateForm(forms.ModelForm):
             "first_name",
             "last_name",
             "email",
+            "farming_motto",
             "phone_number",
             "address_line1",
             "address_line2",

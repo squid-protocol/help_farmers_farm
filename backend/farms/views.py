@@ -7,6 +7,8 @@ from django.db.models import Sum, Q
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.utils import timezone
+from django.core.cache import cache
+from datetime import timedelta
 
 # --- Local App Imports (Farms) ---
 from .models import Farm, Crop, WorkCommitment, ComplianceForm, FarmProfile
@@ -578,7 +580,6 @@ def switch_active_farm(request):
     farm_id = request.POST.get("farm_id")
     if farm_id:
         # Security check: Prove they are actually a member before switching
-        from accounts.models import FarmMembership
 
         is_member = FarmMembership.objects.filter(
             user=request.user, farm_id=farm_id, is_approved=True
@@ -818,3 +819,25 @@ def volunteer_roster_view(request):
         "volunteer_form": volunteer_form,
     }
     return render(request, "farms/volunteer_roster.html", context)
+
+
+def live_stats_fragment(request):
+    stats = cache.get("landing_page_stats")
+
+    if not stats:
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+
+        stats = {
+            "total_farms": Farm.objects.count(),
+            "total_accounts": User.objects.count(),
+            "active_volunteers": LogEntry.objects.filter(
+                date_logged__gte=thirty_days_ago
+            )
+            .values("volunteer")
+            .distinct()
+            .count(),
+        }
+
+        cache.set("landing_page_stats", stats, 300)
+
+    return render(request, "fragments/live_stats.html", {"stats": stats})

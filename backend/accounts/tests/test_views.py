@@ -152,6 +152,116 @@ class ProfileViewsTests(TestCase):
         self.assertIn("signatures", response.context)
         self.assertEqual(response.context["signatures"].count(), 1)
 
+    def test_profile_zero_hours_state(self):
+        """Edge Case: The profile should render the 'Zero State' dummy charts if hours are 0."""
+        # Ensure the user has absolutely no logs
+        LogEntry.objects.filter(volunteer=self.user).delete()
+
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("profile"))
+        self.assertEqual(response.status_code, 200)
+        # Should render the fallback gray chart for Onions, Lettuce, Carrots, etc.
+        self.assertIn("0 Hours Logged", str(response.content))
+
+    def test_waiver_guardian_missing_relationship(self):
+        """Unhappy Path: Guardian checks the box but leaves relationship blank."""
+        self.client.force_login(self.user)
+
+        # Bypass the profile completeness check and email verification check
+        self.user.first_name = "John"
+        self.user.last_name = "Doe"
+        self.user.phone_number = "+15551234567"
+        self.user.address_line1 = "123 Street"
+        self.user.city = "City"
+        self.user.state = "MI"
+        self.user.postal_code = "12345"
+        self.user.is_email_verified = True
+        self.user.save()
+
+        form_to_sign = ComplianceForm.objects.create(
+            farm=self.farm, name="Test Form", is_active=True
+        )
+
+        response = self.client.post(
+            reverse("sign_waiver"),
+            {
+                "sign_document": "true",
+                "form_id": form_to_sign.id,
+                "digital_signature": "John Doe",
+                "is_guardian": "on",
+                "guardian_relationship": "",  # Left blank!
+            },
+        )
+
+        # Should fail and return the error message
+        messages = list(response.context["messages"])
+        self.assertTrue(any("relationship to the minor" in str(m) for m in messages))
+
+    def test_waiver_signature_name_mismatch(self):
+        """Unhappy Path: Signature does not match the user's name or username."""
+        self.client.force_login(self.user)
+
+        # Bypass the profile completeness check and email verification check
+        self.user.first_name = "Joe"
+        self.user.last_name = "Farmer"
+        self.user.phone_number = "+15551234567"
+        self.user.address_line1 = "123 Street"
+        self.user.city = "City"
+        self.user.state = "MI"
+        self.user.postal_code = "12345"
+        self.user.is_email_verified = True
+        self.user.save()
+
+        form_to_sign = ComplianceForm.objects.create(
+            farm=self.farm, name="Test Form", is_active=True
+        )
+
+        response = self.client.post(
+            reverse("sign_waiver"),
+            {
+                "sign_document": "true",
+                "form_id": form_to_sign.id,
+                "digital_signature": "Jane Doe",  # Wrong name!
+            },
+        )
+
+        messages = list(response.context["messages"])
+        self.assertTrue(
+            any("match your first and last name" in str(m) for m in messages)
+        )
+
+    def test_verify_email_wrong_user_token(self):
+        """Security: User clicks an email verification link meant for someone else."""
+        other_user = User.objects.create_user(username="other", password="p")
+
+        # Generate a valid token, but for 'other_user'
+        from django.core.signing import TimestampSigner
+
+        token = TimestampSigner().sign(other_user.id)
+
+        # Login as self.user
+        self.client.force_login(self.user)
+        response = self.client.get(
+            reverse("verify_email_link", args=[token]), follow=True
+        )
+
+        # Should fail security check
+        messages = list(response.context["messages"])
+        self.assertTrue(
+            any("belongs to a different account" in str(m) for m in messages)
+        )
+        self.assertFalse(self.user.is_email_verified)
+
+    def test_verify_email_invalid_token(self):
+        """Unhappy Path: User clicks a corrupted or expired email link."""
+        self.client.force_login(self.user)
+        response = self.client.get(
+            reverse("verify_email_link", args=["garbage:token:123"]), follow=True
+        )
+
+        messages = list(response.context["messages"])
+        self.assertTrue(any("invalid or has expired" in str(m) for m in messages))
+
 
 class LegacyClaimFlowTests(TestCase):
     def setUp(self):

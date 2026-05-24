@@ -76,7 +76,7 @@ class LogHoursIntegrationTests(TestCase):
         self.assertEqual(saved_log.duration_hours, 4.00)
         self.assertEqual(saved_log.activity, "T")
 
-    def test_unattached_volunteer_redirected_to_search(self):
+    def test_unattached_volunteer_redirected_to_profile(self):
         """Ensure a volunteer without a farm cannot access the log hours dashboard."""
         unattached_user = User.objects.create_user(
             username="floater", email="float@test.com", password="p"
@@ -84,7 +84,63 @@ class LogHoursIntegrationTests(TestCase):
         self.client.force_login(unattached_user)
 
         response = self.client.get(reverse("log_hours"))
-        self.assertRedirects(response, reverse("farm_search"))
+        self.assertRedirects(response, reverse("profile"))
+
+    def test_history_year_invalid_input_fallback(self):
+        """Unhappy Path: User types letters into the history_year URL parameter."""
+        # The system should catch the ValueError and safely default to the current year
+        response = self.client.get(self.log_url + "?history_year=garbage_string")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("history_year", response.context)
+
+    def test_history_year_pagination_boundaries(self):
+        """Edge Case: Viewing the oldest and newest years to test prev/next logic."""
+        last_year = timezone.now().date().year - 1
+        LogEntry.objects.create(
+            farm=self.farm,
+            volunteer=self.user,
+            crop=self.crop,
+            activity="O",
+            duration_hours=1.00,
+            date_logged=f"{last_year}-05-05",
+        )
+
+        # Oldest year should NOT have a prev_year
+        response_oldest = self.client.get(self.log_url + f"?history_year={last_year}")
+        self.assertEqual(response_oldest.status_code, 200)
+
+        # Current year should NOT have a next_year
+        response_current = self.client.get(
+            self.log_url + f"?history_year={timezone.now().date().year}"
+        )
+        self.assertEqual(response_current.status_code, 200)
+
+    def test_manager_deletes_other_volunteer_log_routing(self):
+        """Routing check: Managers deleting a log should be routed to the master directory."""
+        # 1. Create a manager WITH an email to bypass RequireEmailMiddleware
+        manager = User.objects.create_user(
+            username="manager",
+            email="manager@test.com",
+            password="p",
+            role="farm_manager",
+        )
+        FarmMembership.objects.create(user=manager, farm=self.farm, is_approved=True)
+
+        # 2. Create a log for the regular volunteer
+        log_to_delete = LogEntry.objects.create(
+            farm=self.farm,
+            volunteer=self.user,
+            activity="T",
+            duration_hours=1,
+            date_logged=timezone.now().date(),
+        )
+
+        # 3. Login as manager and delete the volunteer's log
+        self.client.force_login(manager)
+        response = self.client.post(reverse("delete_log", args=[log_to_delete.id]))
+
+        # 4. Ensure it redirects back to the directory, NOT the personal log hours page
+        self.assertRedirects(response, reverse("master_log_directory"))
 
 
 class LogManagementTests(TestCase):
