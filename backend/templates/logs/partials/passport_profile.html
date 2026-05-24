@@ -1,0 +1,67 @@
+<div class="max-w-3xl mx-auto">
+    <div class="bg-white rounded-3xl border border-emerald-100 shadow-xl overflow-hidden relative">
+        
+        <div class="h-32 bg-gradient-to-r from-emerald-600 to-teal-800 relative">
+            <div class="absolute top-4 right-6 bg-white/20 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold tracking-widest border border-white/30">
+                OFFICIAL RECORD
+            </div>
+        </div>
+
+        <div class="px-8 pb-8 relative">
+            <div class="absolute -top-16 left-8">
+                <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}[https://ui-avatars.com/api/?name=](https://ui-avatars.com/api/?name=){{ user.first_name|default:user.username }}&background=10b981&color=fff&size=128{% endif %}" 
+                     class="w-32 h-32 rounded-2xl border-4 border-white shadow-md object-cover bg-white">
+            </div>
+            
+            <div class="flex justify-end pt-4">
+                <a href="{% url 'profile' %}" class="text-sm font-bold text-gray-400 hover:text-emerald-600 transition flex items-center gap-1">
+                    ✏️ Edit Profile
+                </a>
+            </div>
+
+            <div class="mt-8">
+                <h2 class="text-3xl font-black text-gray-900 tracking-tight">{{ user.first_name|default:user.username }} {{ user.last_name }}</h2>
+                
+                {% if user.farming_motto %}
+                    <p class="text-lg text-emerald-700 font-serif italic mt-2 border-l-4 border-emerald-400 pl-4">"{{ user.farming_motto }}"</p>
+                {% else %}
+                    <p class="text-sm text-gray-400 italic mt-2">No farming motto set. <a href="{% url 'profile' %}" class="text-emerald-600 hover:underline">Add one here.</a></p>
+                {% endif %}
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10 pt-8 border-t border-gray-100">
+                
+                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 text-center">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Lifetime Hours</span>
+                    <span class="text-3xl font-black text-emerald-600">{{ lifetime_hours }}</span>
+                </div>
+
+                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 text-center">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Seasons</span>
+                    <span class="text-2xl font-black text-amber-500 block mt-1" title="{{ seasons_volunteered }} Seasons">{{ season_badges }}</span>
+                </div>
+
+                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 text-center">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Top Crop</span>
+                    <span class="text-xl font-bold text-gray-800 flex items-center justify-center h-full pb-2">{{ top_veggie }}</span>
+                </div>
+
+                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 text-center">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Farms Helped</span>
+                    <span class="text-3xl font-black text-blue-600">{{ total_farms_helped }}</span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    {% if lifetime_hours == 0 %}
+    <div class="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-8 text-center shadow-sm">
+        <span class="text-4xl mb-4 block">🌱</span>
+        <h3 class="text-xl font-bold text-blue-900 mb-2">Ready to get your hands dirty?</h3>
+        <p class="text-blue-800 mb-6 max-w-lg mx-auto">Your farming record is a blank slate. Head over to the Directory to find a local farm and log your first shift to start earning experience.</p>
+        <button onclick="switchPassportTab('directory')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow transition">Find a Farm</button>
+    </div>
+    {% endif %}
+
+</div>
