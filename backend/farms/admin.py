@@ -1,11 +1,19 @@
 from django.contrib import admin
 from django.utils import timezone
-from .models import Farm, Crop, WorkCommitment, ComplianceForm
-
+from .models import Farm, Crop, WorkCommitment, ComplianceForm, FarmProfile, FarmImage
 
 # -----------------------------------------------------------------------------
 # 1. INLINES: Edit connected database rows directly from the Farm page
 # -----------------------------------------------------------------------------
+class FarmProfileInline(admin.StackedInline):
+    """Allows superusers to toggle public directory visibility directly from the Farm."""
+
+    model = FarmProfile
+    can_delete = False
+    max_num = 1
+    classes = ("collapse",)
+
+
 class CropInline(admin.TabularInline):
     model = Crop
     extra = 0  # Don't show empty rows by default
@@ -39,7 +47,14 @@ class ComplianceFormInline(admin.StackedInline):
 # -----------------------------------------------------------------------------
 @admin.register(Farm)
 class FarmAdmin(admin.ModelAdmin):
-    actions = ["reset_trial_period", "grant_lifetime_access", "mark_as_paid"]
+    actions = [
+        "reset_trial_period",
+        "grant_lifetime_access",
+        "mark_as_paid",
+        "revoke_premium",
+        "enable_joint_accounts",
+        "disable_joint_accounts",
+    ]
 
     @admin.action(description="BULK ACTION: Reset 60-Day Free Trial")
     def reset_trial_period(self, request, queryset):
@@ -50,13 +65,34 @@ class FarmAdmin(admin.ModelAdmin):
 
     @admin.action(description="BULK ACTION: Grant Lifetime Free Access (Comped)")
     def grant_lifetime_access(self, request, queryset):
-        queryset.update(is_comped=True)
+        queryset.update(is_comped=True, is_paid=True)
         self.message_user(request, "Selected farms granted lifetime comped access.")
 
     @admin.action(description="BULK ACTION: Mark as Paid")
     def mark_as_paid(self, request, queryset):
         queryset.update(is_paid=True)
         self.message_user(request, "Selected farms marked as paid.")
+
+    @admin.action(description="BULK ACTION: Revoke Premium Access (Mark Unpaid)")
+    def revoke_premium(self, request, queryset):
+        queryset.update(is_paid=False, is_comped=False)
+        self.message_user(
+            request, "Premium access revoked. Farms returned to read-only/trial state."
+        )
+
+    @admin.action(
+        description="BULK ACTION: Enable Joint Accounts (Disable strict liability)"
+    )
+    def enable_joint_accounts(self, request, queryset):
+        queryset.update(allows_joint_accounts=True)
+        self.message_user(request, "Joint accounts enabled for selected farms.")
+
+    @admin.action(
+        description="BULK ACTION: Disable Joint Accounts (Enforce strict liability)"
+    )
+    def disable_joint_accounts(self, request, queryset):
+        queryset.update(allows_joint_accounts=False)
+        self.message_user(request, "Strict liability enforced for selected farms.")
 
     list_display = (
         "id",
@@ -91,7 +127,12 @@ class FarmAdmin(admin.ModelAdmin):
         "get_volunteer_count",
     )
 
-    inlines = [WorkCommitmentInline, CropInline, ComplianceFormInline]
+    inlines = [
+        FarmProfileInline,
+        WorkCommitmentInline,
+        CropInline,
+        ComplianceFormInline,
+    ]
 
     fieldsets = (
         (
@@ -158,6 +199,23 @@ class FarmAdmin(admin.ModelAdmin):
 @admin.register(ComplianceForm)
 class ComplianceFormAdmin(admin.ModelAdmin):
     """Global view of all legal documents across all farms."""
+
+    actions = ["bulk_activate", "bulk_deactivate", "clear_expirations"]
+
+    @admin.action(description="BULK ACTION: Activate selected legal forms")
+    def bulk_activate(self, request, queryset):
+        updated = queryset.update(is_active=True)
+        self.message_user(request, f"Successfully activated {updated} forms.")
+
+    @admin.action(description="BULK ACTION: Archive (Deactivate) selected legal forms")
+    def bulk_deactivate(self, request, queryset):
+        updated = queryset.update(is_active=False)
+        self.message_user(request, f"Successfully archived {updated} forms.")
+
+    @admin.action(description="BULK ACTION: Clear expirations (Set to never expire)")
+    def clear_expirations(self, request, queryset):
+        updated = queryset.update(does_expire=False, expiration_date=None)
+        self.message_user(request, f"Cleared expiration dates for {updated} forms.")
 
     list_display = (
         "id",
@@ -246,3 +304,54 @@ class WorkCommitmentAdmin(admin.ModelAdmin):
     list_filter = ("farm",)
     search_fields = ("name", "farm__name")
     autocomplete_fields = ["farm"]
+
+
+# -----------------------------------------------------------------------------
+# 5. GLOBAL DIRECTORY SWITCHBOARD
+# -----------------------------------------------------------------------------
+@admin.register(FarmProfile)
+class FarmProfileAdmin(admin.ModelAdmin):
+    """A master switchboard to manage public visibility for all farms at once."""
+
+    list_display = ("farm", "is_public", "is_accepting_volunteers", "short_description")
+    list_display_links = ("farm",)
+
+    # This allows you to toggle 100 farms to public/private right from the list view
+    list_editable = ("is_public", "is_accepting_volunteers", "short_description")
+    list_per_page = 200
+    save_on_top = True
+    list_select_related = ("farm",)
+
+    class Media:
+        css = {"all": ("css/admin_dense.css",)}
+
+    list_filter = ("is_public", "is_accepting_volunteers")
+    search_fields = ("farm__name", "short_description", "tags")
+    autocomplete_fields = ["farm"]
+
+    actions = ["make_public", "make_private", "open_applications", "close_applications"]
+
+    @admin.action(description="BULK ACTION: Publish to Public Directory")
+    def make_public(self, request, queryset):
+        updated = queryset.update(is_public=True)
+        self.message_user(request, f"Published {updated} farms to the directory.")
+
+    @admin.action(description="BULK ACTION: Hide from Public Directory")
+    def make_private(self, request, queryset):
+        updated = queryset.update(is_public=False)
+        self.message_user(request, f"Hid {updated} farms from the directory.")
+
+    @admin.action(description="BULK ACTION: Open for Volunteer Applications")
+    def open_applications(self, request, queryset):
+        updated = queryset.update(is_accepting_volunteers=True)
+        self.message_user(request, f"Opened applications for {updated} farms.")
+
+    @admin.action(description="BULK ACTION: Close Volunteer Applications")
+    def close_applications(self, request, queryset):
+        updated = queryset.update(is_accepting_volunteers=False)
+        self.message_user(request, f"Closed applications for {updated} farms.")
+
+@admin.register(FarmImage)
+class FarmImageAdmin(admin.ModelAdmin):
+    list_display = ("id", "profile", "uploaded_at")
+    list_filter = ("profile__farm", "uploaded_at")

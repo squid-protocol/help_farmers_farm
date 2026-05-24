@@ -84,24 +84,36 @@ class CustomUserAdmin(UserAdmin):
         "mark_email_verified",
         "mark_as_legacy_friend",
         "mark_as_active_volunteer",
+        "bulk_deactivate_users",
+        "bulk_activate_users",
     ]
 
-    @admin.action(description="BULK ACTION: Mark selected as Email Verified")
+    @admin.action(description="📧 BULK ACTION: Mark selected as Email Verified")
     def mark_email_verified(self, request, queryset):
         updated = queryset.update(is_email_verified=True)
         self.message_user(request, f"Successfully verified {updated} users.")
 
-    @admin.action(description="BULK ACTION: Downgrade Role to Friend (Legacy)")
+    @admin.action(description="📉 BULK ACTION: Downgrade Role to Friend (Legacy)")
     def mark_as_legacy_friend(self, request, queryset):
         updated = queryset.update(role="friend")
         self.message_user(request, f"Successfully changed {updated} users to Friend.")
 
-    @admin.action(description="BULK ACTION: Upgrade Role to Active Volunteer")
+    @admin.action(description="📈 BULK ACTION: Upgrade Role to Active Volunteer")
     def mark_as_active_volunteer(self, request, queryset):
         updated = queryset.update(role="volunteer")
         self.message_user(
             request, f"Successfully changed {updated} users to Active Volunteer."
         )
+
+    @admin.action(description="🛑 POWER MOVE: Deactivate (Lock Out) Users")
+    def bulk_deactivate_users(self, request, queryset):
+        updated = queryset.update(is_active=False)
+        self.message_user(request, f"Successfully locked out {updated} users.")
+
+    @admin.action(description="✅ POWER MOVE: Activate Users")
+    def bulk_activate_users(self, request, queryset):
+        updated = queryset.update(is_active=True)
+        self.message_user(request, f"Successfully activated {updated} users.")
 
     @admin.display(description="Farms")
     def get_associated_farms(self, obj):
@@ -174,6 +186,32 @@ class FarmMembershipAdmin(admin.ModelAdmin):
     )
     autocomplete_fields = ["user", "farm"]
 
+    actions = [
+        "bulk_approve",
+        "bulk_revoke",
+        "bulk_waiver_bypass",
+    ]
+
+    @admin.action(description="✅ BULK ACTION: Approve Pending Roster Applications")
+    def bulk_approve(self, request, queryset):
+        updated = queryset.update(is_approved=True)
+        self.message_user(
+            request, f"Approved {updated} volunteer applications across the platform."
+        )
+
+    @admin.action(description="🛑 BULK ACTION: Revoke Approvals (Suspend)")
+    def bulk_revoke(self, request, queryset):
+        updated = queryset.update(is_approved=False)
+        self.message_user(request, f"Revoked approval for {updated} memberships.")
+
+    @admin.action(description="⚠️ POWER MOVE: Manually Override/Bypass Legal Waiver")
+    def bulk_waiver_bypass(self, request, queryset):
+        updated = queryset.update(agreed_to_waiver=True)
+        self.message_user(
+            request,
+            f"Bypassed waiver requirements for {updated} memberships. WARNING: This circumvents the WORM audit log.",
+        )
+
 
 # -----------------------------------------------------------------------------
 # 4. WORM AUDIT LOG (LEGAL VAULT)
@@ -182,6 +220,7 @@ class FarmMembershipAdmin(admin.ModelAdmin):
 class FormSignatureAdmin(admin.ModelAdmin):
     """
     A dedicated, highly-restricted vault for viewing all legal signatures globally.
+    No mass actions are permitted here by design to preserve audit integrity.
     """
 
     list_display = (
