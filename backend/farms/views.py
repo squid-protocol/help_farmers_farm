@@ -11,7 +11,7 @@ from django.core.cache import cache
 from datetime import timedelta
 
 # --- Local App Imports (Farms) ---
-from .models import Farm, Crop, WorkCommitment, ComplianceForm, FarmProfile
+from .models import Farm, Crop, WorkCommitment, ComplianceForm, FarmProfile, FarmImage
 from .forms import (
     CropForm,
     VolunteerCreationForm,
@@ -52,9 +52,6 @@ def manager_dashboard(request):
     commitment_form = WorkCommitmentForm()
     farm_form = FarmSettingsForm(instance=my_farm)
     compliance_setup_form = ComplianceFormSetup(farm=my_farm)
-
-    profile, _ = FarmProfile.objects.get_or_create(farm=my_farm)
-    profile_form = FarmProfileForm(instance=profile)
 
     if request.method == "POST":
         # --- THE READ-ONLY TOLLBOOTH (Anti-Spam & Security Lock) ---
@@ -149,15 +146,6 @@ def manager_dashboard(request):
                 messages.success(
                     request, f"Compliance Form '{new_cform.name}' added successfully!"
                 )
-                return redirect("manager_dashboard")
-
-        elif "submit_profile" in request.POST:
-            profile_form = FarmProfileForm(
-                request.POST, request.FILES, instance=profile
-            )
-            if profile_form.is_valid():
-                profile_form.save()
-                messages.success(request, "Public Profile updated successfully!")
                 return redirect("manager_dashboard")
 
     # Fetch data using the membership bridge
@@ -303,7 +291,6 @@ def manager_dashboard(request):
         "grouped_data": grouped_data,
         "expected_pct": expected_pct,
         "farm_form": farm_form,
-        "profile_form": profile_form,
         "crop_form": crop_form,
         "volunteer_form": volunteer_form,
         "commitment_form": commitment_form,
@@ -318,6 +305,49 @@ def manager_dashboard(request):
         "recent_notes": recent_notes,
     }
     return render(request, "farms/manager_dashboard.html", context)
+
+
+@login_required
+@user_passes_test(is_manager, login_url="/log-hours/")
+def edit_farm_profile_view(request):
+    """Dedicated page for managing the Public Directory profile."""
+    my_farm = request.active_farm
+    profile, _ = FarmProfile.objects.get_or_create(farm=my_farm)
+
+    if request.method == "POST":
+        
+        # Action 1: Handle an image deletion request
+        if "delete_image" in request.POST:
+            image_id = request.POST.get("delete_image")
+            FarmImage.objects.filter(id=image_id, profile=profile).delete()
+            messages.success(request, "Image removed from gallery.")
+            return redirect("edit_farm_profile")
+
+        # Action 2: Handle the main profile save
+        profile_form = FarmProfileForm(request.POST, request.FILES, instance=profile)
+        if profile_form.is_valid():
+            profile_form.save()
+
+            # Handle the multi-file gallery uploads
+            for uploaded_file in request.FILES.getlist('gallery_uploads'):
+                # Enforce a strict 5-photo maximum to save server space
+                if profile.gallery_images.count() < 5:
+                    FarmImage.objects.create(profile=profile, image=uploaded_file)
+                else:
+                    messages.warning(request, "Gallery limit reached. Only the first 5 photos were kept.")
+                    break
+
+            messages.success(request, "Public Profile updated successfully!")
+            return redirect("edit_farm_profile")
+    else:
+        profile_form = FarmProfileForm(instance=profile)
+
+    context = {
+        "farm": my_farm,
+        "profile_form": profile_form,
+        "gallery_images": profile.gallery_images.all(),
+    }
+    return render(request, "farms/edit_farm_profile.html", context)
 
 
 @login_required

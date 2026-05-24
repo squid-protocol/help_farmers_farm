@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% load tailwind_filters %}
+
+{% block content %}
+<link href="[https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css](https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css)" rel="stylesheet" type="text/css" />
+<script src="[https://cdn.jsdelivr.net/npm/@yaireo/tagify](https://cdn.jsdelivr.net/npm/@yaireo/tagify)"></script>
+
+<div class="mb-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">⚙️ Manager Command Center</h1>
+            <p class="text-gray-500 mt-1">🌾 {{ farm.name }} - Setup & Management</p>
+        </div>
+    </div>
+</div>
+
+<div class="mb-8 border-b border-gray-200">
+    <nav class="-mb-px flex space-x-4 md:space-x-6 overflow-x-auto custom-scrollbar" aria-label="Tabs">
+        <a href="{% url 'manager_dashboard' %}#overview" class="command-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            📊 Overview
+        </a>
+        <a href="{% url 'manager_dashboard' %}#progress" class="command-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            📈 Progress
+        </a>
+        <a href="{% url 'manager_dashboard' %}#comms" class="command-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            📢 Comms
+        </a>
+        <a href="{% url 'manager_dashboard' %}#crops" class="command-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            🌱 Crops
+        </a>
+        <a href="{% url 'volunteer_roster' %}" class="command-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            👥 Roster
+        </a>
+        <a href="{% url 'manager_dashboard' %}#admin" class="command-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            ⚖️ Waivers
+        </a>
+        <button class="command-tab active-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-purple-500 text-purple-600 cursor-default">
+            🌍 Public Profile
+        </button>
+    </nav>
+</div>
+
+<div class="max-w-4xl">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800 p-4 rounded-r-lg shadow-sm font-medium mb-6">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-100 p-8 rounded-2xl shadow-sm mb-8">
+        <h2 class="text-2xl font-extrabold text-purple-900 mb-3 flex items-center gap-2">
+            <span>🌍</span> Welcome to the Directory
+        </h2>
+        <p class="text-purple-800 leading-relaxed mb-4">
+            By default, your farm is completely hidden and unsearchable. If you choose to flip the switch and go public, anyone searching for volunteer opportunities in your area will be able to see this profile.
+        </p>
+        <p class="text-purple-800 leading-relaxed font-bold">
+            Our motto is "Helping Farmers Farm." If you just want to use this page as a free billboard to drive traffic to your real website or social media, that's perfectly fine with us! We're happy to connect you.
+        </p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm space-y-8">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-inner">
+            <div class="flex items-center justify-between">
+                <div>
+                    <label class="font-bold text-gray-900 text-lg">Public Directory Status</label>
+                    <p class="text-sm text-gray-500">Toggle to appear in search results.</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    {{ profile_form.is_public }}
+                    <div class="w-14 h-7 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-purple-600"></div>
+                </label>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <div>
+                    <label class="font-bold text-gray-900 text-lg">Accepting Volunteers?</label>
+                    <p class="text-sm text-gray-500">Allows users to click "Request to Join".</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    {{ profile_form.is_accepting_volunteers }}
+                    <div class="w-14 h-7 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-600"></div>
+                </label>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <h3 class="text-xl font-bold text-gray-800 border-b border-gray-100 pb-2">The Pitch</h3>
+            
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Short Description / Hook</label>
+                {{ profile_form.short_description|as_crispy_field }}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Searchable Tags</label>
+                {{ profile_form.tags }}
+                <p class="text-xs text-gray-500 mt-1">Type a tag (e.g., "USDA Organic", "No-Till") and press Enter.</p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">About Us</label>
+                {{ profile_form.about_us }}
+                <link rel="stylesheet" type="text/css" href="[https://unpkg.com/trix@2.0.8/dist/trix.css](https://unpkg.com/trix@2.0.8/dist/trix.css)">
+                <script type="text/javascript" src="[https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js](https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js)"></script>
+                <trix-editor input="id_about_us" class="bg-white min-h-[150px] border-gray-300 rounded-lg shadow-sm"></trix-editor>
+            </div>
+        </div>
+
+        <div class="space-y-6 pt-6 border-t border-gray-100">
+            <h3 class="text-xl font-bold text-gray-800 border-b border-gray-100 pb-2">Expectations & Perks</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Volunteer Perks</label>
+                    {{ profile_form.volunteer_perks }}
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Physical Requirements</label>
+                    {{ profile_form.physical_requirements }}
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-6 pt-6 border-t border-gray-100">
+            <div class="flex justify-between items-end border-b border-gray-100 pb-2">
+                <h3 class="text-xl font-bold text-gray-800">Action Shot Gallery</h3>
+                <span class="text-sm font-bold {% if gallery_images.count == 5 %}text-red-500{% else %}text-gray-500{% endif %}">
+                    {{ gallery_images.count }} / 5 Photos
+                </span>
+            </div>
+            
+            {% if gallery_images %}
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                {% for img in gallery_images %}
+                <div class="relative group aspect-square rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+                    <img src="{{ img.image.url }}" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button type="submit" name="delete_image" value="{{ img.id }}" class="text-white bg-red-600 hover:bg-red-700 p-2 rounded-full shadow-lg transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if gallery_images.count < 5 %}
+            <div class="bg-gray-50 border border-dashed border-gray-300 p-4 rounded-xl text-center">
+                <label class="block text-sm font-bold text-gray-700 mb-2">Upload New Photos</label>
+                {{ profile_form.gallery_uploads }}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="space-y-6 pt-6 border-t border-gray-100">
+            <h3 class="text-xl font-bold text-gray-800 border-b border-gray-100 pb-2">Branding & Links</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Farm Logo</label>
+                    {{ profile_form.logo|as_crispy_field }}
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Cover Photo</label>
+                    {{ profile_form.cover_photo|as_crispy_field }}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Primary Website</label>
+                    {{ profile_form.website_url|as_crispy_field }}
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Facebook URL</label>
+                    {{ profile_form.facebook_url|as_crispy_field }}
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Instagram URL</label>
+                    {{ profile_form.instagram_url|as_crispy_field }}
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-6 border-t border-gray-200">
+            <button type="submit" class="w-full md:w-auto px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-lg transition text-lg">
+                Save & Update Profile
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Initialize Tagify for the tags field
+    document.addEventListener('DOMContentLoaded', function() {
+        var input = document.querySelector('.tagify-input');
+        if (input) {
+            new Tagify(input, {
+                originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(',')
+            });
+        }
+        
+        // Hide default crispy checkboxes since we built custom slider toggles
+        document.querySelectorAll('input[name="is_public"], input[name="is_accepting_volunteers"]').forEach(el => {
+            el.classList.add('sr-only', 'peer');
+        });
+    });
+</script>
+{% endblock %}
