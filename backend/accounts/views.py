@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.utils import timezone
 from accounts.models import FormSignature
 from farms.models import ComplianceForm
@@ -22,6 +22,8 @@ from .forms import VolunteerSignUpForm, FarmSignUpForm
 from .models import FarmMembership
 from farms.models import Farm
 import logging
+import plotly.graph_objects as go
+from logs.models import LogEntry
 
 from .forms import ProfileUpdateForm, AccountClaimForm
 
@@ -43,16 +45,114 @@ def profile_view(request):
     else:
         form = ProfileUpdateForm(instance=user)
 
-    # --- NEW: Fetch their signed legal documents ---
+    # 2. Fetch their signed legal documents
     signatures = (
         FormSignature.objects.filter(user=user)
         .select_related("form")
         .order_by("-signed_at")
     )
 
+    # 3. Generate Trading Card Stats
+    all_logs = LogEntry.objects.filter(volunteer=user)
+    lifetime_hours = all_logs.aggregate(total=Sum("duration_hours"))["total"] or 0
+
+    active_seasons = all_logs.dates("date_logged", "year").count()
+    total_seasons = max(user.legacy_years_volunteered + active_seasons, 1)
+    if total_seasons <= 5:
+        season_badges = "⭐" * total_seasons
+    else:
+        season_badges = f"{total_seasons}x ⭐"
+
+    total_farms_helped = all_logs.values("farm").distinct().count()
+
+    top_veggie_data = (
+        all_logs.exclude(crop__isnull=True)
+        .values("crop__crop_name")
+        .annotate(total=Sum("duration_hours"))
+        .order_by("-total")
+        .first()
+    )
+    top_veggie = top_veggie_data["crop__crop_name"] if top_veggie_data else "N/A"
+
+    activity_map = dict(LogEntry.ACTIVITY_CHOICES)
+    top_act_data = (
+        all_logs.values("activity")
+        .annotate(total=Sum("duration_hours"))
+        .order_by("-total")
+        .first()
+    )
+    top_act = (
+        activity_map.get(top_act_data["activity"], "N/A") if top_act_data else "N/A"
+    )
+
+    # 4. Lifetime Crop Chart (With Gamified Zero-State)
+    lt_crop_names = []
+    lt_hours_list = []
+    marker_color = "#10b981"
+
+    if lifetime_hours > 0:
+        lifetime_crop_data = (
+            all_logs.exclude(crop__isnull=True)
+            .values("crop__crop_name")
+            .annotate(total=Sum("duration_hours"))
+            .order_by("total")
+        )
+
+        if lifetime_crop_data:
+            lt_crop_names = [item["crop__crop_name"] for item in lifetime_crop_data]
+            lt_hours_list = [float(item["total"] or 0) for item in lifetime_crop_data]
+    else:
+        # Zero state placeholder data
+        lt_crop_names = ["Onions", "Lettuce", "Carrots", "Peppers", "Tomatoes"]
+        lt_hours_list = [0.0, 0.0, 0.0, 0.0, 0.0]
+        marker_color = "#e2e8f0"
+
+    lifetime_crop_chart_html = None
+    if lt_crop_names:
+        fig_lt = go.Figure(
+            data=[
+                go.Bar(
+                    name="Lifetime Hours",
+                    y=lt_crop_names,
+                    x=lt_hours_list,
+                    orientation="h",
+                    marker_color=marker_color,
+                    hovertemplate="<b>%{y}</b><br>Lifetime Hours: %{x} hrs<extra></extra>",
+                )
+            ]
+        )
+        fig_lt.update_layout(
+            plot_bgcolor="rgba(250,250,250,1)",
+            paper_bgcolor="white",
+            margin=dict(t=30, b=30, l=10, r=20),
+            height=max(300, len(lt_crop_names) * 35 + 100),
+            showlegend=False,
+            hoverlabel=dict(bgcolor="white", font_size=13, font_color="black"),
+            xaxis=dict(
+                title="Lifetime Hours" if lifetime_hours > 0 else "0 Hours Logged",
+                showgrid=True,
+                gridcolor="rgba(200,200,200,0.3)",
+            ),
+            yaxis=dict(title="", tickfont=dict(size=12), automargin=True),
+        )
+
+        if lifetime_hours == 0:
+            fig_lt.update_xaxes(range=[0, 10])
+
+        lifetime_crop_chart_html = fig_lt.to_html(
+            full_html=False, include_plotlyjs=False
+        )
+
     context = {
         "form": form,
         "signatures": signatures,
+        "lifetime_hours": round(lifetime_hours, 1),
+        "seasons_volunteered": total_seasons,
+        "season_badges": season_badges,
+        "total_farms_helped": total_farms_helped,
+        "top_veggie": top_veggie,
+        "top_act": top_act,
+        "lifetime_crop_chart": lifetime_crop_chart_html,
     }
     return render(request, "accounts/profile.html", context)
 

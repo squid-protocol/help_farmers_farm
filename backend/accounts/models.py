@@ -43,6 +43,15 @@ class CustomUser(AbstractUser):
         default=0, help_text="Number of years volunteered prior to using this system."
     )
 
+    # --- NEW: The Farming Persona ---
+    farming_motto = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        verbose_name="Farming Motto",
+        help_text="A short blurb visible to Farm Managers about your experience or why you farm.",
+    )
+
     # --- THE SHIMS (Tricks the app into working without rewriting all templates) ---
     @property
     def farm(self):
