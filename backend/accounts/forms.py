@@ -22,6 +22,9 @@ class ProfileUpdateForm(forms.ModelForm):
             "postal_code",
             "username",
         ]
+        labels = {
+            "farming_motto": "Farming Experience & Interests",
+        }
         widgets = {
             "phone_number": forms.TextInput(attrs={"placeholder": "(555) 123-4567"}),
             "address_line1": forms.TextInput(attrs={"placeholder": "123 Harvest Lane"}),
@@ -29,6 +32,7 @@ class ProfileUpdateForm(forms.ModelForm):
             "postal_code": forms.TextInput(attrs={"placeholder": "48103"}),
         }
         help_texts = {
+            "farming_motto": "A short description about your farming experience and interests for farmers to see.",
             "phone_number": "Format: (555) 123-4567 or +15551234567",
             "address_line1": "We require a physical address to legally validate electronic signatures.",
         }
