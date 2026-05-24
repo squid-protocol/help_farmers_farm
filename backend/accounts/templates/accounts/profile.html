@@ -2,82 +2,168 @@
 {% load tailwind_filters %}
 
 {% block content %}
-<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<link href="[https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css](https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css)" rel="stylesheet">
+<script src="[https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js](https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js)"></script>
 
-<div class="max-w-2xl mx-auto mt-10 mb-20 space-y-8">
+<div class="max-w-4xl mx-auto mt-8 mb-20 px-4">
     
-    <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
-        
-        <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
-            <h2 class="text-3xl font-extrabold text-gray-900">Your Profile</h2>
-            <a href="{% url 'password_change' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg transition">
-                Change Password
-            </a>
-        </div>
+    <div class="mb-8">
+        <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight">Global Persona</h1>
+        <p class="text-lg text-gray-500 mt-2">Manage your identity and lifetime agricultural impact.</p>
+    </div>
 
-        {% if messages %}
-            {% for message in messages %}
-                <div class="bg-green-50 border border-green-200 text-green-800 p-4 rounded-lg mb-6 font-medium">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
+    <div class="mb-8 border-b border-gray-200">
+        <nav class="-mb-px flex space-x-4 md:space-x-6 overflow-x-auto custom-scrollbar" aria-label="Tabs">
+            <button onclick="switchProfileTab('persona')" id="nav-persona" class="profile-tab active-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-emerald-500 text-emerald-600">
+                🧑‍🌾 Agricultural Record
+            </button>
+            <button onclick="switchProfileTab('settings')" id="nav-settings" class="profile-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                ⚙️ Account Settings
+            </button>
+            <button onclick="switchProfileTab('vault')" id="nav-vault" class="profile-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                ⚖️ Legal Vault
+            </button>
+        </nav>
+    </div>
 
-        <div class="flex flex-col items-center mb-8">
-            <div class="relative group cursor-pointer" onclick="document.getElementById('avatar-upload').click()">
-                <img id="current-avatar" 
-                     src="{% if user.avatar %}{{ user.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.first_name|default:user.username }}&background=10b981&color=fff&size=128{% endif %}" 
-                     class="h-32 w-32 rounded-full object-cover border-4 border-emerald-500 shadow-lg">
-                
-                <div class="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span class="text-white text-sm font-bold">Change Photo</span>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl mb-6 font-medium">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div id="tab-persona" class="profile-panel block">
+        <div class="bg-white rounded-3xl border border-emerald-100 shadow-xl overflow-hidden relative mb-8">
+            <div class="h-32 bg-gradient-to-r from-emerald-600 to-teal-800 relative">
+                <div class="absolute top-4 right-6 bg-white/20 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold tracking-widest border border-white/30">
+                    OFFICIAL RECORD
                 </div>
             </div>
-            <p class="text-sm text-gray-500 mt-2">Click to update avatar</p>
-            
-            <input type="file" id="avatar-upload" class="hidden" accept="image/png, image/jpeg, image/jpg">
+
+            <div class="px-8 pb-8 relative">
+                <div class="absolute -top-16 left-8">
+                    <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}[https://ui-avatars.com/api/?name=](https://ui-avatars.com/api/?name=){{ user.first_name|default:user.username }}&background=10b981&color=fff&size=128{% endif %}" 
+                         class="w-32 h-32 rounded-2xl border-4 border-white shadow-md object-cover bg-white">
+                </div>
+                
+                <div class="mt-20">
+                    <h2 class="text-3xl font-black text-gray-900 tracking-tight">{{ user.first_name|default:user.username }} {{ user.last_name }}</h2>
+                    
+                    {% if user.farming_motto %}
+                        <p class="text-lg text-emerald-700 font-serif italic mt-2 border-l-4 border-emerald-400 pl-4">"{{ user.farming_motto }}"</p>
+                    {% else %}
+                        <p class="text-sm text-gray-400 italic mt-2">No farming motto set. <button onclick="switchProfileTab('settings')" class="text-emerald-600 hover:underline">Add one here.</button></p>
+                    {% endif %}
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10 pt-8 border-t border-gray-100">
+                    <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 text-center">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Lifetime Hours</span>
+                        <span class="text-3xl font-black text-emerald-600">{{ lifetime_hours }}</span>
+                    </div>
+
+                    <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 text-center">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Seasons</span>
+                        <span class="text-2xl font-black text-amber-500 block mt-1" title="{{ seasons_volunteered }} Seasons">{{ season_badges }}</span>
+                    </div>
+
+                    <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 text-center">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Top Crop</span>
+                        <span class="text-xl font-bold text-gray-800 flex items-center justify-center h-full pb-2">{{ top_veggie }}</span>
+                    </div>
+
+                    <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 text-center">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Farms Helped</span>
+                        <span class="text-3xl font-black text-blue-600">{{ total_farms_helped }}</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <form method="POST">
-            {% csrf_token %}
-            {{ form|crispy }}
-            <button type="submit" class="w-full mt-6 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-xl shadow transition">
-                Save Changes
-            </button>
-        </form>
+        {% if lifetime_hours == 0 %}
+        <div class="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-8 text-center shadow-sm">
+            <span class="text-4xl mb-4 block">🌱</span>
+            <h3 class="text-xl font-bold text-blue-900 mb-2">Ready to get your hands dirty?</h3>
+            <p class="text-blue-800 mb-6 max-w-lg mx-auto">Your farming record is a blank slate. Head over to the Directory to find a local farm and log your first shift to start earning experience.</p>
+            <a href="{% url 'farm_search' %}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow transition">Find a Farm</a>
+        </div>
+        {% endif %}
 
-    </div>
-
-    <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
-        <h3 class="text-2xl font-extrabold text-gray-900 mb-6">Signed Legal Documents</h3>
-        
-        {% if signatures %}
-            <ul class="divide-y divide-gray-100 border-t border-gray-100">
-                {% for sig in signatures %}
-                    <li class="py-4 flex justify-between items-center group">
-                        <div>
-                            <p class="font-bold text-gray-900 text-lg">{{ sig.form.name }}</p>
-                            <p class="text-sm text-gray-500">Signed on {{ sig.signed_at|date:"F j, Y" }}</p>
-                        </div>
-                        <button onclick="document.getElementById('doc-modal-{{ sig.id }}').showModal()" 
-                                class="px-5 py-2 bg-gray-50 border border-gray-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 text-gray-700 font-bold rounded-xl shadow-sm transition text-sm">
-                            View Document
-                        </button>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="text-gray-500 italic bg-gray-50 p-4 rounded-xl border border-gray-100 text-center">You have not signed any legal documents yet.</p>
+        {% if lifetime_crop_chart %}
+        <div class="mt-6 bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition">
+            <h3 class="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <span>🏆</span> Total Crop Experience
+            </h3>
+            <p class="text-gray-500 mb-6">Your all-time total hours dedicated to each crop across all seasons and farms.</p>
+            <div class="w-full overflow-x-auto">
+                {{ lifetime_crop_chart|safe }}
+            </div>
+        </div>
         {% endif %}
     </div>
 
-    <div class="bg-red-50 p-8 rounded-2xl border border-red-100 shadow-sm">
-        <h3 class="text-2xl font-extrabold text-red-900 mb-2">Danger Zone</h3>
-        <p class="text-red-700 mb-6">Permanently delete your account and anonymize your personal data. This will revoke your access to the farm immediately.</p>
-        <button onclick="document.getElementById('delete_account_modal').showModal()" class="bg-white border-2 border-red-200 text-red-600 hover:bg-red-600 hover:text-white font-bold py-3 px-6 rounded-xl transition">
-            Delete My Account
-        </button>
+    <div id="tab-settings" class="profile-panel hidden">
+        <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm max-w-2xl mx-auto">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
+                <h2 class="text-2xl font-extrabold text-gray-900">Account Settings</h2>
+                <a href="{% url 'password_change' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg transition">Change Password</a>
+            </div>
+
+            <div class="flex flex-col items-center mb-8">
+                <div class="relative group cursor-pointer" onclick="document.getElementById('avatar-upload').click()">
+                    <img id="current-avatar" 
+                         src="{% if user.avatar %}{{ user.avatar.url }}{% else %}[https://ui-avatars.com/api/?name=](https://ui-avatars.com/api/?name=){{ user.first_name|default:user.username }}&background=10b981&color=fff&size=128{% endif %}" 
+                         class="h-32 w-32 rounded-full object-cover border-4 border-emerald-500 shadow-lg">
+                    
+                    <div class="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span class="text-white text-sm font-bold">Change Photo</span>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-500 mt-2">Click to update avatar</p>
+                <input type="file" id="avatar-upload" class="hidden" accept="image/png, image/jpeg, image/jpg">
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <button type="submit" class="w-full mt-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow transition">Save Changes</button>
+            </form>
+        </div>
+
+        <div class="bg-red-50 p-8 rounded-2xl border border-red-100 shadow-sm max-w-2xl mx-auto mt-8">
+            <h3 class="text-xl font-extrabold text-red-900 mb-2">Danger Zone</h3>
+            <p class="text-red-700 mb-6">Permanently delete your account and anonymize your personal data. This will revoke your access to the farm immediately.</p>
+            <button onclick="document.getElementById('delete_account_modal').showModal()" class="bg-white border-2 border-red-200 text-red-600 hover:bg-red-600 hover:text-white font-bold py-3 px-6 rounded-xl transition">
+                Delete My Account
+            </button>
+        </div>
+    </div>
+
+    <div id="tab-vault" class="profile-panel hidden">
+        <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm max-w-3xl mx-auto">
+            <h2 class="text-2xl font-extrabold text-gray-900 mb-6">Signed Legal Documents</h2>
+            
+            {% if signatures %}
+                <ul class="divide-y divide-gray-100 border-t border-gray-100">
+                    {% for sig in signatures %}
+                        <li class="py-4 flex justify-between items-center group">
+                            <div>
+                                <p class="font-bold text-gray-900 text-lg">{{ sig.form.name }}</p>
+                                <p class="text-sm text-gray-500">Signed on {{ sig.signed_at|date:"F j, Y" }} @ {{ sig.form.farm.name }}</p>
+                            </div>
+                            <button onclick="document.getElementById('doc-modal-{{ sig.id }}').showModal()" 
+                                    class="px-5 py-2 bg-gray-50 border border-gray-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 text-gray-700 font-bold rounded-xl shadow-sm transition text-sm">
+                                View Document
+                            </button>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-gray-500 italic bg-gray-50 p-4 rounded-xl border border-gray-100 text-center">You have not signed any legal documents yet.</p>
+            {% endif %}
+        </div>
     </div>
 
 </div>
@@ -85,7 +171,6 @@
 <dialog id="delete_account_modal" class="p-8 rounded-2xl shadow-2xl border border-red-200 backdrop:bg-slate-900/70 w-full max-w-md">
     <h3 class="text-2xl font-bold text-red-900 mb-4">⚠️ Delete Account?</h3>
     <p class="text-gray-600 mb-6">Are you sure you want to permanently delete your account? Your personal information will be scrubbed, and you will lose access immediately. This action <strong>cannot be undone</strong>.</p>
-    
     <form action="{% url 'delete_account' %}" method="POST" class="flex justify-end gap-3">
         {% csrf_token %}
         <button type="button" onclick="document.getElementById('delete_account_modal').close()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg transition">Cancel</button>
@@ -99,26 +184,19 @@
         <h3 class="text-2xl font-bold text-gray-900">{{ sig.form.name }}</h3>
         <button onclick="document.getElementById('doc-modal-{{ sig.id }}').close()" class="text-gray-400 hover:text-gray-600 font-bold text-3xl leading-none">&times;</button>
     </div>
-    
-    <div class="h-96 overflow-y-auto bg-gray-50 p-6 md:p-8 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap font-serif border border-gray-200 rounded-xl custom-scrollbar mb-6">
-{{ sig.form.body_text }}
-    </div>
-
+    <div class="h-96 overflow-y-auto bg-gray-50 p-6 md:p-8 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap font-serif border border-gray-200 rounded-xl custom-scrollbar mb-6">{{ sig.form.body_text }}</div>
     <div class="bg-blue-50 p-5 rounded-xl border border-blue-100">
         <h4 class="text-sm font-bold text-blue-900 uppercase tracking-widest border-b border-blue-200 pb-2 mb-3">Digital Signature Receipt</h4>
         <p class="text-sm text-blue-900 mb-2"><strong>Electronically Signed By:</strong> {{ sig.digital_signature }}</p>
-        
         {% if sig.is_guardian_signature %}
-            <p class="text-sm text-blue-900 mb-2 bg-blue-100 inline-block px-2 py-1 rounded font-medium">
-                Signed on behalf of minor by: {{ sig.guardian_relationship }}
-            </p>
+            <p class="text-sm text-blue-900 mb-2 bg-blue-100 inline-block px-2 py-1 rounded font-medium">Signed on behalf of minor by: {{ sig.guardian_relationship }}</p>
         {% endif %}
-        
         <p class="text-sm text-blue-900 mb-2"><strong>Timestamp:</strong> {{ sig.signed_at|date:"F j, Y, g:i a" }}</p>
         <p class="text-xs text-blue-700 font-mono mt-4 pt-2 border-t border-blue-200/50">Audit ID: DOC-{{ sig.form.id }}-SIG-{{ sig.id }}-USR-{{ user.id }}</p>
     </div>
 </dialog>
 {% endfor %}
+
 <form id="avatar-form" action="{% url 'upload_avatar' %}" method="POST" class="hidden">
     {% csrf_token %}
     <input type="hidden" name="avatar_base64" id="avatar_base64_input">
@@ -129,11 +207,9 @@
         <div class="p-4 border-b">
             <h3 class="text-lg font-bold text-gray-800">Position and Crop</h3>
         </div>
-        
         <div class="p-4 bg-gray-900 flex justify-center" style="max-height: 400px;">
             <img id="image-to-crop" class="max-w-full max-h-full block">
         </div>
-        
         <div class="p-4 border-t flex justify-end gap-3 bg-gray-50">
             <button onclick="closeCropperModal()" class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-semibold transition">Cancel</button>
             <button onclick="cropAndSubmit()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-semibold shadow-sm transition">Save Avatar</button>
@@ -142,32 +218,47 @@
 </div>
 
 <script>
+    function switchProfileTab(tabId) {
+        document.querySelectorAll('.profile-panel').forEach(panel => {
+            panel.classList.remove('block');
+            panel.classList.add('hidden');
+        });
+        document.querySelectorAll('.profile-tab').forEach(tab => {
+            tab.className = "profile-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300";
+        });
+        document.getElementById('tab-' + tabId).classList.remove('hidden');
+        document.getElementById('tab-' + tabId).classList.add('block');
+        document.getElementById('nav-' + tabId).className = "profile-tab active-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-emerald-500 text-emerald-600";
+        window.history.replaceState(null, null, '#' + tabId);
+        if (tabId === 'persona') {
+            window.dispatchEvent(new Event('resize'));
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        if(window.location.hash) {
+            const tabId = window.location.hash.substring(1);
+            if(document.getElementById('nav-' + tabId)) {
+                switchProfileTab(tabId);
+            }
+        }
+    });
+
     let cropper = null;
     const modal = document.getElementById('cropper-modal');
     const imageToCrop = document.getElementById('image-to-crop');
     const fileInput = document.getElementById('avatar-upload');
 
-    // Triggered when user selects an image
     fileInput.addEventListener('change', function(e) {
         const files = e.target.files;
         if (files && files.length > 0) {
             const file = files[0];
             const reader = new FileReader();
-            
             reader.onload = function(event) {
                 imageToCrop.src = event.target.result;
                 modal.classList.remove('hidden');
-                
                 if (cropper) { cropper.destroy(); }
-                
-                // Spin up Cropper.js locked to a perfect square
-                cropper = new Cropper(imageToCrop, {
-                    aspectRatio: 1, 
-                    viewMode: 1,    
-                    guides: true,
-                    background: false,
-                    autoCropArea: 0.8,
-                });
+                cropper = new Cropper(imageToCrop, { aspectRatio: 1, viewMode: 1, guides: true, background: false, autoCropArea: 0.8 });
             };
             reader.readAsDataURL(file);
         }
@@ -176,25 +267,13 @@
 
     function closeCropperModal() {
         modal.classList.add('hidden');
-        if (cropper) {
-            cropper.destroy();
-            cropper = null;
-        }
+        if (cropper) { cropper.destroy(); cropper = null; }
     }
 
     function cropAndSubmit() {
         if (!cropper) return;
-        
-        // Force the output to be exactly 300x300 pixels
-        const canvas = cropper.getCroppedCanvas({
-            width: 300,
-            height: 300,
-        });
-        
-        // Convert to lightweight Base64 string
+        const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
         const base64String = canvas.toDataURL('image/jpeg', 0.8);
-        
-        // Load the payload and fire it to Django
         document.getElementById('avatar_base64_input').value = base64String;
         document.getElementById('avatar-form').submit();
     }
