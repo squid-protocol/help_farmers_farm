@@ -5,9 +5,24 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    labels:
+      - "dependencies"
+      - "python"
     
+  # Maintain Tailwind/Node dependencies (package.json)
+  - package-ecosystem: "npm"
+    directory: "/theme/static_src"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "frontend"
+
   # Maintain GitHub Actions dependencies
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    labels:
+      - "dependencies"
+      - "actions"
