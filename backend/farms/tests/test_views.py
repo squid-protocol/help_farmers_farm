@@ -1313,7 +1313,7 @@ class PublicDirectoryTests(TestCase):
             volunteer=self.volunteer,
             crop=self.crop,
             duration_hours=5.5,
-            activity="harvesting",
+            activity="H",
             date_logged="2026-05-20",
         )
 
