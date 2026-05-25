@@ -47,7 +47,9 @@
                     </div>
 
                     <div class="p-6 pt-10 flex-grow flex flex-col">
-                        <h2 class="text-xl font-extrabold text-gray-900">{{ farm.name }}</h2>
+                        <h2 class="text-xl font-extrabold text-gray-900">
+                            <a href="{% url 'public_farm_detail' farm.id %}" class="hover:text-emerald-600 transition">{{ farm.name }}</a>
+                        </h2>
                         <p class="text-sm text-gray-500 mt-1">{{ farm.address|default:"Location not provided" }}</p>
                         
                         {% if farm.profile.short_description %}

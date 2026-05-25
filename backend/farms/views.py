@@ -8,7 +8,7 @@ from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.utils import timezone
 from django.core.cache import cache
-from datetime import timedelta
+import json  # Ensure this is imported at the top of your file
 
 # --- Local App Imports (Farms) ---
 from .models import Farm, Crop, WorkCommitment, ComplianceForm, FarmProfile, FarmImage
@@ -315,7 +315,7 @@ def edit_farm_profile_view(request):
     profile, _ = FarmProfile.objects.get_or_create(farm=my_farm)
 
     if request.method == "POST":
-        
+
         # Action 1: Handle an image deletion request
         if "delete_image" in request.POST:
             image_id = request.POST.get("delete_image")
@@ -329,12 +329,15 @@ def edit_farm_profile_view(request):
             profile_form.save()
 
             # Handle the multi-file gallery uploads
-            for uploaded_file in request.FILES.getlist('gallery_uploads'):
+            for uploaded_file in request.FILES.getlist("gallery_uploads"):
                 # Enforce a strict 5-photo maximum to save server space
                 if profile.gallery_images.count() < 5:
                     FarmImage.objects.create(profile=profile, image=uploaded_file)
                 else:
-                    messages.warning(request, "Gallery limit reached. Only the first 5 photos were kept.")
+                    messages.warning(
+                        request,
+                        "Gallery limit reached. Only the first 5 photos were kept.",
+                    )
                     break
 
             messages.success(request, "Public Profile updated successfully!")
@@ -678,7 +681,14 @@ def farm_search_view(request):
     farms = Farm.objects.filter(profile__is_public=True).select_related("profile")
 
     if query:
-        farms = farms.filter(name__icontains=query)
+        # Use Q objects to search across multiple fields at once!
+        farms = farms.filter(
+            Q(name__icontains=query)
+            | Q(address__icontains=query)
+            | Q(profile__short_description__icontains=query)
+            | Q(profile__tags__icontains=query)
+            | Q(profile__volunteer_perks__icontains=query)
+        ).distinct()
 
     farms = farms[:15]  # Limit results to keep UI fast
 
@@ -855,19 +865,94 @@ def live_stats_fragment(request):
     stats = cache.get("landing_page_stats")
 
     if not stats:
-        thirty_days_ago = timezone.now() - timedelta(days=30)
+        current_year = timezone.now().year
+
+        # 1. Baseline filters to ignore noise
+        real_farms = Farm.objects.exclude(name__icontains="test")
+        real_users = User.objects.exclude(username__icontains="test")
 
         stats = {
-            "total_farms": Farm.objects.count(),
-            "total_accounts": User.objects.count(),
+            "total_farms": real_farms.count(),
+            "searching_farms": real_farms.filter(
+                profile__is_accepting_volunteers=True, profile__is_public=True
+            ).count(),
             "active_volunteers": LogEntry.objects.filter(
-                date_logged__gte=thirty_days_ago
+                date_logged__year=current_year, volunteer__in=real_users
             )
             .values("volunteer")
             .distinct()
             .count(),
+            # Count every approved relationship between a real volunteer and a real farm
+            "connections_made": FarmMembership.objects.filter(
+                is_approved=True,
+                user__role="volunteer",
+                user__in=real_users,
+                farm__in=real_farms,
+            ).count(),
         }
 
         cache.set("landing_page_stats", stats, 300)
 
     return render(request, "fragments/live_stats.html", {"stats": stats})
+
+
+@login_required
+def public_farm_detail_view(request, farm_id):
+    """Path 3: The Public Profile & Historical Impact Report"""
+
+    # 1. Fetch the farm ONLY if they are opted into the public directory
+    farm = get_object_or_404(Farm, id=farm_id, profile__is_public=True)
+    profile = farm.profile
+
+    # 2. Gather top-level historical impact data
+    logs = LogEntry.objects.filter(farm=farm)
+    total_hours = logs.aggregate(total=Sum("duration_hours"))["total"] or 0
+    active_volunteers = logs.values("volunteer").distinct().count()
+
+    # 3. Build the Stacked Bar Chart Data (Crops vs Activities)
+    activity_choices = dict(LogEntry._meta.get_field("activity").choices)
+    raw_data = logs.values("crop__crop_name", "activity").annotate(
+        total_hours=Sum("duration_hours")
+    )
+
+    chart_data = {}
+    crop_names_set = set()
+
+    for row in raw_data:
+        crop_name = row["crop__crop_name"] or "General/Facilities"
+        activity_label = str(activity_choices.get(row["activity"], "Other"))
+        hours = float(row["total_hours"])
+
+        crop_names_set.add(crop_name)
+        if activity_label not in chart_data:
+            chart_data[activity_label] = {}
+        chart_data[activity_label][crop_name] = hours
+
+    # Sort crops alphabetically for a clean X-axis
+    crop_names = sorted(list(crop_names_set))
+    plotly_traces = []
+
+    # Assign distinct colors for different farm activities
+    colors = ["#059669", "#3b82f6", "#f59e0b", "#8b5cf6", "#ec4899", "#64748b"]
+
+    for idx, (activity, crop_dict) in enumerate(chart_data.items()):
+        y_values = [crop_dict.get(crop, 0) for crop in crop_names]
+        plotly_traces.append(
+            {
+                "name": activity,
+                "x": crop_names,
+                "y": y_values,
+                "type": "bar",
+                "marker": {"color": colors[idx % len(colors)]},
+            }
+        )
+
+    context = {
+        "farm": farm,
+        "profile": profile,
+        "total_hours": total_hours,
+        "active_volunteers": active_volunteers,
+        "plotly_traces_json": json.dumps(plotly_traces),
+    }
+
+    return render(request, "farms/public_farm_detail.html", context)

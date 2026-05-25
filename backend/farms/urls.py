@@ -55,6 +55,11 @@ urlpatterns = [
         "request-join/<int:farm_id>/", views.request_join_farm_view, name="request_join"
     ),
     path(
+        "directory/<int:farm_id>/",
+        views.public_farm_detail_view,
+        name="public_farm_detail",
+    ),
+    path(
         "approve-join/<int:membership_id>/",
         views.approve_membership_view,
         name="approve_join",
