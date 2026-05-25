@@ -336,24 +336,41 @@ class ComplianceFormSetup(forms.ModelForm):
             self.fields["assigned_users"].queryset = valid_users
 
 
+# 1. Custom Widget to bypass Django's ValueError
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
+# 2. Custom field to safely handle a list of files
+class MultipleFileField(forms.FileField):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("widget", MultipleFileInput())
+        super().__init__(*args, **kwargs)
+
+    def clean(self, data, initial=None):
+        single_file_clean = super().clean
+        if isinstance(data, (list, tuple)):
+            # Clean each file individually
+            return [single_file_clean(d, initial) for d in data]
+        else:
+            return [single_file_clean(data, initial)] if data else []
+
+
 class FarmProfileForm(forms.ModelForm):
-    # THE FIX: These must sit ABOVE the Meta class to override strict validation
+    # These must sit ABOVE the Meta class to override strict validation
     is_public = forms.BooleanField(required=False)
     is_accepting_volunteers = forms.BooleanField(required=False)
 
-    # Custom multiple file upload field for the gallery
-    gallery_uploads = forms.FileField(
-        widget=forms.ClearableFileInput(
+    # 3. Use the new custom field and widget (No 'multiple' flag in attrs!)
+    gallery_uploads = MultipleFileField(
+        widget=MultipleFileInput(
             attrs={
-                "class": "bg-white border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2 cursor-pointer focus:outline-none"
+                "class": "bg-white border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2 cursor-pointer focus:outline-none",
             }
         ),
         required=False,
         help_text="Upload up to 5 action shots of your farm. (JPG or PNG)",
     )
-
-    # THE FIX: Explicitly tell the widget it is allowed to accept multiple files
-    gallery_uploads.widget.allow_multiple_selected = True
 
     # We use a standard text input for tags, which Tagify will hijack on the frontend
     tags = forms.CharField(
