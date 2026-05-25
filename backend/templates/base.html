@@ -65,9 +65,15 @@
                         {% endif %}
 
                         <a href="{% url 'profile' %}" class="flex items-center gap-2 hover:opacity-80 transition-opacity ml-2 border-l border-gray-200 pl-4" title="View Global Persona">
+<<<<<<< Updated upstream
                             <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.first_name|default:user.username }}&background=10b981&color=fff&size=64{% endif %}"
                                 class="w-8 h-8 rounded-full object-cover border border-emerald-500 shadow-sm" alt="{{ user.username }}">
                             <span class="text-sm font-bold text-gray-900">{{ user.username }}</span>
+=======
+                            <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.first_name|default:user.username }}&background=10b981&color=fff&size=64{% endif %}" 
+                                 class="w-8 h-8 rounded-full object-cover border border-emerald-500 shadow-sm" alt="{{ user.username }}">
+                            <span class="hidden sm:block text-sm font-bold text-gray-900">{{ user.username }}</span>
+>>>>>>> Stashed changes
                         </a>
                         
                         <form action="{% url 'logout' %}" method="post" class="m-0">
