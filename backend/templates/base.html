@@ -11,18 +11,21 @@
 </head>
 <body class="bg-white text-gray-800 min-h-screen flex flex-col">
 
-    <nav class="bg-white border-b border-gray-200 shadow-sm">
+    <nav class="bg-white border-b border-gray-200 shadow-sm relative z-50">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 
-                <div class="flex-shrink-0 flex items-center gap-4">
+                <div class="flex-shrink-0 flex items-center gap-3 sm:gap-4">
                     <div class="flex items-center gap-2">
                         <span class="text-2xl">🌾</span>
-                        <a href="/" class="text-xl font-bold text-green-700 tracking-tight hover:text-green-800">Helping Farmers Farm</a>
+                        <a href="/" class="text-lg md:text-xl font-bold text-green-700 tracking-tight hover:text-green-800 leading-tight">
+                            <span class="hidden sm:inline">Helping Farmers Farm</span>
+                            <span class="sm:hidden">HFF</span>
+                        </a>
                     </div>
 
                     {% if request.user.is_authenticated and request.user_farms %}
-                        <div class="hidden sm:block border-l border-gray-300 pl-4">
+                        <div class="border-l border-gray-300 pl-3 sm:pl-4 hidden md:block">
                             {% if request.user_farms|length > 1 %}
                                 <form action="{% url 'switch_active_farm' %}" method="POST" class="m-0">
                                     {% csrf_token %}
@@ -44,16 +47,14 @@
                     {% endif %}
                 </div>
 
-                <div class="flex items-center space-x-6">
+                <div class="hidden md:flex items-center space-x-6">
                     {% if user.is_authenticated %}
-                        
                         {% if request.resolver_match.url_name != 'log_hours' and request.resolver_match.url_name != 'farm_impact' %}
                             <a href="{% url 'farm_search' %}" class="text-blue-600 hover:text-blue-800 font-bold transition flex items-center gap-1">🔎 Find Farms</a>
                         {% endif %}
 
                         {% if request.active_farm %}
                             <a href="{% url 'log_hours' %}" class="text-gray-600 hover:text-emerald-600 font-medium transition">Log Hours</a>
-                            
                             <a href="{% url 'farm_impact' %}" class="text-gray-600 hover:text-emerald-600 font-medium transition flex items-center gap-1">
                                 📊 Farm Impact
                             </a>
@@ -66,7 +67,7 @@
                         <a href="{% url 'profile' %}" class="flex items-center gap-2 hover:opacity-80 transition-opacity ml-2 border-l border-gray-200 pl-4" title="View Global Persona">
                             <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.first_name|default:user.username }}&background=10b981&color=fff&size=64{% endif %}"
                                 class="w-8 h-8 rounded-full object-cover border border-emerald-500 shadow-sm" alt="{{ user.username }}">
-                            <span class="hidden sm:block text-sm font-bold text-gray-900">{{ user.username }}</span>
+                            <span class="text-sm font-bold text-gray-900">{{ user.username }}</span>
                         </a>
                         
                         <form action="{% url 'logout' %}" method="post" class="m-0">
@@ -78,7 +79,74 @@
                         <a href="{% url 'signup_gateway' %}" class="bg-emerald-100 text-emerald-800 font-bold px-4 py-2 rounded-lg hover:bg-emerald-200 transition">Sign Up</a>
                     {% endif %}
                 </div>
+
+                <div class="flex items-center md:hidden">
+                    <button id="mobile-menu-btn" class="text-gray-600 hover:text-emerald-600 focus:outline-none p-2">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
             </div>
+        </div>
+
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100 px-4 py-4 space-y-3 shadow-lg absolute w-full left-0">
+            {% if user.is_authenticated %}
+                <div class="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
+                    <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}[https://ui-avatars.com/api/?name=](https://ui-avatars.com/api/?name=){{ user.first_name|default:user.username }}&background=10b981&color=fff&size=64{% endif %}"
+                         class="w-10 h-10 rounded-full object-cover border border-emerald-500 shadow-sm" alt="{{ user.username }}">
+                    <div>
+                        <p class="text-sm font-bold text-gray-900">{{ user.first_name|default:user.username }} {{ user.last_name }}</p>
+                        <a href="{% url 'profile' %}" class="text-xs text-emerald-600 font-medium hover:underline">View Profile</a>
+                    </div>
+                </div>
+
+                {% if request.user_farms %}
+                    <div class="mb-4 pb-4 border-b border-gray-100">
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Active Farm</p>
+                        {% if request.user_farms|length > 1 %}
+                            <form action="{% url 'switch_active_farm' %}" method="POST" class="m-0">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.path }}">
+                                <select name="farm_id" onchange="this.form.submit()" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm font-bold rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 shadow-sm">
+                                    {% for farm in request.user_farms %}
+                                        <option value="{{ farm.id }}" {% if farm.id == request.active_farm.id %}selected{% endif %}>
+                                            {{ farm.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                        {% else %}
+                            <span class="block text-sm font-bold text-gray-600 bg-gray-100 px-3 py-2 rounded-lg border border-gray-200 shadow-sm">
+                                {{ request.active_farm.name }}
+                            </span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                {% if request.resolver_match.url_name != 'log_hours' and request.resolver_match.url_name != 'farm_impact' %}
+                    <a href="{% url 'farm_search' %}" class="block text-blue-600 hover:bg-blue-50 font-bold px-3 py-2 rounded-lg transition">🔎 Find Farms</a>
+                {% endif %}
+
+                {% if request.active_farm %}
+                    <a href="{% url 'log_hours' %}" class="block text-gray-700 hover:bg-gray-50 hover:text-emerald-600 font-medium px-3 py-2 rounded-lg transition">Log Hours</a>
+                    <a href="{% url 'farm_impact' %}" class="block text-gray-700 hover:bg-gray-50 hover:text-emerald-600 font-medium px-3 py-2 rounded-lg transition">📊 Farm Impact</a>
+                {% endif %}
+                
+                {% if user.is_staff or user.role == 'account_manager' or user.role == 'farm_manager' %}
+                    <a href="{% url 'manager_dashboard' %}" class="block text-emerald-600 hover:bg-emerald-50 font-bold px-3 py-2 rounded-lg transition">Manage Farm</a>
+                {% endif %}
+
+                <div class="pt-4 mt-2 border-t border-gray-100">
+                    <form action="{% url 'logout' %}" method="post" class="m-0">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full text-left text-red-500 hover:bg-red-50 font-bold px-3 py-2 rounded-lg transition">Log Out</button>
+                    </form>
+                </div>
+            {% else %}
+                <a href="{% url 'login' %}" class="block text-gray-700 hover:bg-gray-50 font-medium px-3 py-2 rounded-lg transition">Log In</a>
+                <a href="{% url 'signup_gateway' %}" class="block bg-emerald-100 text-emerald-800 text-center font-bold px-4 py-3 mt-2 rounded-xl hover:bg-emerald-200 transition">Sign Up for Free</a>
+            {% endif %}
         </div>
     </nav>
 
@@ -94,7 +162,8 @@
                 <a href="{% url 'about' %}" class="text-gray-500 hover:text-emerald-600 font-medium transition">About Us</a>
                 <a href="{% url 'faq' %}" class="text-gray-500 hover:text-emerald-600 font-medium transition">FAQ</a>
                 <a href="{% url 'contact' %}" class="text-gray-500 hover:text-emerald-600 font-medium transition">Contact Us</a>
-                <a href="#" class="text-gray-500 hover:text-emerald-600 font-medium transition">Privacy Policy</a>
+                <a href="{% url 'privacy' %}" class="text-gray-500 hover:text-emerald-600 font-medium transition">Privacy Policy</a>
+                <a href="{% url 'terms' %}" class="text-gray-500 hover:text-emerald-600 font-medium transition">Terms of Service</a>
             </div>
             
             <p class="text-gray-400 text-sm">
@@ -103,5 +172,17 @@
         </div>
     </footer>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            
+            if (btn && menu) {
+                btn.addEventListener('click', () => {
+                    menu.classList.toggle('hidden');
+                });
+            }
+        });
+    </script>
 </body>
 </html>
