@@ -4,6 +4,10 @@ from django.contrib.auth import get_user_model
 from farms.models import Farm, Crop, WorkCommitment, ComplianceForm, FarmProfile
 from accounts.models import FarmMembership
 from unittest.mock import patch
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.cache import cache
+from logs.models import LogEntry
+from farms.models import FarmImage
 
 User = get_user_model()
 
@@ -319,28 +323,22 @@ class ManagerDashboardActionTests(TestCase):
         # Simulating Tagify's JSON payload
         tagify_json = '[{"value":"USDA Organic"},{"value":"No-Till"}]'
 
+        # THE FIX: Point to the correct view URL
         response = self.client.post(
-            self.dashboard_url,
+            reverse("edit_farm_profile"),
             {
                 "submit_profile": "true",
                 "is_public": True,
-                # THE FIX: Simulating an unchecked box by omitting it entirely
                 "short_description": "We grow the best carrots.",
                 "about_us": "<div>Rich text content</div>",
                 "tags": tagify_json,
                 "website_url": "https://schulerfarms.com",
+                "volunteer_perks": "Free vegetables.",
+                "physical_requirements": "Ability to lift 30 lbs.",
             },
         )
 
-        # THE FIX: If this fails, it will print the EXACT form errors to your console!
-        errors = (
-            response.context["profile_form"].errors
-            if response.status_code == 200
-            else ""
-        )
-        self.assertEqual(
-            response.status_code, 302, f"Form failed validation! Errors: {errors}"
-        )
+        self.assertEqual(response.status_code, 302)
 
         # Verify it actually saved to the database correctly
         profile = self.farm.profile
@@ -419,14 +417,35 @@ class ManagerDashboardActionTests(TestCase):
         """STABILITY: Ensure the backend gracefully falls back to comma-separated strings if Tagify JS fails."""
         self.client.force_login(self.manager)
 
+        # THE FIX: Point to the correct view URL
         response = self.client.post(
-            self.dashboard_url,
+            reverse("edit_farm_profile"),
             {
                 "submit_profile": "true",
                 "is_public": True,
-                "tags": "Heirloom, Hand-Picked, Pesticide Free",  # <-- Standard string, NOT JSON
+                "tags": "Heirloom, Hand-Picked, Pesticide Free",
+                "short_description": "We grow the best carrots.",
+                "about_us": "<div>Rich text content</div>",
+                "website_url": "https://schulerfarms.com",
+                "volunteer_perks": "Free vegetables.",
+                "physical_requirements": "Ability to lift 30 lbs.",
             },
         )
+
+        self.assertEqual(response.status_code, 302)
+
+        # --- BULLETPROOF DEBUG BLOCK ---
+        if response.status_code == 200:
+            print("\n" + "=" * 50)
+            print("🚨 FORM VALIDATION FAILED! 🚨")
+            # response.context is a list of dictionaries in Django tests
+            for context_dict in response.context:
+                if isinstance(context_dict, dict):
+                    for key, val in context_dict.items():
+                        if hasattr(val, "errors") and val.errors:
+                            print(f"Errors in form '{key}': {val.errors}")
+            print("=" * 50 + "\n")
+        # -------------------------------
 
         self.assertEqual(response.status_code, 302)
 
@@ -1093,3 +1112,245 @@ class VolunteerOnboardingTests(TestCase):
             response, self.volunteer.get_full_name() or self.volunteer.username
         )
         self.assertContains(response, "Applicants")
+
+    def test_privacy_anonymous_users_cannot_view_directory(self):
+        """PRIVACY: Ensure unauthenticated internet traffic cannot scrape the directory."""
+        # Ensure the test client is completely logged out
+        self.client.logout()
+
+        # Attempt to access the search page
+        search_response = self.client.get(reverse("farm_search"))
+        # Attempt to access a specific public profile
+        detail_response = self.client.get(
+            reverse("public_farm_detail", args=[self.farm.id])
+        )
+
+        # Both should trigger a 302 Redirect to the login screen, NOT a 200 OK
+        self.assertEqual(search_response.status_code, 302)
+        self.assertEqual(detail_response.status_code, 302)
+        self.assertTrue(search_response.url.startswith("/accounts/login/"))
+
+    def test_search_system_deep_field_querying(self):
+        """SEARCH: Ensure Q objects successfully query related FarmProfile fields."""
+        self.client.force_login(self.volunteer)
+
+        # Create a farm with a completely unrelated name, but specific perks/tags
+        stealth_farm = Farm.objects.create(name="Generic Operations LLC")
+        FarmProfile.objects.create(
+            farm=stealth_farm,
+            is_public=True,
+            volunteer_perks="Free helicopter rides",
+            tags='[{"value":"Hydroponic"}]',
+        )
+
+        # Search for the perk
+        perk_response = self.client.get(reverse("farm_search") + "?q=helicopter")
+        self.assertIn(stealth_farm, perk_response.context["farms"])
+
+        # Search for the tag
+        tag_response = self.client.get(reverse("farm_search") + "?q=Hydroponic")
+        self.assertIn(stealth_farm, tag_response.context["farms"])
+
+    def test_search_system_enforces_query_limits(self):
+        """STABILITY: Ensure the database doesn't crash by attempting to render hundreds of farms."""
+        self.client.force_login(self.volunteer)
+
+        # Create 16 public farms with the exact same name
+        for i in range(16):
+            bulk_farm = Farm.objects.create(name="Limit Test Farm")
+            FarmProfile.objects.create(farm=bulk_farm, is_public=True)
+
+        response = self.client.get(reverse("farm_search") + "?q=Limit")
+
+        # The query should strictly slice the results to 15 to protect server memory
+        self.assertEqual(len(response.context["farms"]), 15)
+
+
+class EdgeCaseDashboardTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        # Create a manager but DO NOT give them a FarmMembership
+        self.homeless_manager = User.objects.create_user(
+            username="nomad",
+            email="nomad@test.com",
+            password="pass",
+            role="farm_manager",
+        )
+
+    def test_manager_dashboard_without_farm_redirects(self):
+        """Covers Lines 44-48: Ensure managers without a farm are safely caught and redirected."""
+        self.client.force_login(self.homeless_manager)
+        response = self.client.get(reverse("manager_dashboard"))
+
+        # Should redirect to the home page since they aren't staff
+        self.assertRedirects(response, "/")
+
+        # Verify the error message was generated
+        messages = list(response.wsgi_request._messages)
+        self.assertEqual(len(messages), 1)
+        self.assertIn("You are not linked to a farm", str(messages[0]))
+
+
+class FarmProfileGalleryTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.farm = Farm.objects.create(name="Gallery Farm")
+        self.manager = User.objects.create_user(
+            username="gallery_mgr",
+            email="gal@test.com",
+            password="p",
+            role="farm_manager",
+        )
+        FarmMembership.objects.create(
+            user=self.manager, farm=self.farm, is_approved=True
+        )
+        self.profile = FarmProfile.objects.create(farm=self.farm)
+
+        # Create a dummy image for testing
+        self.dummy_image = SimpleUploadedFile(
+            name="test_image.jpg",
+            content=b"\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff\x21\xf9\x04\x01\x00\x00\x00\x00\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3b",
+            content_type="image/jpeg",
+        )
+
+    def test_manager_can_delete_gallery_image(self):
+        """Covers Lines 203-204: Image deletion path."""
+        self.client.force_login(self.manager)
+        img = FarmImage.objects.create(profile=self.profile, image="dummy.jpg")
+
+        response = self.client.post(
+            reverse("edit_farm_profile"), {"delete_image": str(img.id)}
+        )
+        self.assertRedirects(response, reverse("edit_farm_profile"))
+        self.assertEqual(FarmImage.objects.filter(profile=self.profile).count(), 0)
+
+    def test_manager_gallery_upload_limit_enforced(self):
+        """NUCLEAR DIAGNOSTIC 2.0: Validates the newly patched MultipleFileField."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        self.client.force_login(self.manager)
+
+        # Max out the gallery manually first
+        for i in range(5):
+            FarmImage.objects.create(profile=self.profile, image=f"dummy_{i}.jpg")
+
+        fresh_image = SimpleUploadedFile(
+            name="test_image.jpg",
+            content=b"dummy image content",
+            content_type="image/jpeg",
+        )
+
+        response = self.client.post(
+            reverse("edit_farm_profile"),
+            {
+                "submit_profile": "true",
+                "is_public": True,
+                "short_description": "Valid description.",
+                "about_us": "<div>About us</div>",
+                "tags": '[{"value":"Organic"}]',
+                "website_url": "https://" + "example.com",
+                "volunteer_perks": "Free vegetables.",
+                "physical_requirements": "Ability to lift 30 lbs.",
+                # The test client puts this in a list, which our new form field can finally read!
+                "gallery_uploads": [fresh_image],
+            },
+        )
+
+        # =====================================================================
+        # ☢️ THE AUTOPSY TRIPWIRE ☢️
+        # =====================================================================
+        if response.status_code == 200:
+            error_log = [
+                "\n\n☢️ FORM VALIDATION FAILED (200 OK instead of 302 Redirect) ☢️\n"
+            ]
+
+            req = getattr(response, "wsgi_request", None)
+            if req:
+                error_log.append("--- SERVER RECEIVED FILES ---")
+                error_log.append(str(req.FILES))
+
+            if "profile_form" in response.context:
+                form = response.context["profile_form"]
+                error_log.append("\n--- EXACT FIELD ERRORS ---")
+                error_log.append(form.errors.as_json())
+
+            error_log.append(
+                "\n=====================================================================\n"
+            )
+            self.fail("\n".join(error_log))
+        # =====================================================================
+
+        self.assertRedirects(response, reverse("edit_farm_profile"))
+        self.assertEqual(FarmImage.objects.filter(profile=self.profile).count(), 5)
+
+
+class PublicDirectoryTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+        self.public_farm = Farm.objects.create(name="Happy Valley Farms")
+        self.public_profile = FarmProfile.objects.create(
+            farm=self.public_farm, is_public=True
+        )
+
+        self.private_farm = Farm.objects.create(name="Secret Valley Farms")
+        self.private_profile = FarmProfile.objects.create(
+            farm=self.private_farm, is_public=False
+        )
+
+        # THE FIX: Add an email so the RequireEmailMiddleware doesn't intercept the request!
+        self.volunteer = User.objects.create_user(
+            username="stat_vol",
+            email="stat_vol@test.com",
+            password="p",
+            role="volunteer",
+        )
+        self.crop = Crop.objects.create(farm=self.public_farm, crop_name="Corn")
+
+        # Create a log entry to test the Plotly chart aggregation
+        LogEntry.objects.create(
+            farm=self.public_farm,
+            volunteer=self.volunteer,
+            crop=self.crop,
+            duration_hours=5.5,
+            activity="H",
+            date_logged="2026-05-20",
+        )
+
+        # Clear cache before tests to ensure fresh stats
+        cache.clear()
+
+    def test_live_stats_fragment_caching(self):
+        """Covers the global live stats generator and caching."""
+        # Ensure url name matches your urls.py (adjust to 'live_stats' if needed)
+        response = self.client.get(reverse("live_stats_fragment"))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("stats", response.context)
+
+        # Verify it successfully cached
+        self.assertIsNotNone(cache.get("landing_page_stats"))
+
+    def test_public_farm_detail_generates_plotly_data(self):
+        """Covers Lines 865-958: The public resume page and the Plotly dictionary builder."""
+        self.client.force_login(self.volunteer)
+
+        # Ensure url name matches your urls.py (adjust if needed)
+        url = reverse("public_farm_detail", args=[self.public_farm.id])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "farms/public_farm_detail.html")
+
+        # Verify the context generated the JSON required for Plotly to render
+        self.assertIn("plotly_traces_json", response.context)
+        self.assertIn("Corn", response.context["plotly_traces_json"])
+
+    def test_public_farm_detail_404s_for_private_farms(self):
+        """Ensures volunteers cannot view profiles of farms that opted out of the directory."""
+        self.client.force_login(self.volunteer)
+
+        url = reverse("public_farm_detail", args=[self.private_farm.id])
+        response = self.client.get(url)
+
+        # The get_object_or_404 should catch it and throw a 404
+        self.assertEqual(response.status_code, 404)

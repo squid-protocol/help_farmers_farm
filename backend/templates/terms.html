@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-12 mb-20 px-4 sm:px-6">
+    
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight mb-4">Terms of Service</h1>
+        <p class="text-lg text-gray-500">The rules for using our platform, managing your farm, and logging your hours.</p>
+        <p class="text-sm text-gray-400 mt-2">Last Updated: May 24, 2026</p>
+    </div>
+
+    <div class="bg-white p-8 md:p-12 rounded-3xl border border-gray-200 shadow-sm space-y-8 text-gray-700 leading-relaxed">
+        
+        <section>
+            <h2 class="text-2xl font-bold text-gray-900 mb-3">1. Acceptance of Terms</h2>
+            <p>By accessing or using the Helping Farmers Farm platform ("the Service"), whether as a Volunteer, Farm Manager, or Account Admin, you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the Service.</p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-gray-900 mb-3">2. Description of Service & Liability Disclaimer</h2>
+            <p class="mb-3">Helping Farmers Farm provides software tools for farms to manage volunteer rosters, track hours, and generate electronic compliance documents. <strong>We are a software provider, not a farm operator.</strong></p>
+            <ul class="list-disc pl-6 space-y-2">
+                <li>We are not responsible for the safety, training, or physical well-being of volunteers at any participating farm.</li>
+                <li>We do not verify the legal validity or enforceability of the specific liability waivers uploaded by Farm Managers.</li>
+                <li>Volunteers assume all risks associated with physical farm labor. Any disputes regarding injury, compensation, or working conditions must be resolved directly with the Farm Manager.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-gray-900 mb-3">3. Electronic Signatures (E-SIGN Act)</h2>
+            <p>By typing your name to sign a compliance document or waiver on this platform, you consent to the use of electronic signatures. You agree that your electronic signature is legally binding and carries the same weight as a physical, handwritten signature under the Electronic Signatures in Global and National Commerce (E-SIGN) Act. Signed documents are stored in an immutable WORM (Write Once, Read Many) vault to preserve audit integrity.</p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-gray-900 mb-3">4. Farm Subscriptions & Billing</h2>
+            <p class="mb-3">Farm Managers who register a farm are responsible for maintaining an active subscription.</p>
+            <ul class="list-disc pl-6 space-y-2">
+                <li><strong>60-Day Trial:</strong> New farms receive a 60-day free trial with full feature access. No credit card is required to begin.</li>
+                <li><strong>Read-Only State:</strong> If a trial expires or a subscription payment fails, the farm workspace will be downgraded to a "Read-Only" state. Historical data is preserved, but no new volunteers may join, and no new hours may be logged until the account is brought into good standing.</li>
+                <li><strong>Refunds:</strong> Subscriptions are billed annually. We do not offer prorated refunds for mid-season cancellations.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-gray-900 mb-3">5. User Conduct & Account Termination</h2>
+            <p>You agree to provide accurate information when creating an account. You may not use the Service to upload malicious code, spam users, or misrepresent your identity. We reserve the right to suspend or permanently terminate any Farm or Volunteer account that violates these terms, attempts to manipulate the gamification/pacing engines, or abuses the platform.</p>
+        </section>
+
+    </div>
+</div>
+{% endblock %}

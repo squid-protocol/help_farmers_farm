@@ -48,10 +48,16 @@ urlpatterns = [
     ),
     path("switch-workspace/", views.switch_active_farm, name="switch_active_farm"),
     # --- NEW: ONBOARDING ROUTES ---
+    path("profile/settings/", views.edit_farm_profile_view, name="edit_farm_profile"),
     path("invite/<uuid:token>/", views.invite_link_view, name="invite_link"),
     path("search/", views.farm_search_view, name="farm_search"),
     path(
         "request-join/<int:farm_id>/", views.request_join_farm_view, name="request_join"
+    ),
+    path(
+        "directory/<int:farm_id>/",
+        views.public_farm_detail_view,
+        name="public_farm_detail",
     ),
     path(
         "approve-join/<int:membership_id>/",

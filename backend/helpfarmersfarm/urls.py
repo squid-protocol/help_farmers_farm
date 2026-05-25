@@ -17,6 +17,10 @@ urlpatterns = [
     path(
         "pricing/", TemplateView.as_view(template_name="pricing.html"), name="pricing"
     ),
+    path(
+        "privacy/", TemplateView.as_view(template_name="privacy.html"), name="privacy"
+    ),
+    path("terms/", TemplateView.as_view(template_name="terms.html"), name="terms"),
     path("billing/", include("billing.urls")),
     path("", include("logs.urls")),
     path("farm/", include("farms.urls")),
