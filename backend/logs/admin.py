@@ -29,6 +29,8 @@ class ShiftLengthFilter(SimpleListFilter):
         if self.value() == "long":
             return queryset.filter(duration_hours__gt=8)
 
+        return queryset
+
 
 @admin.register(LogEntry)
 class LogEntryAdmin(admin.ModelAdmin):
