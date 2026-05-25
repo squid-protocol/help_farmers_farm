@@ -324,23 +324,16 @@ class ManagerDashboardActionTests(TestCase):
             {
                 "submit_profile": "true",
                 "is_public": True,
-                # THE FIX: Simulating an unchecked box by omitting it entirely
                 "short_description": "We grow the best carrots.",
                 "about_us": "<div>Rich text content</div>",
                 "tags": tagify_json,
                 "website_url": "https://schulerfarms.com",
+                "volunteer_perks": "Free vegetables.",
+                "physical_requirements": "Ability to lift 30 lbs.",
             },
         )
 
-        # THE FIX: If this fails, it will print the EXACT form errors to your console!
-        errors = (
-            response.context["profile_form"].errors
-            if response.status_code == 200
-            else ""
-        )
-        self.assertEqual(
-            response.status_code, 302, f"Form failed validation! Errors: {errors}"
-        )
+        self.assertEqual(response.status_code, 302)
 
         # Verify it actually saved to the database correctly
         profile = self.farm.profile
@@ -424,7 +417,12 @@ class ManagerDashboardActionTests(TestCase):
             {
                 "submit_profile": "true",
                 "is_public": True,
-                "tags": "Heirloom, Hand-Picked, Pesticide Free",  # <-- Standard string, NOT JSON
+                "tags": "Heirloom, Hand-Picked, Pesticide Free",
+                "short_description": "We grow the best carrots.",
+                "about_us": "<div>Rich text content</div>",
+                "website_url": "https://schulerfarms.com",
+                "volunteer_perks": "Free vegetables.",
+                "physical_requirements": "Ability to lift 30 lbs.",
             },
         )
 
