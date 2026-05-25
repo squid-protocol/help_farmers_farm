@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-12 mb-20 px-4 sm:px-6">
+    
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight mb-4">Privacy Policy</h1>
+        <p class="text-lg text-gray-500">How we protect your data, handle your legal waivers, and keep the platform secure.</p>
+        <p class="text-sm text-gray-400 mt-2">Last Updated: May 24, 2026</p>
+    </div>
+
+    <div class="bg-white p-8 md:p-12 rounded-3xl border border-gray-200 shadow-sm space-y-8 text-gray-700 leading-relaxed">
+        
+        <section>
+            <h2 class="text-2xl font-bold text-gray-900 mb-3">1. Information We Collect</h2>
+            <p class="mb-3">When you register as a volunteer or a Farm Manager, we collect essential contact and identity information, including your name, email address, and optionally, your phone number. If you sign a liability waiver, we strictly require a physical mailing address to legally validate your electronic signature.</p>
+            <p>When you use the platform, we also track your volunteer logs, including dates, hours worked, crop associations, and qualitative field notes.</p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-gray-900 mb-3">2. Legal Waivers & WORM Compliance</h2>
+            <p>To provide legal protection for our participating farms, all signed compliance forms and liability waivers are generated as cryptographically hashed, immutable PDF documents. These documents capture your IP address and a timestamp at the exact moment of signing. Because these are legal records stored in a "Write Once, Read Many" (WORM) vault, they cannot be altered or deleted once submitted.</p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-gray-900 mb-3">3. Cloudflare Turnstile & Bot Protection</h2>
+            <p>To protect this platform from spam, credential stuffing, and automated attacks, we use <strong>Cloudflare Turnstile</strong>. Turnstile operates transparently in the background to verify that visitors are real humans.</p>
+            <p class="mt-3"><strong>What Turnstile Collects:</strong> Turnstile processes minimal client-side signals, including your IP address, User-Agent header, and browser characteristics. This data is processed strictly under the legal basis of "legitimate interest" to maintain the security of the platform.</p>
+            <p class="mt-3"><strong>No Advertising Tracking:</strong> Unlike other CAPTCHA providers, Turnstile does not harvest your data for ad retargeting, nor does it inject cross-site tracking cookies into your browser.</p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-gray-900 mb-3">4. Third-Party Infrastructure</h2>
+            <p class="mb-3">We never sell your personal data. We only share data with essential infrastructure partners required to operate the service:</p>
+            <ul class="list-disc pl-6 space-y-2">
+                <li><strong>AWS (Amazon Web Services):</strong> Used for secure, long-term storage of user avatars, farm logos, and legal PDFs.</li>
+                <li><strong>Stripe:</strong> Used to securely process subscription payments for Farm Managers. We do not store your credit card numbers on our servers.</li>
+                <li><strong>Brevo:</strong> Used to route transactional emails (like password resets) and manager broadcast emails.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-gray-900 mb-3">5. Data Anonymization</h2>
+            <p>You have the right to request the deletion of your account. Because farms rely on historical labor analytics, executing an account deletion will trigger a GDPR/CCPA-compliant anonymization protocol. This permanently scrubs your name, email, phone number, and physical address from the database, while preserving the raw hours logged as an anonymous, unidentifiable record. The only record of your presence will be if you signed a legally binding waiver that is stored on an AWS -drop in -never remove vault for 7 years to maintain a legal compliance track record of document signing for both parties.</p>
+        </section>
+
+    </div>
+</div>
+{% endblock %}
