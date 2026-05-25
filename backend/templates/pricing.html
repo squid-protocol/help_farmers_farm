@@ -15,13 +15,14 @@
         
         <div class="bg-white rounded-3xl p-8 border border-gray-200 shadow-sm hover:shadow-lg transition flex flex-col h-full">
             <h3 class="text-2xl font-bold text-gray-900">Starter</h3>
-            <p class="text-gray-500 text-sm mt-2">Best for small community gardens operating on the honor system (Up to 50 Volunteers)</p>
+            <p class="text-gray-500 text-sm mt-2">Best for community gardens operating on the honor system (0 - 200 Volunteers)</p>
             <p class="text-5xl font-extrabold text-gray-900 mt-6 mb-8">$249<span class="text-lg font-medium text-gray-500">/yr</span></p>
             
             <ul class="space-y-4 mb-8 flex-grow text-gray-600">
-                <li class="flex items-center gap-3">✅ Basic Time Logging & Shift Scheduling</li>
-                <li class="flex items-center gap-3">✅ Personal Volunteer Impact Dashboards</li>
-                <li class="flex items-center gap-3">✅ Gamified Pacing & Seasonal Badges</li>
+                <li class="flex items-center gap-3">✅ Full Farm Analytics & Dashboards</li>
+                <li class="flex items-center gap-3">✅ Time Logging & Shift Scheduling</li>
+                <li class="flex items-center gap-3">✅ Personal Volunteer Impact Profiles</li>
+                <li class="flex items-center gap-3 opacity-50">❌ No Liability Waiver Tracking</li>
             </ul>
 
             <div class="mt-auto">
@@ -43,14 +44,13 @@
             </div>
             
             <h3 class="text-2xl font-bold text-white">Professional</h3>
-            <p class="text-emerald-100 text-sm mt-2">Best for growing operations that require strict liability protection (Up to 200 Volunteers)</p>
+            <p class="text-emerald-100 text-sm mt-2">Best for growing operations that require strict liability protection (0 - 200 Volunteers)</p>
             <p class="text-5xl font-extrabold text-white mt-6 mb-8">$499<span class="text-lg font-medium text-emerald-200">/yr</span></p>
             
             <ul class="space-y-4 mb-8 flex-grow text-emerald-50">
                 <li class="flex items-center gap-3">✨ <span class="font-bold">Everything in Starter, plus:</span></li>
                 <li class="flex items-center gap-3">✅ Automated Liability Compliance Gate</li>
-                <li class="flex items-center gap-3">✅ Standard Digital Signature Waivers</li>
-                <li class="flex items-center gap-3">✅ Manager Command Center & Roster Analytics</li>
+                <li class="flex items-center gap-3">✅ Digital Signature Waivers (WORM Vault)</li>
             </ul>
 
             <div class="mt-auto">
@@ -67,15 +67,15 @@
         </div>
 
         <div class="bg-white rounded-3xl p-8 border border-gray-200 shadow-sm hover:shadow-lg transition flex flex-col h-full">
-            <h3 class="text-2xl font-bold text-gray-900">Enterprise</h3>
-            <p class="text-gray-500 text-sm mt-2">Best for grant-funded programs or massive leagues requiring audit-ready workflows (200+ Volunteers)</p>
+            <h3 class="text-2xl font-bold text-gray-900">Institutional</h3>
+            <p class="text-gray-500 text-sm mt-2">Best for grant-funded programs, co-ops, or massive leagues (200+ Volunteers)</p>
             <p class="text-5xl font-extrabold text-gray-900 mt-6 mb-8">$999<span class="text-lg font-medium text-gray-500">/yr</span></p>
             
             <ul class="space-y-4 mb-8 flex-grow text-gray-600">
                 <li class="flex items-center gap-3">✨ <span class="font-bold">Everything in Professional, plus:</span></li>
-                <li class="flex items-center gap-3">✅ Custom Multi-Document Workflows</li>
-                <li class="flex items-center gap-3">✅ Exportable Statistical Grant Reports</li>
-                <li class="flex items-center gap-3">✅ 52-Week HTMX Activity Heatmaps</li>
+                <li class="flex items-center gap-3">✅ Support for 200+ Volunteers</li>
+                <li class="flex items-center gap-3">✅ Unlimited Unique Farm Combinations</li>
+                <li class="flex items-center gap-3">✅ Exportable Grant Participation Reports</li>
             </ul>
 
             <div class="mt-auto">
@@ -83,7 +83,7 @@
                     <form action="{% url 'create_checkout_session' %}" method="POST">
                         {% csrf_token %}
                         <input type="hidden" name="price_id" value="price_1TYsJj4Q1x6w9f8FpRlCUh0j">
-                        <button type="submit" class="w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold py-3 rounded-xl transition">Select Enterprise</button>
+                        <button type="submit" class="w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold py-3 rounded-xl transition">Select Institutional</button>
                     </form>
                 {% else %}
                     <a href="{% url 'signup_farm' %}" class="block text-center w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold py-3 rounded-xl transition">Start 60-Day Free Trial</a>

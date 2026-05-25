@@ -1,14 +1,21 @@
-<div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center max-w-4xl mx-auto">
-    <div class="p-6">
-        <p class="text-5xl font-extrabold text-emerald-600 mb-2">{{ stats.total_farms }}</p>
-        <p class="text-lg font-medium text-gray-500 uppercase tracking-wide">Active Farms</p>
-    </div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center max-w-5xl mx-auto">
     <div class="p-6">
         <p class="text-5xl font-extrabold text-emerald-600 mb-2">{{ stats.active_volunteers }}</p>
-        <p class="text-lg font-medium text-gray-500 uppercase tracking-wide">Active Volunteers</p>
+        <p class="text-lg font-medium text-gray-500 uppercase tracking-wide">Volunteers Active This Season</p>
     </div>
+    
     <div class="p-6">
-        <p class="text-5xl font-extrabold text-emerald-600 mb-2">{{ stats.total_accounts }}</p>
-        <p class="text-lg font-medium text-gray-500 uppercase tracking-wide">Total Accounts</p>
+        <p class="text-5xl font-extrabold text-emerald-600 mb-2">{{ stats.searching_farms }}</p>
+        <p class="text-lg font-medium text-gray-500 uppercase tracking-wide">Farms Hiring</p>
+    </div>
+    
+    <div class="p-6">
+        <p class="text-5xl font-extrabold text-emerald-600 mb-2">{{ stats.connections_made }}</p>
+        <p class="text-lg font-medium text-gray-500 uppercase tracking-wide">Connections Made</p>
+    </div>
+    
+    <div class="p-6">
+        <p class="text-5xl font-extrabold text-emerald-600 mb-2">{{ stats.total_farms }}</p>
+        <p class="text-lg font-medium text-gray-500 uppercase tracking-wide">Total Farms</p>
     </div>
 </div>
