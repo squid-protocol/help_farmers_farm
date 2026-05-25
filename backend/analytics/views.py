@@ -98,7 +98,7 @@ def get_impact_chart(request):
     """
 
     # --- PART 2: THE CROP BAR CHART DATA ---
-    # Exclude null crops and generic placeholders so non-veggie activities 
+    # Exclude null crops and generic placeholders so non-veggie activities
     # (like Move Dirt) don't skew the visual graph.
     aggregated_data = list(
         global_logs.exclude(crop__isnull=True)
