@@ -343,13 +343,15 @@ class FarmProfileForm(forms.ModelForm):
 
     # Custom multiple file upload field for the gallery
     gallery_uploads = forms.FileField(
-        widget=forms.ClearableFileInput(attrs={
-            "class": "bg-white border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2 cursor-pointer focus:outline-none"
-        }),
+        widget=forms.ClearableFileInput(
+            attrs={
+                "class": "bg-white border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2 cursor-pointer focus:outline-none"
+            }
+        ),
         required=False,
-        help_text="Upload up to 5 action shots of your farm. (JPG or PNG)"
+        help_text="Upload up to 5 action shots of your farm. (JPG or PNG)",
     )
-    
+
     # THE FIX: Explicitly tell the widget it is allowed to accept multiple files
     gallery_uploads.widget.allow_multiple_selected = True
 
@@ -387,8 +389,20 @@ class FarmProfileForm(forms.ModelForm):
             "instagram_url",
         ]
         widgets = {
-            "volunteer_perks": forms.Textarea(attrs={"rows": 3, "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 custom-scrollbar", "placeholder": "e.g., Take home a free box of produce every shift..."}),
-            "physical_requirements": forms.Textarea(attrs={"rows": 3, "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 custom-scrollbar", "placeholder": "e.g., Must be able to lift 50 lbs, lots of kneeling..."}),
+            "volunteer_perks": forms.Textarea(
+                attrs={
+                    "rows": 3,
+                    "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 custom-scrollbar",
+                    "placeholder": "e.g., Take home a free box of produce every shift...",
+                }
+            ),
+            "physical_requirements": forms.Textarea(
+                attrs={
+                    "rows": 3,
+                    "class": "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 custom-scrollbar",
+                    "placeholder": "e.g., Must be able to lift 50 lbs, lots of kneeling...",
+                }
+            ),
         }
 
     def __init__(self, *args, **kwargs):

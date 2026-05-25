@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.utils import timezone
 from .models import Farm, Crop, WorkCommitment, ComplianceForm, FarmProfile, FarmImage
 
+
 # -----------------------------------------------------------------------------
 # 1. INLINES: Edit connected database rows directly from the Farm page
 # -----------------------------------------------------------------------------
@@ -350,6 +351,7 @@ class FarmProfileAdmin(admin.ModelAdmin):
     def close_applications(self, request, queryset):
         updated = queryset.update(is_accepting_volunteers=False)
         self.message_user(request, f"Closed applications for {updated} farms.")
+
 
 @admin.register(FarmImage)
 class FarmImageAdmin(admin.ModelAdmin):
