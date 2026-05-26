@@ -98,25 +98,14 @@ def get_impact_chart(request):
     """
 
     # --- PART 2: THE CROP BAR CHART DATA ---
-    # Fetch raw IDs to prevent Django from dropping rows with null crops
+    # Exclude null crops and generic placeholders so non-veggie activities
+    # (like Move Dirt) don't skew the visual graph.
     aggregated_data = list(
-        global_logs.values("crop", "activity").annotate(
-            total_hours=Sum("duration_hours")
-        )
+        global_logs.exclude(crop__isnull=True)
+        .exclude(crop__crop_name__iexact="General / Deleted")
+        .values("crop__crop_name", "activity")
+        .annotate(total_hours=Sum("duration_hours"))
     )
-
-    # Map the crop names in Python, injecting our generic label for nulls
-    from farms.models import Crop
-
-    crop_dict = {c.id: c.crop_name for c in Crop.objects.filter(farm=farm)}
-
-    for item in aggregated_data:
-        crop_id = item.pop("crop", None)
-        item["crop__crop_name"] = (
-            crop_dict.get(crop_id, "General / Deleted")
-            if crop_id
-            else "General / Deleted"
-        )
 
     if not aggregated_data and total_hours == 0:
         empty_html = (

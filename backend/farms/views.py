@@ -384,7 +384,19 @@ def volunteer_detail_view(request, volunteer_id):
 @login_required
 def farm_impact_view(request):
     farm = request.active_farm
-    crops = Crop.objects.filter(farm=farm, is_active=True).order_by("crop_name")
+    crops = (
+        Crop.objects.filter(farm=farm, is_active=True)
+        .exclude(crop_name__iexact="General / Deleted")
+        .order_by("crop_name")
+    )
+
+    # --- DIAGNOSTIC PRINT ---
+    print(f"--- BACKEND DIAGNOSTIC: Found {crops.count()} crops ---")
+    for c in crops:
+        if "general" in c.crop_name.lower():
+            print(f"🚨 ALERT: Ghost Crop Found in Backend -> {c.crop_name}")
+    # ------------------------
+
     return render(request, "farms/farm_impact.html", {"farm": farm, "crops": crops})
 
 
@@ -419,7 +431,8 @@ def progress_report_view(request):
                 "user__logs__duration_hours",
                 filter=Q(
                     user__logs__date_logged__year=current_year, user__logs__farm=farm
-                ),
+                )
+                & ~Q(user__logs__crop__crop_name__iexact="General / Deleted"),
             )
         )
     )
