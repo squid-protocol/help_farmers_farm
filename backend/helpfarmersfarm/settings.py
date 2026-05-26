@@ -135,8 +135,14 @@ AXES_FAILURE_LIMIT = 5  # 5 failed attempts allowed
 AXES_COOLOFF_TIME = 1  # Lock out for 1 hour
 AXES_RESET_ON_SUCCESS = True  # Reset the counter if they log in successfully
 
-# During development, print emails to the console instead of actually sending them
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# --- EMAIL CONFIGURATION ---
+EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
+EMAIL_HOST = env("EMAIL_HOST", default="smtp-relay.brevo.com")
+EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="hello@helpingfarmersfarm.com")
 
 # Media Files
 MEDIA_URL = "/media/"

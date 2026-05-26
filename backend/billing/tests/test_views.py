@@ -345,9 +345,9 @@ class WebhookSubscriptionUpdatedTests(TestCase):
             "data": {
                 "object": {
                     "customer": "cus_upgrade_123",
-                    "status": "unpaid",
+                    "status": "active",
                     "items": {
-                        "data": [{"price": {"id": "price_1TYsF54Q1x6w9f8FaXJmkcE1"}}]
+                        "data": [{"price": {"id": "price_1TbLHZ6EZATAzdVSFracrHkT"}}]
                     },
                 }
             },
@@ -368,7 +368,7 @@ class WebhookSubscriptionUpdatedTests(TestCase):
                     "customer": "cus_upgrade_123",
                     "status": "unpaid",
                     "items": {
-                        "data": [{"price": {"id": "price_1TYsF54Q1x6w9f8FaXJmkcE1"}}]
+                        "data": [{"price": {"id": "price_1TbLHZ6EZATAzdVSRo4kyEjN"}}]
                     },
                 }
             },
