@@ -94,7 +94,7 @@
         <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100 px-4 py-4 space-y-3 shadow-lg absolute w-full left-0">
             {% if user.is_authenticated %}
                 <div class="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
-                    <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}[https://ui-avatars.com/api/?name=](https://ui-avatars.com/api/?name=){{ user.first_name|default:user.username }}&background=10b981&color=fff&size=64{% endif %}"
+                    <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.first_name|default:user.username }}&background=10b981&color=fff&size=64{% endif %}"
                          class="w-10 h-10 rounded-full object-cover border border-emerald-500 shadow-sm" alt="{{ user.username }}">
                     <div>
                         <p class="text-sm font-bold text-gray-900">{{ user.first_name|default:user.username }} {{ user.last_name }}</p>

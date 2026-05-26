@@ -222,12 +222,12 @@ def stripe_webhook(request):
                 farm = Farm.objects.get(stripe_customer_id=customer_id)
 
                 # Map the Stripe Price ID to your internal database tiers
-                if new_price_id == "price_1TYsDw4Q1x6w9f8FBWp82g03":
+                if new_price_id == "price_1TbLHe6EZATAzdVS3yD8Z7H3":
                     farm.subscription_tier = "starter"
-                elif new_price_id == "price_1TYsF54Q1x6w9f8FaXJmkcE1":
+                elif new_price_id == "price_1TbLHZ6EZATAzdVSRo4kyEjN":
                     farm.subscription_tier = "growth"
                 elif (
-                    new_price_id == "price_1TYsJj4Q1x6w9f8FpRlCUh0j"
+                    new_price_id == "price_1TbLHZ6EZATAzdVSFracrHkT"
                 ):  # <-- PREMIUM ADDED
                     farm.subscription_tier = "institutional"
 

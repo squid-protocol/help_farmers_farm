@@ -325,7 +325,7 @@ class WebhookSubscriptionUpdatedTests(TestCase):
                     "customer": "cus_upgrade_123",
                     "status": "active",
                     "items": {
-                        "data": [{"price": {"id": "price_1TYsF54Q1x6w9f8FaXJmkcE1"}}]
+                        "data": [{"price": {"id": "price_1TbLHZ6EZATAzdVSRo4kyEjN"}}]
                     },
                 }
             },
@@ -345,9 +345,9 @@ class WebhookSubscriptionUpdatedTests(TestCase):
             "data": {
                 "object": {
                     "customer": "cus_upgrade_123",
-                    "status": "active",
+                    "status": "unpaid",
                     "items": {
-                        "data": [{"price": {"id": "price_1TYsJj4Q1x6w9f8FpRlCUh0j"}}]
+                        "data": [{"price": {"id": "price_1TYsF54Q1x6w9f8FaXJmkcE1"}}]
                     },
                 }
             },
@@ -389,7 +389,7 @@ class WebhookSubscriptionUpdatedTests(TestCase):
                     "customer": "cus_ghost_updater",
                     "status": "active",
                     "items": {
-                        "data": [{"price": {"id": "price_1TYsF54Q1x6w9f8FaXJmkcE1"}}]
+                        "data": [{"price": {"id": "price_1TbLHZ6EZATAzdVSRo4kyEjN"}}]
                     },
                 }
             },
