@@ -45,7 +45,7 @@ markdown-it-py==4.2.0
 MarkupSafe==3.0.3
 mccabe==0.7.0
 mdurl==0.1.2
-more-itertools==11.0.2
+more-itertools==11.1.0
 murmurhash==1.0.15
 mypy_extensions==1.1.0
 narwhals==2.21.0
