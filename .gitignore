@@ -27,3 +27,7 @@ Thumbs.db
 .coverage
 htmlcov/
 prod_data.json
+
+# Node / Tailwind CSS
+**/node_modules/
+npm-debug.log
