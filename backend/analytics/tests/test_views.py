@@ -187,7 +187,7 @@ class AnalyticsEmptyStateTests(TestCase):
             response = self.client.get(reverse(endpoint))
             self.assertEqual(response.status_code, 200)
             self.assertNotContains(response, "General / Deleted")
-            
+
     def test_impact_chart_returns_empty_state_for_new_farm(self):
         """STABILITY: Ensure a new farm without logs sees a clean 'no data' message instead of a 500 error."""
         response = self.client.get(reverse("get_impact_chart"))
