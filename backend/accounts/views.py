@@ -263,9 +263,12 @@ def upload_avatar(request):
                 request.user.avatar.save(filename, data, save=True)
                 messages.success(request, "Avatar updated successfully!")
 
-            except Exception as e:
+            except Exception:
                 logger.exception(f"Avatar upload failed for user {request.user.id}")
-                messages.error(request, "There was a critical error updating your avatar. Our engineering team has been notified.")
+                messages.error(
+                    request,
+                    "There was a critical error updating your avatar. Our engineering team has been notified.",
+                )
         else:
             messages.error(request, "No image data was received. Please try again.")
 
@@ -703,8 +706,10 @@ def farm_signup_view(request):
                 )
                 return redirect("manager_dashboard")
 
-            except Exception as e:
-                logger.exception("CRITICAL: Failed to provision new farm and manager account.")
+            except Exception:
+                logger.exception(
+                    "CRITICAL: Failed to provision new farm and manager account."
+                )
                 messages.error(
                     request,
                     "There was a critical error setting up your account. Our engineering team has been notified.",

@@ -58,7 +58,7 @@ def log_hours_view(request):
                 new_log.save()
                 messages.success(request, "Shift logged successfully!")
                 return redirect("log_hours")
-            except Exception as e:
+            except Exception:
                 logger.exception("CRITICAL: Database error saving volunteer shift log.")
                 messages.error(
                     request,
