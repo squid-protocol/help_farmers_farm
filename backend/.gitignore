@@ -38,3 +38,22 @@ llm_context.txt
 *.json
 *_context.md
 static/
+# Environments and Secrets
+.env
+__pycache__/
+*.py[cod]
+
+# Database
+db.sqlite3
+*.db
+
+# Media and Static Uploads
+/media/
+/static/
+
+# Virtual Environments
+venv/
+env/
+
+# OS generated files
+.DS_Store

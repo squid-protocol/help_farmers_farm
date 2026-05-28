@@ -1,0 +1,2675 @@
+commit 90f95ea72293b801d647bf89b76501ad2d83ed58
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 26 10:37:07 2026 -0400
+
+    stripe payment integration correction
+
+commit 8cb142aeb3fa4f9e8649dc1bb56671d76db05792
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 26 10:00:48 2026 -0400
+
+    Updated Stripe Price IDs and fixed avatar URL
+
+commit d2510b87c9af6dc7d39e9eafca59902715fd8c0c
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 26 08:38:15 2026 -0400
+
+    Force adding package.json files bypassing gitignore
+
+commit e433b6b1691b684095dedd4432690df89dc99182
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 26 08:37:13 2026 -0400
+
+    Restored missing Tailwind configuration files
+
+commit 1843a515230bf8602efdd10781473108e690882d
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 26 08:34:48 2026 -0400
+
+    Force adding missing Tailwind configuration files and updating gitignore
+
+commit b6153111a01c831f02835114f00abfd7fbf4a356
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 26 08:14:32 2026 -0400
+
+    chore: merge conflict
+
+commit 9a4675d985a15ab90d66906797635712bf1cf31b
+Merge: bbb03b5 7f2fdbe
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 26 08:13:43 2026 -0400
+
+    Merge branch 'main' of https://github.com/squid-protocol/help_farmers_farm
+
+commit bbb03b5a6050c70167b9d7da299ea599984c2801
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 26 08:11:34 2026 -0400
+
+    chore: merge conflict
+
+commit 7f2fdbe8ec54fe6daf8f4a9427597cc549144e12
+Merge: f7822d8 1e00b39
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Tue May 26 07:43:08 2026 -0400
+
+    Merge pull request #49 from squid-protocol/dependabot/pip/idna-3.16
+    
+    build(deps): bump idna from 3.15 to 3.16
+
+commit f7822d8dd1ec101cfe17d8945a7d9bbf1d0daa8e
+Merge: d8b4851 2ac0d6c
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Tue May 26 07:42:41 2026 -0400
+
+    Merge pull request #48 from squid-protocol/dependabot/pip/numpy-2.4.6
+    
+    build(deps): bump numpy from 2.4.4 to 2.4.6
+
+commit d8b48517a11fcd92a0dc3d0bf4e46161d1ac7efc
+Merge: 005f51f d623353
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Tue May 26 07:42:18 2026 -0400
+
+    Merge pull request #50 from squid-protocol/dependabot/pip/wrapt-2.2.1
+    
+    build(deps): bump wrapt from 2.1.2 to 2.2.1
+
+commit 005f51fcaaa418529775c1729d5cf218ab5ee83e
+Merge: 71ed2a3 35f28d9
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Tue May 26 07:41:57 2026 -0400
+
+    Merge pull request #51 from squid-protocol/dependabot/pip/more-itertools-11.1.0
+    
+    build(deps): bump more-itertools from 11.0.2 to 11.1.0
+
+commit 71ed2a37b3168bb23c2b72de4969becda23797ca
+Merge: 8b02984 7ea8d54
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Tue May 26 07:08:25 2026 -0400
+
+    Merge pull request #53 from squid-protocol/feature/no_gen_cat
+    
+    get rid of the general category in the farm impact graph
+
+commit 7ea8d543a2ca02624fdc0ab26b27f1109638f1a2
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 26 06:59:09 2026 -0400
+
+    update general catch all category in farm/views to stop plotly graph overflow
+
+commit 391f9bd4b8f3754d3f7f1277a42cd156455caf6a
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 25 16:17:59 2026 -0400
+
+    chore:black and flake
+
+commit 6f7f1104cb48f36611f7264b42601d98d1866dc4
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 25 16:17:17 2026 -0400
+
+    get rid of the general category in the farm impact graph
+
+commit 8b0298457c597fb08a88f905118094219b19f0ab
+Merge: 210b03f f5c5456
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Mon May 25 14:45:12 2026 -0400
+
+    Merge pull request #52 from squid-protocol/feature/cookbooks
+    
+    AI SEO
+
+commit f5c54565b126cc17fa0c63e891cb9d5d0af9ae5d
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 25 14:37:45 2026 -0400
+
+    AI SEO
+
+commit 210b03f016a9c2b7629aa8c8029412b1f109ee0b
+Merge: e050ed9 dca051e
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Mon May 25 11:19:55 2026 -0400
+
+    Merge pull request #46 from squid-protocol/feature/seeded_data_testing
+    
+    Feature/seeded data testing
+
+commit dca051ecaec4095cae5e45d5ffb24f7660c9cb84
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 25 10:56:04 2026 -0400
+
+    mismatched correction for activity type in tests
+
+commit cd024a6a52df7f0107173b7a224e940e3a469b8c
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 25 10:02:59 2026 -0400
+
+    fix(logs): add missing fallback return to ShiftLengthFilter in admin to prevent queryset crashes
+
+commit cc6e91f918f47e47b89b02be864756abe4314380
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 25 10:01:45 2026 -0400
+
+    fix(farms): implement MultipleFileField for gallery and expand search/privacy test coverage
+
+commit c7795e59c8320770191c1adbd6c4c047e61c39d9
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 25 10:01:40 2026 -0400
+
+    chore(tools): add python utility to scrub markdown URLs from source files
+
+commit 35f28d9c558fab299c557d3c450d1ac3417235fc
+Author: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Date:   Mon May 25 11:29:40 2026 +0000
+
+    build(deps): bump more-itertools from 11.0.2 to 11.1.0
+    
+    Bumps [more-itertools](https://github.com/more-itertools/more-itertools) from 11.0.2 to 11.1.0.
+    - [Release notes](https://github.com/more-itertools/more-itertools/releases)
+    - [Commits](https://github.com/more-itertools/more-itertools/compare/v11.0.2...v11.1.0)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: more-itertools
+      dependency-version: 11.1.0
+      dependency-type: direct:production
+      update-type: version-update:semver-minor
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit d6233537175a4e345573386492654678f3d6aa30
+Author: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Date:   Mon May 25 11:29:30 2026 +0000
+
+    build(deps): bump wrapt from 2.1.2 to 2.2.1
+    
+    Bumps [wrapt](https://github.com/GrahamDumpleton/wrapt) from 2.1.2 to 2.2.1.
+    - [Release notes](https://github.com/GrahamDumpleton/wrapt/releases)
+    - [Changelog](https://github.com/GrahamDumpleton/wrapt/blob/develop/docs/changes.rst)
+    - [Commits](https://github.com/GrahamDumpleton/wrapt/compare/2.1.2...2.2.1)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: wrapt
+      dependency-version: 2.2.1
+      dependency-type: direct:production
+      update-type: version-update:semver-minor
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit 1e00b3903ba3465b16abbee2c2088c0027e86fbd
+Author: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Date:   Mon May 25 11:29:24 2026 +0000
+
+    build(deps): bump idna from 3.15 to 3.16
+    
+    Bumps [idna](https://github.com/kjd/idna) from 3.15 to 3.16.
+    - [Release notes](https://github.com/kjd/idna/releases)
+    - [Changelog](https://github.com/kjd/idna/blob/master/HISTORY.md)
+    - [Commits](https://github.com/kjd/idna/compare/v3.15...v3.16)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: idna
+      dependency-version: '3.16'
+      dependency-type: direct:production
+      update-type: version-update:semver-minor
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit 2ac0d6c3d7dea6028a31747155743c6af7986449
+Author: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Date:   Mon May 25 11:29:17 2026 +0000
+
+    build(deps): bump numpy from 2.4.4 to 2.4.6
+    
+    Bumps [numpy](https://github.com/numpy/numpy) from 2.4.4 to 2.4.6.
+    - [Release notes](https://github.com/numpy/numpy/releases)
+    - [Changelog](https://github.com/numpy/numpy/blob/main/doc/RELEASE_WALKTHROUGH.rst)
+    - [Commits](https://github.com/numpy/numpy/compare/v2.4.4...v2.4.6)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: numpy
+      dependency-version: 2.4.6
+      dependency-type: direct:production
+      update-type: version-update:semver-patch
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit e050ed9fbfb4edb569f5f21e1c508070cdfe9ff9
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Mon May 25 07:28:13 2026 -0400
+
+    Update dependabot.yml
+
+commit 57b83ddd428d6b30ee8a78a8eed99c8db5e4e79a
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 25 07:19:59 2026 -0400
+
+    style(theme): compile updated tailwind css assets
+
+commit a87b84a28142c85622dd009a77445c2c5e1a6461
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 25 07:19:56 2026 -0400
+
+    test(farms): fix profile form validation failures in manager dashboard tests
+
+commit 168a474c7a07d42a25105049da5285dd44930aca
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 25 07:19:53 2026 -0400
+
+    copy(seo): overhaul origin story, pricing tiers, and volunteer onboarding FAQ
+
+commit dd4423497aec8a359d30765d4d8699ef8b47b2d2
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 25 07:19:50 2026 -0400
+
+    ux(core): implement responsive mobile navigation and graceful logout redirect
+
+commit a0f97a519742d446af08cb3ac98942944c851835
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 25 07:19:46 2026 -0400
+
+    docs(legal): implement Stripe-compliant privacy policy and terms of service
+
+commit 28feb7acc45fe62cb0a585be7740b176e0913f04
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 25 07:19:43 2026 -0400
+
+    feat(farms): build public farm profile dashboard with historical labor analytics
+
+commit efb0e2cc0b1a86e3ef0cabdd2764f7fb96bd1d72
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 25 07:19:39 2026 -0400
+
+    feat(farms): expand farm profile schema and update seed script for public directory
+
+commit b6f223b7baf90b68bd4a92e0f72a4ada8765f6b3
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 24 15:47:53 2026 -0400
+
+    chore: update seed data and compile tailwind css assets
+
+commit 07204823a4a33139b15a6470bd95f71909b66147
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 24 15:47:50 2026 -0400
+
+    feat(admin): implement bulk actions, compliance overrides, and directory switchboard
+
+commit 17b6ebf1bacd22bbf95901424713131e3a681f9b
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 24 15:47:45 2026 -0400
+
+    refactor(farms): extract public profile to dedicated command center tab
+
+commit 225f52383bb289039ddbc6e0a2c7454d339838f5
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 24 15:47:41 2026 -0400
+
+    feat(farms): add volunteer perks, physical requirements, and multi-image gallery to Farm Profile
+
+commit 8560af4a98f2fc1f2494b3b2e7729ff8a01e9ace
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 24 15:47:38 2026 -0400
+
+    feat(accounts): add privacy notice and update farming motto label in user settings
+
+commit 7618c4ecb4bda179b31b844d2366005c10aec1a3
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 24 15:47:35 2026 -0400
+
+    fix(accounts): resolve UnboundLocalError and color mapping in lifetime activity chart
+
+commit 338de6d87fcc33096e83aee0d7565d656926ce2b
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 24 12:17:01 2026 -0400
+
+    chore(theme): compile updated tailwind classes for new UI components
+
+commit 7b16bdb7b2187ce1aeecc2899b79e9aec3a1bfc6
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 24 12:16:56 2026 -0400
+
+    style(core): update base template and landing page layouts
+
+commit 78726a9e2dd26ce89ba3d01c91736e962e7a709a
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 24 12:16:52 2026 -0400
+
+    feat(logs): add dedicated templates for shift logging and directory views
+
+commit aaf3db7b8bd9e0e9b724dc30c2af0a2bde3c6278
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 24 12:16:48 2026 -0400
+
+    feat(accounts): upgrade profile dashboard with extended metrics and chart layouts
+
+commit 8ec07023b236752734c1b145a80d746e1c5c5135
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 24 12:16:45 2026 -0400
+
+    feat(farms): add seed_db management command for generating test data
+
+commit fe73cf17f1ab51d1c74a56feda41ae6aeceb4448
+Merge: 04055be 423a639
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Sun May 24 09:15:10 2026 -0400
+
+    Merge pull request #45 from squid-protocol/feature/volun_profiles
+    
+    Feature/volun profiles
+
+commit 423a63922804a5265f495f84727414850ebfe388
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 24 09:10:36 2026 -0400
+
+    chore(theme): compile tailwind css for Global Persona and Live Stats
+
+commit 292b604f8daaa1a542083d92cd0583e0498e7fc2
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 24 09:10:33 2026 -0400
+
+    refactor(logs): isolate log hours dashboard to active farm context only
+
+commit 68c4b12449abd9bb93c27511b1d1333028e20574
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 24 09:10:30 2026 -0400
+
+    ui(accounts): overhaul profile into tabbed Global Persona trading card
+
+commit 97f564cb37f7fc8de9dd9a5addbc0ad4a6d167a1
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 24 09:10:26 2026 -0400
+
+    feat(accounts): add farming_motto field and calculate lifetime stats for Persona
+
+commit 2dbf44deac2c1f86edf2ab19be051dad23d7475f
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 24 09:10:22 2026 -0400
+
+    feat(landing): add HTMX-powered live platform impact statistics
+
+commit 04055be0aef8908919090e34f8d45717e5c3ca00
+Merge: fccf619 867c1e2
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 18:42:47 2026 -0400
+
+    Merge pull request #44 from squid-protocol/feature/add_users
+    
+    Feature/add users
+
+commit 867c1e20db92b3e04b2f62fc81e60a4ce1347f8b
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 18:34:10 2026 -0400
+
+    test: achieve 95% coverage with anonymization, marketplace, and analytics resilience tests
+
+commit 136b9e9fccd764eb6ded2ad09e3a37db0caaa122
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 18:32:19 2026 -0400
+
+    feat: implement two-sided marketplace search with introductory messaging
+
+commit b9d04d59d889764d87f54847f1cd76b7f4774a35
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 18:32:19 2026 -0400
+
+    build: implement FarmProfile model and expand FarmMembership for applicant messages
+
+commit 36309bbce1eae773a27f51d24742e1f58fc16232
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 15:27:17 2026 -0400
+
+    feat(farms): implement unique cryptographic invite tokens and data migration
+
+commit fccf619452e06082a76e1d00ef91941e2d10fcdb
+Merge: 0e3b3d2 3f28c7b
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 13:47:34 2026 -0400
+
+    Merge pull request #43 from squid-protocol/feature/open_logon
+    
+    Feature/open logon
+
+commit 3f28c7bbe48dfd41d9dd0c61978d7cb2634dbe91
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 13:47:01 2026 -0400
+
+    style(farms): compact manager dashboard tabs and recompile css
+
+commit 81f1e63294d879f7dd7614731ea96bdf0a87c7e1
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 13:46:58 2026 -0400
+
+    fix(ui): wire landing page CTAs and protect pricing checkout routes
+
+commit 2ae3cdf1024aded66b3f8712b0fe87680b1b913c
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 13:46:54 2026 -0400
+
+    feat(auth): auto-verify emails for new managers and manager-created volunteers
+
+commit 7d2601711bf2a80af593df82c333093d898789b2
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 13:46:51 2026 -0400
+
+    fix(accounts): restrict nightly purge to unattached unverified volunteers
+
+commit 1b336768595aa292c9caa5d29d091010021dbbd6
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 13:12:11 2026 -0400
+
+    chore: update local commit history log
+
+commit 7284ab0685abaa27ee686fbdceba7f7cab59b76e
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 13:12:06 2026 -0400
+
+    test(accounts): update test suite to cover address schema and security boundaries
+
+commit 659fb83692d6a63ec8f4ee0c9f625b1d0a3e001f
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 13:12:03 2026 -0400
+
+    feat(accounts): implement secure registration endpoints and atomic farm provisioning
+
+commit f2e38bf8e52223969716ba80b8238ffc46a31497
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 13:11:56 2026 -0400
+
+    feat(ui): build dual-path registration gateway and Turnstile-enabled templates
+
+commit 9599ffe481f91ab2f8965a62b62e05b3449cdf5f
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 13:11:44 2026 -0400
+
+    chore(security): configure Cloudflare Turnstile environment and compile CSS
+
+commit a8ae4d8586cd0ec88763f6969691215d25e2f180
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 13:11:41 2026 -0400
+
+    feat(accounts): add 7-day nightly purge worker for unverified ghost accounts
+
+commit ee994674c0d7e555bc604e75d52dd9319ca854d4
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 13:11:38 2026 -0400
+
+    feat(accounts): normalize user address schema into distinct fields
+
+commit 0e3b3d2b31bf52e31049d27aca9122d022195f9a
+Merge: 5832412 92fe05d
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 10:26:42 2026 -0400
+
+    Merge pull request #42 from squid-protocol/feature/wiring_corrections
+    
+    Feature/wiring corrections
+
+commit 92fe05db5247f8aa2bf9bd21d971739d437d9beb
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 10:21:31 2026 -0400
+
+    fix(analytics): resolve pandas ORM null crop drops and add empty state test coverage
+
+commit 61236ee646bc2962c8d9e821ed6f44ac76404b10
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 10:21:28 2026 -0400
+
+    test(accounts): add coverage for GDPR deletion, XSS prevention, and IP spoofing
+
+commit d568f7ddf6cdd7baea6ec02fe4f6760b4fafe5bc
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 10:21:24 2026 -0400
+
+    test(billing): update webhook test assertion to expect institutional tier
+
+commit 85553ccd1117ab0c526c460bf9a79a563c9749fa
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 09:43:34 2026 -0400
+
+    Merge main, resolve styles.css conflict by recompiling tailwind
+
+commit 0280fa8f3e6baf38204e5f34c036d8109ae4fcc7
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 09:46:36 2026 -0400
+
+    Potential fix for pull request finding 'CodeQL / Log Injection'
+    
+    Co-authored-by: Copilot Autofix powered by AI <62310815+github-advanced-security[bot]@users.noreply.github.com>
+
+commit eb748d0307ab0d6ece51631ac050493729690ca5
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 09:46:29 2026 -0400
+
+    Potential fix for pull request finding 'CodeQL / Module is imported more than once'
+    
+    Co-authored-by: Copilot Autofix powered by AI <62310815+github-advanced-security[bot]@users.noreply.github.com>
+
+commit e33eb11616e9c4f1df70c1be0d3b056824493771
+Merge: 88907da 5832412
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 09:44:18 2026 -0400
+
+    Merge branch 'main' into feature/wiring_corrections
+
+commit 88907da0df3f9660a7b8940e8a6658a6ccb30bdd
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 09:06:26 2026 -0400
+
+    fix(security): prevent avatar XSS and secure waiver audit trails with Cloudflare IPs
+
+commit 2a983f744efb5e306597b7c211a1bbaaaee0eb67
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 09:06:22 2026 -0400
+
+    fix(analytics): include null/deleted crops in dataframes to prevent ghost hour mismatches
+
+commit 4b0325b6e8b23a50acc6dfb6546b78f704e62432
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 09:06:18 2026 -0400
+
+    perf(farms): eliminate N+1 query chokehold and secure POST actions on expired trials
+
+commit b6602515d7e85398ad0bc86b772f2cc79b94cbf1
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 09:06:15 2026 -0400
+
+    fix(comms): route automated email replies back to farm managers
+
+commit ed7db587ba0a0a0fe284a71cb57fab14e1feb225
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 09:04:50 2026 -0400
+
+    fix(accounts): secure waiver audit trails by prioritizing cloudflare connecting IP over spoofable forwarded headers
+
+commit 72a63af5b18ce7112312171b4fa3dfd24d3f9764
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 09:04:00 2026 -0400
+
+    fix(security): hardcode avatar extensions to prevent stored XSS via forged MIME types
+
+commit 23b345697daf250aa6f0e0954816bb75c2d52966
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 09:02:54 2026 -0400
+
+    perf(farms): eliminate N+1 query chokehold on progress reporting by migrating math to postgres annotations
+
+commit 4a3ff33b5a0f0dc6be62c5a131e0ac598e780498
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 08:56:15 2026 -0400
+
+    fix(accounts): prevent signature lockout when browser restores scroll position after form validation error
+
+commit e3ec4aae6c96d51d52142f6785ed22542f96d074
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 08:54:14 2026 -0400
+
+    fix(analytics): include null/deleted crops in dataframes to prevent ghost hour mismatches
+
+commit 60044c0e20625140da804052bc13e39febed46b9
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 08:50:58 2026 -0400
+
+    fix(security): block POST actions on manager dashboard when farm trial is expired
+
+commit aedcfc87ffea010b58bc090d71215b9cfd79178a
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 08:48:52 2026 -0400
+
+    fix(comms): route automated email replies back to farm managers
+
+commit 96c0ae45c4396378cbad6e478a30c85cfbb0446a
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 08:42:35 2026 -0400
+
+    style: compile latest tailwind css
+
+commit fc7dc13d7cdce806c5b6ee5d0c39b27189183985
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 08:42:32 2026 -0400
+
+    refactor(core): remove unused cookbooks app from settings
+
+commit b87927e94588e2d29275a21e7eff8cb922752000
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 08:42:29 2026 -0400
+
+    feat(farms): add archive and restore controls for compliance forms
+
+commit c98d910b3d4942f72da36db3a4d7c117ac93866e
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 08:42:26 2026 -0400
+
+    fix(billing): resolve stripe tier mismatch and prevent checkout race condition
+
+commit 2fa9dd23abc28dc917ba17c8a56b4d7f1263b811
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 08:42:23 2026 -0400
+
+    chore: add static folder to gitignore
+
+commit 5832412ddc5fc26099208a5b049892d4dba0930e
+Merge: 3558ea8 986ff91
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 08:32:40 2026 -0400
+
+    Merge pull request #41 from squid-protocol/feature/is_comped
+    
+    fix(ui): hide payment banner if farm is comped for life
+
+commit 986ff91fc4d7b4902c5d5dc86d44d329fce12eba
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 08:29:03 2026 -0400
+
+    fix(ui): hide payment banner if farm is comped for life
+
+commit 3558ea805eb1ecff7730c82204bbd8fec708fd4d
+Merge: 0b23bdb f653b6d
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 07:39:59 2026 -0400
+
+    Merge pull request #40 from squid-protocol/feature/name_change
+    
+    Feature/name change
+
+commit f653b6d1ac951cf30cf772281be01b367d8a7053
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 07:35:13 2026 -0400
+
+    ci: inject github token for checkout authentication
+
+commit ccee109ab40f70294dcbb08224b80f1e4358752e
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 07:31:46 2026 -0400
+
+    style: compile latest tailwind css
+
+commit b0df1f9013e163c1b7d5c7b881a3d1a03539898f
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 07:31:42 2026 -0400
+
+    style(admin): inject custom dense css for rapid ledger entry
+
+commit eaa89ab508754a4725789b564c88cdcf506a6463
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 07:31:39 2026 -0400
+
+    feat(admin): implement high-density spreadsheet mode and bulk actions
+
+commit 648138e7539ecf7ec63d732d9d9d2630d8ac840e
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 07:31:36 2026 -0400
+
+    docs: update readme and content generator for new project nomenclature
+
+commit 7fde87335e1fefc9d926af3165703d5c7ed4dd9c
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 07:31:32 2026 -0400
+
+    refactor(core): update core configuration pointers for brand rename
+
+commit e4612c732a34383159ad92e447e07d941632b8f7
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 07:01:32 2026 -0400
+
+    folder name change
+
+commit 2d15191f8cac32ebf180830fee211f619c9dc91e
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 06:58:47 2026 -0400
+
+    updating name
+
+commit 0b23bdba26a0377bca5e0a53268b482511a11a0e
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 06:33:39 2026 -0400
+
+    chore: flake
+
+commit 4467c7717ef2048855c4684ed42e2e0deee48724
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 06:26:27 2026 -0400
+
+    style: compile updated tailwind css output
+
+commit ccbcc3daa7f1d9f8a01b89b15046a1ce71deba9a
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 06:26:27 2026 -0400
+
+    feat(farms): implement view logic and corresponding test coverage
+
+commit 1c4fd35e21a664145b618823115ceb055cf58a87
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sat May 23 06:26:27 2026 -0400
+
+    feat(farms): update models and validate with unit tests
+
+commit 717054dcb75ff2a51e64243a97b8f320307e9b5a
+Merge: 6a7e2ce ddac6e8
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 17:39:00 2026 -0400
+
+    Merge pull request #39 from squid-protocol/feature/membership_tier_status
+    
+    Feature/membership tier status
+
+commit ddac6e811c381420de9fab3c8659c0821fc8d6a2
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 17:35:03 2026 -0400
+
+    Potential fix for pull request finding 'CodeQL / Variable defined multiple times'
+    
+    Co-authored-by: Copilot Autofix powered by AI <62310815+github-advanced-security[bot]@users.noreply.github.com>
+
+commit 0e41edef48f321481d0450067856b98f09f87073
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 17:34:53 2026 -0400
+
+    Potential fix for pull request finding 'CodeQL / Empty except'
+    
+    Co-authored-by: Copilot Autofix powered by AI <62310815+github-advanced-security[bot]@users.noreply.github.com>
+
+commit 6853bea0347ac81fda5ef3553b63ab40a37670c1
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 17:33:30 2026 -0400
+
+    Potential fix for pull request finding 'CodeQL / Imprecise assert'
+    
+    Co-authored-by: Copilot Autofix powered by AI <62310815+github-advanced-security[bot]@users.noreply.github.com>
+
+commit 41564f12aa75f8d791ac0ce24b4a1b5fbb91fb7a
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 17:19:42 2026 -0400
+
+    chore: flake
+
+commit 04f5b483df42caa0413aff178fdf2a5081b3d900
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 17:18:27 2026 -0400
+
+    chore: compile tailwind css for profile danger zone
+
+commit 09260ea70df8da67d1524bddd6a066b04d3cd88a
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 17:18:22 2026 -0400
+
+    feat(accounts): implement GDPR-compliant account anonymization and PII scrubbing
+
+commit 061508653139341bbd1ce9d48773505d3f2f59c3
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 17:00:45 2026 -0400
+
+    chore: compile tailwind css
+
+commit 170786f5e659af1c27203b3c006ba17ec0ab9d4c
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 17:00:41 2026 -0400
+
+    test(logs): add unhappy path coverage for pacing engine and invalid form payloads
+
+commit 40a12ef8f0bfbddb128230c5aaba1fc3b3f87af2
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 17:00:38 2026 -0400
+
+    test(analytics): add coverage for super admin dashboard and empty database states
+
+commit c2e38fe23eb2cca87549e6b7ebaafe45bcd9f149
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 17:00:34 2026 -0400
+
+    sec(accounts): harden waiver signatures against DOM-bypass and cross-tenant pollution
+
+commit 573f6e4deff5d37de7cde5cd40d9fc993dc332cc
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 17:00:31 2026 -0400
+
+    test(farms): add coverage for background email tasks and manager edge cases
+
+commit 4e07d23ace10fe2f5ca40ecec050fe69c7f86f1d
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 17:00:27 2026 -0400
+
+    feat(farms): implement automated welcome emails and targeted broadcasts
+
+commit 4b5748cae2de69b3536fded6ba16d57ecf6dfd5e
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 17:00:24 2026 -0400
+
+    test(billing): migrate test file to directory structure and add webhook coverage
+
+commit 447ee9ecbd6512dded3b063e9c1520a10fafcec1
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 15:29:54 2026 -0400
+
+    chore: compile tailwind css
+
+commit fca90032046a67db8414b1bc45b4f011ee72887c
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 15:29:50 2026 -0400
+
+    ui(farms): update manager dashboard with communications panel
+
+commit 834dec045df1870ebbcb71c23d00dc6bd22d1c95
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 15:29:46 2026 -0400
+
+    feat(analytics): build htmx system adoption report and super admin dashboard
+
+commit 9da680d84b9019b7fa79f3aaf2cd7542cc456cf5
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 15:29:42 2026 -0400
+
+    test: fix test suite failures caused by Farm schema changes and state leakage
+
+commit 9af7bea970ebaff5de0e5c9975b2b01d06c0aab9
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 15:29:38 2026 -0400
+
+    feat(farms): add customizable welcome email schema and templates
+
+commit cf67c5d5d3836ad6a8c4a8258cc468ba5637f306
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 10:35:37 2026 -0400
+
+    refactor(farms): merge progress report into manager dashboard tabs and update tailwind styles
+
+commit 7b3c4cfc93219f4a8e37eec34a0ddcd1dd8f9eec
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 10:35:33 2026 -0400
+
+    fix(analytics): restore missing volunteer heatmap htmx endpoint
+
+commit d4a23430450c3faebd5aa3b4949dd0fd523eb9a9
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 10:35:30 2026 -0400
+
+    feat(farms): add manual subscription tier control and trial reset actions to admin
+
+commit 6a7e2ce10b30ef7884acbd89c8e6597b104e0640
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 09:30:07 2026 -0400
+
+    add work committment to volunteer edit
+
+commit 29fea90d3b193aaa042a07a12eecd7a3f407077b
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 08:49:19 2026 -0400
+
+    chore:flake
+
+commit 42c00e5ba873ac5302952d44aced6e17fd915104
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Fri May 22 08:46:47 2026 -0400
+
+    Un-ignore migrations, add M2M schema files, update tasks and scripts
+
+commit 599467f4f7c32eb771c97558b1ca79db6a460d4c
+Merge: 27f706b 8c2fa51
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 15:46:28 2026 -0400
+
+    Merge pull request #38 from squid-protocol/feature/waiver_tiering_system
+    
+    Feature/waiver tiering system
+
+commit 8c2fa511cf38616d9d94d739dad23857cad25256
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 15:42:58 2026 -0400
+
+    test: update coverage for strict tier-based compliance routing
+
+commit 8bd0fd3b2186395b4a1dc4aa9541edd00d52063b
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 15:42:55 2026 -0400
+
+    feat(ui): lock compliance hub behind paywall and add upsell banner
+
+commit 02ea9e41bccdfe61cecc21a59aad655adc08c53d
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 15:42:52 2026 -0400
+
+    feat(security): enforce waiver paywall in middleware and form processors
+
+commit a314c308530fa41c4f9929d1dc88c3b0f4e9e6c5
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 15:42:49 2026 -0400
+
+    feat(billing): implement can_use_waivers feature flag and update pricing copy
+
+commit 27f706bc86effdc4a7dd3d14ba6d8225f84e1ed7
+Merge: c5998ed 855c307
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 15:03:14 2026 -0400
+
+    Merge pull request #37 from squid-protocol/feature/compliance-and-webhooks
+    
+    Feature/compliance and webhooks
+
+commit 855c307d06b88bea48a05f145c66393aa3785694
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 15:00:37 2026 -0400
+
+    test(logs): add strict RBAC coverage and fix tollbooth test interceptions
+
+commit d6a8386da546a9aea87198bb047df2d7d985c3d5
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 15:00:33 2026 -0400
+
+    feat(logs): build master directory UI and interactive edit modals
+
+commit 6de04b9fea8c3b54a85e953ee8f73f448933ba34
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 15:00:30 2026 -0400
+
+    feat(logs): implement secure RBAC edit and delete views for volunteers and managers
+
+commit a6be0acca0cde89572a73e01e7b6c06e334b24a7
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 15:00:27 2026 -0400
+
+    fix(billing): correct undefined variable in stripe webhook logger
+
+commit 905765ab7de2f8fd6cbf84699ca3ce7d725353ec
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 14:34:49 2026 -0400
+
+    chore: label empty exception block
+
+commit f11e1173f62710d5a04fa1d84bc3619cb1afc8ec
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 14:29:30 2026 -0400
+
+    test(compliance): add comprehensive coverage for email verification and waiver middleware
+
+commit ee460917ec54bf1f7d815c3eb9d1fdfc644afeae
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 14:29:28 2026 -0400
+
+    feat(admin): deploy God Mode dashboards with global ledgers and read-only WORM audit locks
+
+commit e4a0456ffd76faca843690df5e3dcc2f3e6ece3e
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 14:29:25 2026 -0400
+
+    feat(compliance): build strict liability tollbooths, e-signatures, and async PDF workers
+
+commit da0a27e9bab87faa8db99083d27f9bd01bfa686c
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 14:29:22 2026 -0400
+
+    feat(core): implement WORM signature models, farm compliance toggles, and PDF settings
+
+commit 37eeda9063896dd63ebdc2e22860b70dbef3b66d
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 14:20:16 2026 -0400
+
+    chore(theme): recompile Tailwind CSS for updated templates
+
+commit ee9b7a975c37345f2679d13eff5687a7b1cd910e
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 14:20:12 2026 -0400
+
+    feat(admin): deploy comprehensive God Mode dashboards with global ledgers and strict WORM audit locks
+
+commit 6f66aa9b09d64db5fbd4813055e47fb4d19b7759
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 14:20:09 2026 -0400
+
+    feat(farms): add allows_joint_accounts toggle to bypass WORM compliance for legacy families
+
+commit 730a1b81d8776a9f550f590a308d29b3cdee1d04
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 13:50:08 2026 -0400
+
+    feat(accounts): generate immutable PDF receipts for ESIGN compliance and achieve 100% test coverage
+
+commit 53b353c72aeebdd0e0f44effbd7315d382ecba11
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 13:50:04 2026 -0400
+
+    feat(accounts): implement cryptographic email verification and mandate physical address for waivers
+
+commit db3f4b2620130acd4d63f064e668108454646fad
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 13:50:02 2026 -0400
+
+    feat(accounts): add strict legal identity fields and WORM document columns to schema
+
+commit e67d1779bb948762158be72df5949cdff60d7bb0
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 13:18:45 2026 -0400
+
+    fix(farms): enforce Flake8 line length in forms and add missing farm membership safety catch
+
+commit 5286c075e53ee5935119cfd0fbde0ac1ee51bf1b
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 13:18:42 2026 -0400
+
+    feat(accounts): implement asynchronous WORM-compliant PDF generation for waivers via django-q2
+
+commit 7379b9b9ef54d8d475d68c003c7fa26c8cecedf4
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 12:50:38 2026 -0400
+
+    chore: compile tailwind CSS assets
+
+commit 2b7e4e52bb0201f07769ed8cafef85c32efce06f
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 12:50:35 2026 -0400
+
+    feat(farms): build printable compliance audit view for manager transparency
+
+commit 807b24e5d1e53f79e2f36dfb6a115a1bacc95ac1
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 12:50:32 2026 -0400
+
+    feat(accounts): implement guardian signature bypass and volunteer document portal
+
+commit 37e9c54687d6eef8ef84812e9bc0740de9884ecf
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 12:30:32 2026 -0400
+
+    feat(accounts): add legal document portal for volunteers to review signed waivers
+
+commit 00a57408ce5d2da1b5c56a7b4e061e02a5bfbe0a
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 12:27:26 2026 -0400
+
+    feat(accounts): implement guardian signature bypass UX for minor volunteers
+
+commit fb109882686343221bc0da1c8c3520c075fe5b9e
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 12:25:48 2026 -0400
+
+    feat(accounts): add guardian signature schema to FormSignature model for minors
+
+commit 351f7ab09295a5405eee9bbd42d326b242398f96
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 12:18:17 2026 -0400
+
+    chore: compile tailwind assets and finalize global settings
+
+commit 097c166e82c4414652a08e93214e16333d60c444
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 12:18:14 2026 -0400
+
+    feat(accounts): apply strict E.164 phone number validation to user profiles
+
+commit 39b67f741c0683b3da78efedd343f64f8817202a
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 12:16:32 2026 -0400
+
+    ux(forms): add phone number format placeholders and help text to prevent validation friction
+
+commit 1e19d1ba150b7777df9814faac9a7e1053976769
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 12:06:39 2026 -0400
+
+    feat(farms): implement strict E.164 phone number validation and formatting
+
+commit 844e8fd5d6cc3a962581ffa3345f95c64ba12b6e
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 11:56:28 2026 -0400
+
+    test(farms): achieve 100% coverage for manager dashboards, IDOR, and reporting
+
+commit b3cd2740203a4bafab7338e736b0c16164ef806d
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 11:56:24 2026 -0400
+
+    test(accounts): achieve 100% coverage for identity flows and compliance middleware
+
+commit 2636d0d0271f50b2d0e3ebbb8d79577123ff29ad
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 11:56:21 2026 -0400
+
+    fix(farms): correct capacity query related name and add model string representations
+
+commit ca7b15e824f7450fc8b069acdef1059267334a89
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 11:10:55 2026 -0400
+
+    chore: compile updated tailwind styles for manager dashboard
+
+commit a8ad4946a58d057f908947d40e74b35ff5ad6d91
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 11:10:51 2026 -0400
+
+    refactor(farms): upgrade manager dashboard UI with targeted forms and new settings modal
+
+commit e8df9d6da0376f7a6e719809d8b1011373ce57c9
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 11:10:48 2026 -0400
+
+    feat(accounts): enforce targeted compliance forms in middleware and views
+
+commit ebae24ca4dcef2af5d63f6246f69cb51dfff36f5
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 11:10:45 2026 -0400
+
+    feat(data): add targeted compliance forms and update farm business schema
+
+commit 7e8fd3bc22b32683da34cf55740dc2001f9cd581
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 10:37:53 2026 -0400
+
+    chore: compile updated tailwind styles and minor log view tweaks
+
+commit b93e3347dfab74f5d6840c1057f7df990d18287e
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 10:37:49 2026 -0400
+
+    feat(accounts): update middleware for dynamic waivers and add scroll-lock signature UI
+
+commit 93f136b4f1a001aa1a0b62d8bb69871f9a346747
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 10:37:46 2026 -0400
+
+    refactor(farms): convert manager dashboard to tabbed UI and integrate compliance hub
+
+commit 8d9a8c7a762d29b1f2abe4f7aab9f2d0ed0bf2f1
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 10:37:43 2026 -0400
+
+    feat(data): add dynamic compliance forms, signature tracking, and comped billing tier
+
+commit dfbbb6805f22c8c06ec662263b70a4af95977fd2
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 09:26:15 2026 -0400
+
+    style(farms): apply black formatting constraints to views
+
+commit 0a0e1987f5c89ccc64e58290339f983b9cdfa52d
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 09:26:11 2026 -0400
+
+    chore(dev): refactor markdown f-string to resolve flake8 syntax and line length limits
+
+commit f003c4577ad4ca426300f5fec4dd8a0fb4e45801
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 09:26:05 2026 -0400
+
+    fix(logs): resolve duplicate form instantiation and trailing whitespace in read-only tollbooth
+
+commit fd5d670ef5b9211580d627247c41c0d537647364
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 09:26:03 2026 -0400
+
+    feat(billing): extend trial to 90 days, add comped status, and enable stripe promo codes
+
+commit 8d4275a9bb0a20f40402e94885c900b3f46a5a1e
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 07:50:45 2026 -0400
+
+    chore(git): ignore generated llm context markdown files
+
+commit f1d0dceb22b6cf8632d88b7a13d5f5cea3404317
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 07:50:35 2026 -0400
+
+    chore(tools): refactor context generator to output subsystem markdown files
+
+commit 4de67c57cfd5400f0a1c44087f0e0e0bafb76f04
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 07:40:37 2026 -0400
+
+    chore: flake & black
+
+commit 24fc18e368c00465af9f9111fb91d71cfcf5006b
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 07:38:49 2026 -0400
+
+    feat(billing): map real Stripe products to DB and enforce tier capacity limits
+
+commit 93669dca77404b33c94edbc006c5ab1637508cc2
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 07:13:05 2026 -0400
+
+    test(farms): add integration tests for manager command center modals
+
+commit 803a8174299bf6bd0d5dfb470b227d9acb43872a
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 07:13:01 2026 -0400
+
+    test(accounts): lock in coverage for legacy claim flow and waiver compliance
+
+commit 00e274a283fb49345d540cd104a7fc2e675b8749
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 07:12:59 2026 -0400
+
+    test(billing): establish complete coverage for checkout, portal, and webhooks
+
+commit 3a84067260603d4082c47810c4ae578ddce931a2
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 07:12:56 2026 -0400
+
+    feat(billing): implement customer portal and enforce 303 checkout redirects
+
+commit adc6760a2b5eee2a8e22589ddbf46d75f4848555
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 06:30:26 2026 -0400
+
+    feat(compliance): implement liability waiver middleware and signature UI
+
+commit 480e60dd36a7f781a6bf203ec69d2e3265966e5e
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 20 06:30:22 2026 -0400
+
+    feat(billing): implement webhook handlers for failed payments and cancellations
+
+commit c5998edeb9a1737a167070b56d4150a9de1b22e5
+Merge: f18a6d3 af088c0
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 18:01:58 2026 -0400
+
+    Merge pull request #36 from squid-protocol/feature/stripe_customer_portal
+    
+    Feature/stripe customer portal
+
+commit af088c04ec285ce3f6c07747ba71cd9443bc630f
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 18:00:06 2026 -0400
+
+    fix: remove leftover merge conflict marker in 0007 migration
+
+commit c04aa893c49403771a0237f98012bdf9790711dc
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 17:57:36 2026 -0400
+
+    chore: merge conflict resolution
+
+commit ad316caa61efba07670836b2ba4e3091d1c80d53
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 17:54:50 2026 -0400
+
+    chore: resolve final merge conflicts in urls.py
+
+commit 4c66141a50f6e15dbfb6873f9ed4a22d16f1f646
+Merge: c0bcfc4 f18a6d3
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 17:47:10 2026 -0400
+
+    chore: resolve merge conflicts and preserve cookbooks app
+
+commit c0bcfc446756cc69967c990c985d0c40655e5075
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 17:15:53 2026 -0400
+
+    feat(ui): add pricing page and manager dashboard trial lockouts
+
+commit 4004537dba7241c23736522cbcf0cf578e5c9b2d
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 17:15:48 2026 -0400
+
+    feat(billing): integrate stripe checkout, webhooks, and customer portal
+
+commit 8db963bbb51cedc70134201854aca6e0a17b71b0
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 17:15:45 2026 -0400
+
+    feat(admin): implement God Mode with inline memberships, advanced search, and billing fields
+
+commit 8dc68f2523946a76ada89f771c682812b714daa3
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 17:15:41 2026 -0400
+
+    feat(farms): add billing fields and 60-day trial calculation logic
+
+commit f18a6d385dd571a3f0513cbf9bdd1f63eaf1741a
+Merge: 5f7cb19 863a399
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 15:38:23 2026 -0400
+
+    Merge pull request #35 from squid-protocol/feature/stripe
+    
+    Feature/stripe
+
+commit 863a3992757439fd5ad44d224dae6910c0da1f03
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 15:36:40 2026 -0400
+
+    feat(frontend): build pricing page UI and wire core billing routes
+
+commit 26794e9ca1507d3d86f7da13c5dde2672f383a8f
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 15:36:36 2026 -0400
+
+    feat(billing): implement stripe checkout sessions and webhook verification
+
+commit 6a01f2b864f800ff780451b1b2c9e8c961cd3656
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 15:36:32 2026 -0400
+
+    feat(farms): add stripe subscription tracking fields to Farm model
+
+commit 403f741eb9c70d01b56fc51beeaafd81a1d8e07e
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 15:36:28 2026 -0400
+
+    chore: add stripe dependency and register billing and cookbooks apps
+
+commit 5f7cb19c5fa04b79928269887766bf62e8b9c459
+Merge: 8c99550 b02be56
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 11:31:44 2026 -0400
+
+    Merge pull request #33 from squid-protocol/feature/password-reset-flow
+    
+    feat(auth): migrate password reset flow to global templates and imple…
+
+commit b02be5686300cb6aed9b345805d1dceb18c59c22
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 11:29:39 2026 -0400
+
+    feat(auth): migrate password reset flow to global templates and implement UI
+
+commit 8c995506ae10f1771db877ec68d9b4b1572ed384
+Merge: cbcb3d6 cf6b5f6
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 10:57:25 2026 -0400
+
+    Merge pull request #26 from squid-protocol/dependabot/pip/click-8.4.0
+    
+    build(deps): bump click from 8.3.3 to 8.4.0
+
+commit cbcb3d61bbfab0651f06b71446bb3018912dd514
+Merge: 3b5dea5 14a216b
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 10:57:04 2026 -0400
+
+    Merge pull request #30 from squid-protocol/dependabot/pip/requests-2.34.2
+    
+    build(deps): bump requests from 2.34.1 to 2.34.2
+
+commit 3b5dea58f9b4ab30618a65fda30ecfd266f5c02d
+Merge: d6d847b df31226
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 10:56:42 2026 -0400
+
+    Merge pull request #32 from squid-protocol/feature/workspace-switcher
+    
+    Feature/workspace switcher
+
+commit df312263a9d710cd887bb25bdeacc464299417f2
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 10:51:25 2026 -0400
+
+    feat(ui): add multi-farm workspace switcher to global navigation
+
+commit 73bfbabb28677316ed9202759e79f269019f3cc6
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 10:51:21 2026 -0400
+
+    refactor(views): migrate to request.active_farm and add workspace switcher endpoint
+
+commit 7772fef8c0f930bc5f959369dc6d961d3413e128
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 10:51:16 2026 -0400
+
+    feat(core): implement active farm session middleware
+
+commit 14a216bdb5ba20b9925b67bb9e0f63b49d6f2f3c
+Author: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Date:   Tue May 19 14:35:58 2026 +0000
+
+    build(deps): bump requests from 2.34.1 to 2.34.2
+    
+    Bumps [requests](https://github.com/psf/requests) from 2.34.1 to 2.34.2.
+    - [Release notes](https://github.com/psf/requests/releases)
+    - [Changelog](https://github.com/psf/requests/blob/main/HISTORY.md)
+    - [Commits](https://github.com/psf/requests/compare/v2.34.1...v2.34.2)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: requests
+      dependency-version: 2.34.2
+      dependency-type: direct:production
+      update-type: version-update:semver-patch
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit d6d847ba41fbdd05ace8f088f16b3fa1358696ea
+Merge: 5bb69e2 7a95882
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 10:25:27 2026 -0400
+
+    Merge pull request #25 from squid-protocol/dependabot/pip/numpy-2.4.6
+    
+    build(deps): bump numpy from 2.4.4 to 2.4.6
+
+commit cf6b5f628fd1d8fcb374559b3001de80cace2f17
+Author: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Date:   Tue May 19 14:23:57 2026 +0000
+
+    build(deps): bump click from 8.3.3 to 8.4.0
+    
+    Bumps [click](https://github.com/pallets/click) from 8.3.3 to 8.4.0.
+    - [Release notes](https://github.com/pallets/click/releases)
+    - [Changelog](https://github.com/pallets/click/blob/main/CHANGES.rst)
+    - [Commits](https://github.com/pallets/click/compare/8.3.3...8.4.0)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: click
+      dependency-version: 8.4.0
+      dependency-type: direct:production
+      update-type: version-update:semver-minor
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit 5bb69e243da532af697850717a699c8235059902
+Merge: dc45687 920c68c
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 10:21:54 2026 -0400
+
+    Merge pull request #23 from squid-protocol/dependabot/github_actions/github/codeql-action-4
+    
+    build(deps): bump github/codeql-action from 3 to 4
+
+commit dc45687425483b2f4221aebf17388d221acbbe22
+Merge: 29f4736 d35645f
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 10:21:36 2026 -0400
+
+    Merge pull request #27 from squid-protocol/dependabot/pip/black-26.5.1
+    
+    build(deps): bump black from 26.3.1 to 26.5.1
+
+commit 7a958821946a966f3644e78b61ba030d166641e8
+Author: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Date:   Tue May 19 14:19:26 2026 +0000
+
+    build(deps): bump numpy from 2.4.4 to 2.4.6
+    
+    Bumps [numpy](https://github.com/numpy/numpy) from 2.4.4 to 2.4.6.
+    - [Release notes](https://github.com/numpy/numpy/releases)
+    - [Changelog](https://github.com/numpy/numpy/blob/main/doc/RELEASE_WALKTHROUGH.rst)
+    - [Commits](https://github.com/numpy/numpy/compare/v2.4.4...v2.4.6)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: numpy
+      dependency-version: 2.4.6
+      dependency-type: direct:production
+      update-type: version-update:semver-patch
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit 29f4736334cfa2af5222109c2ff8e1977f7d396a
+Merge: d40ac83 3e39179
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 10:18:52 2026 -0400
+
+    Merge pull request #28 from squid-protocol/dependabot/pip/narwhals-2.21.2
+    
+    build(deps): bump narwhals from 2.21.0 to 2.21.2
+
+commit 920c68c57232f83f5b5a0b0aa7fbb2b4eab33360
+Author: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Date:   Tue May 19 14:18:42 2026 +0000
+
+    build(deps): bump github/codeql-action from 3 to 4
+    
+    Bumps [github/codeql-action](https://github.com/github/codeql-action) from 3 to 4.
+    - [Release notes](https://github.com/github/codeql-action/releases)
+    - [Changelog](https://github.com/github/codeql-action/blob/main/CHANGELOG.md)
+    - [Commits](https://github.com/github/codeql-action/compare/v3...v4)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: github/codeql-action
+      dependency-version: '4'
+      dependency-type: direct:production
+      update-type: version-update:semver-major
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit d35645faf3fa0ce80fb2c9e950f87b184a9bede0
+Author: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Date:   Tue May 19 14:17:59 2026 +0000
+
+    build(deps): bump black from 26.3.1 to 26.5.1
+    
+    Bumps [black](https://github.com/psf/black) from 26.3.1 to 26.5.1.
+    - [Release notes](https://github.com/psf/black/releases)
+    - [Changelog](https://github.com/psf/black/blob/main/CHANGES.md)
+    - [Commits](https://github.com/psf/black/compare/26.3.1...26.5.1)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: black
+      dependency-version: 26.5.1
+      dependency-type: direct:production
+      update-type: version-update:semver-minor
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit d40ac833b761bf2c06270fb28461016a69c8daed
+Merge: b5fe9e6 7e55e35
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 10:16:36 2026 -0400
+
+    Merge pull request #22 from squid-protocol/dependabot/github_actions/actions/checkout-6
+    
+    build(deps): bump actions/checkout from 4 to 6
+
+commit 3e39179efefec7d32397a3a11193c29db524e837
+Author: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Date:   Tue May 19 14:16:30 2026 +0000
+
+    build(deps): bump narwhals from 2.21.0 to 2.21.2
+    
+    Bumps [narwhals](https://github.com/narwhals-dev/narwhals) from 2.21.0 to 2.21.2.
+    - [Release notes](https://github.com/narwhals-dev/narwhals/releases)
+    - [Commits](https://github.com/narwhals-dev/narwhals/compare/v2.21.0...v2.21.2)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: narwhals
+      dependency-version: 2.21.2
+      dependency-type: direct:production
+      update-type: version-update:semver-patch
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit 7e55e35ede41852a02dc4736b7918825b5368e93
+Author: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+Date:   Tue May 19 14:14:01 2026 +0000
+
+    build(deps): bump actions/checkout from 4 to 6
+    
+    Bumps [actions/checkout](https://github.com/actions/checkout) from 4 to 6.
+    - [Release notes](https://github.com/actions/checkout/releases)
+    - [Changelog](https://github.com/actions/checkout/blob/main/CHANGELOG.md)
+    - [Commits](https://github.com/actions/checkout/compare/v4...v6)
+    
+    ---
+    updated-dependencies:
+    - dependency-name: actions/checkout
+      dependency-version: '6'
+      dependency-type: direct:production
+      update-type: version-update:semver-major
+    ...
+    
+    Signed-off-by: dependabot[bot] <support@github.com>
+
+commit b5fe9e6fb3c0cba446513dc299642f125987f273
+Merge: 8428f8f b2ee0c2
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 10:11:22 2026 -0400
+
+    ci: resolve merge conflict and fix yaml formatting
+
+commit b2ee0c2c3a41840cc4dca83ba25bc89f4f5699ed
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 09:59:30 2026 -0400
+
+    ci: fix postgres service container password initialization
+
+commit 8428f8f65dbad0bf7f7300148adfc43d2758f487
+Merge: f1eceef dae783d
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 09:56:46 2026 -0400
+
+    Merge pull request #29 from squid-protocol/feature/m2m-database-pivot
+    
+    Feature/m2m database pivot
+
+commit dae783d90195673000f6e9035de067b1565c9178
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 09:55:11 2026 -0400
+
+    fix(lint): remove unused active_vols variable in manager_dashboard
+
+commit 0740bd4406ffdd220ad5534198dd1e52a46831b6
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 09:49:27 2026 -0400
+
+    chore: black & flake
+
+commit c46ac00289009aa461ca3c10365d3287fd03a30e
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 09:48:40 2026 -0400
+
+    test: update test suite for new M2M database architecture
+
+commit faa9832cbdbef506307d35bb28657fb891013556
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 09:48:36 2026 -0400
+
+    refactor(core): update admin, forms, and views to use FarmMembership bridge
+
+commit 9b4d72db807082d405860f20f36c1e0f70102599
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 09:48:32 2026 -0400
+
+    feat(db): implement FarmMembership M2M architecture and live data migrations
+
+commit f1eceef4c6056ca9e834b7265a8067bf785011e2
+Merge: c003dcb 46d306f
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 09:10:10 2026 -0400
+
+    Merge pull request #21 from squid-protocol/feature/codeql/dependabot/secrets
+    
+    Feature/codeql/dependabot/secrets
+
+commit 46d306fe0e3fa6c811aa0b8c2cdd9fed26a1ef87
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 09:08:11 2026 -0400
+
+    chore: black and flake
+
+commit 84b959b5e97c3986b7062e69d737070f3d9c57c4
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 09:06:29 2026 -0400
+
+    fix(seo): add missing url routes for static public pages
+
+commit bc621fc06a310745a37500edec30bd4178172d9c
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 08:59:17 2026 -0400
+
+    feat(seo): add public info pages and wire them into base layout
+
+commit 35ea0bb69bda6b015ed0846b216b6039979ed8e0
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Tue May 19 08:59:13 2026 -0400
+
+    ci: integrate Dependabot, CodeQL scanning, and GitHub Secrets
+
+commit c003dcb6ba47936563f78d92a5fcdbcf05ce074c
+Merge: 33b83b6 8e5a2d7
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 16:50:16 2026 -0400
+
+    Merge pull request #20 from squid-protocol/feature/readmes
+    
+    better documentation - moving from development to maintenance/production
+
+commit 8e5a2d7ae768602372fad03129ad7dffeaf82d7e
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 16:45:44 2026 -0400
+
+    documentation
+
+commit c3f3a01799925b2b263e753aee86f0d5e1504871
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 16:27:11 2026 -0400
+
+    chore: ignore all json files and clear from git cache
+
+commit 33b83b69317cedcb511371410363ef423a8c20c7
+Merge: e40fe0e 8afbb46
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 14:22:41 2026 -0400
+
+    Merge pull request #19 from squid-protocol/feature/stability_updates
+    
+    Feature/stability updates
+
+commit 8afbb46f329fc6ca18ab4ddc691445e4186ebb63
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 14:22:04 2026 -0400
+
+    feat(etl): add persistent audit logging to legacy db import script
+
+commit a581874cbf8988db5923636ad1ccf2ffe39e8853
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 14:22:00 2026 -0400
+
+    feat(logs): implement graceful exception handling for shift submissions
+
+commit 51b36544f20005e507900042513a951b113cb0e7
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 14:21:58 2026 -0400
+
+    feat(logging): configure persistent audit logger for administrative and background tasks
+
+commit e40fe0ee88206b0ea70e349bf3a3c1e4b2123b63
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 14:13:39 2026 -0400
+
+    fix(logs): remove unique_together constraint to allow multiple identical shifts per day
+
+commit 55b797425e24f9ad3e50485f453143f53d4ddd3b
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 14:13:36 2026 -0400
+
+    fix(auth): allow static and media files to bypass email verification middleware
+
+commit 66c0a4f9c9129d93040e2116a6dec520b22cd3a6
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 14:13:33 2026 -0400
+
+    chore(sentry): dynamically set environment tag to prevent local dev spam
+
+commit eefd87af1286a25cc3b0fdc8b2c162f3a5514b11
+Merge: 4cebbd8 a347c83
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 14:05:08 2026 -0400
+
+    Merge pull request #18 from squid-protocol/feature/yearly_progress_edge_cases
+    
+    clearly show expected pacing progress
+
+commit 4cebbd83c9d9f6e2cd613bf720008de61ca28bce
+Merge: 5eddb4c 0dfa760
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 14:02:34 2026 -0400
+
+    Merge pull request #17 from squid-protocol/feature/sentry_fix
+    
+    fix: turn off sentry when server in testing
+
+commit a347c8382e837c036187cfa4fe7325b113e5b9b1
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 13:59:57 2026 -0400
+
+    clearly show expected pacing progress
+
+commit 0dfa7603da877cd4f30d2ded141805ed676d70f2
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 13:30:34 2026 -0400
+
+    fix: turn off sentry when server in testing
+
+commit 5eddb4ca8e1122ee076a75b7dabe0a3b86ce746d
+Merge: 0dea6ac b2bc121
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 13:27:01 2026 -0400
+
+    Merge pull request #16 from squid-protocol/feature/volunteer_years_addition
+    
+    farmers can add in years volunteered that acts as an offset
+
+commit b2bc12146241c164f96029ec57b513c424b967f0
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 13:21:08 2026 -0400
+
+    farmers can add in years volunteered that acts as an offset
+
+commit 0dea6acd9df3425d34134d9772b9b27bd3257883
+Merge: 3682635 fe097d3
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 13:05:07 2026 -0400
+
+    Merge pull request #15 from squid-protocol/feature/missing_volun_field_info
+    
+    Feature/missing volun field info
+
+commit 3682635bccd48b820f329ac0c08a8c01453acfe4
+Merge: 401a961 302373e
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 12:57:19 2026 -0400
+
+    Merge pull request #14 from squid-protocol/feature/voln_historical_view
+    
+    show total veggie experience
+
+commit fe097d3776ae75eab464b999ecf940446a75fc23
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 12:54:59 2026 -0400
+
+    chore: black
+
+commit 5256b72a123a0865b33189419f5d792aca21f6cd
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 12:54:26 2026 -0400
+
+    added phone # & work commitment to user add form
+
+commit 302373e02008d5bdce71d50305597f6941b7a6bd
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 12:41:36 2026 -0400
+
+    show total veggie experience
+
+commit 401a9619c15084d4a5b4648d78766c811637f0bf
+Merge: 6c9bcff f000dd7
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 12:31:35 2026 -0400
+
+    Merge pull request #13 from squid-protocol/feature/let_voln_see_past_logs
+    
+    volunteers can choose the year of their log view
+
+commit f000dd7ee3474a273477e48293b8d4b2e980e32c
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 12:29:09 2026 -0400
+
+    volunteers can choose the year of their log view
+
+commit 6c9bcff19eb28811517f1f3f7bf71c375162e068
+Merge: 8664f50 d5779df
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 12:09:01 2026 -0400
+
+    Merge pull request #12 from squid-protocol/feature/account-claim
+    
+    sentry addition
+
+commit d5779df90a04a7824c7b9059ab3c3db895958abe
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 12:06:05 2026 -0400
+
+    Fix CI: Update requirements.txt inside the backend directory
+
+commit dce63cce71a47ed56dd296074c3a6de179aa9367
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 12:00:59 2026 -0400
+
+    Update requirements.txt with sentry-sdk to fix CI
+
+commit d3c44fac33b7830df9bc2c13825a407170795822
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Mon May 18 11:54:52 2026 -0400
+
+    sentry addition
+
+commit 8664f506796b8e113affed5eaea23877662424eb
+Merge: fecad98 ebb9b80
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 16:57:39 2026 -0400
+
+    Merge pull request #11 from squid-protocol/feature/account-claim
+    
+    feat(accounts): implement legacy account claim flow and dual email/us…
+
+commit ebb9b8032ef71341516ec64ea28fe210093e79c3
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 16:56:12 2026 -0400
+
+    chore: black
+
+commit 79afd04d31810284f26edf3a2866b37554b5dc1a
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 16:54:22 2026 -0400
+
+    fix(accounts): move AuthenticationForm import to top to satisfy flake8
+
+commit ad382f2079bb0a8c30139e3016544b2434fb2f41
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 16:50:42 2026 -0400
+
+    chore: black and flake
+
+commit 113f6e96bfebab7e8eb2620384fe2f047e2f0340
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 16:49:14 2026 -0400
+
+    feat(accounts): implement legacy account claim flow and dual email/username authentication
+
+commit fecad9865edb379dcfb44822eded23c681bbcf57
+Merge: 717182f 33e6f68
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 16:32:45 2026 -0400
+
+    Merge pull request #10 from squid-protocol/feature/notes
+    
+    feat(core): add qualitative field notes to volunteer logs and manager…
+
+commit 33e6f6804d447d0044d70cc9da72ebde6b9b37db
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 16:28:27 2026 -0400
+
+    feat(core): add qualitative field notes to volunteer logs and manager dashboard
+
+commit 717182fd0eed48f80478eb3e5a2dcb1731ddabb5
+Merge: 11de38b 0121e6e
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 16:13:42 2026 -0400
+
+    Merge pull request #9 from squid-protocol/feature/manager_dashboard
+    
+    feat(farms): add summary stat widgets and tabbed filtering to manager…
+
+commit 0121e6e902622ba75311f5235c7550c3de9bd7e1
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 16:12:18 2026 -0400
+
+    test(logs): fix assertion count to account for setup dummy data
+
+commit 26a8a32c1447f39509d97fce59a00da6eb0199d8
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 16:09:33 2026 -0400
+
+    chore: black and flake corrections
+
+commit 0ccb0fd2f470d447e4d561cf57a0921fcb8ad7a2
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 16:07:56 2026 -0400
+
+    test(core): add integration tests for manager dashboard and plotly chart generation
+
+commit 69d0ac5e3f9b7b1f29de0984b0de067b0d725fb6
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 15:59:20 2026 -0400
+
+    feat(farms): add summary stat widgets and tabbed filtering to manager dashboard
+
+commit 11de38b5b11d50279b295c35eb3cefcb1a67be58
+Merge: 5e766a2 7583857
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 15:43:17 2026 -0400
+
+    Merge pull request #8 from squid-protocol/feature/volunteer_honoring
+    
+    feat(logs): add farm-wide crop comparison chart to volunteer dashboard
+
+commit 7583857b4b1c37545e7e2667a57878800f6f4816
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 15:41:25 2026 -0400
+
+    chore: black correction
+
+commit 454a094a7bd1b018bce3a955054e7a98e403fab7
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 15:40:24 2026 -0400
+
+    feat(logs): add farm-wide crop comparison chart to volunteer dashboard
+
+commit 5e766a2970e027593dc133a896807848dfeb66b7
+Merge: 1a39f0f 502b945
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 14:42:56 2026 -0400
+
+    Merge pull request #7 from squid-protocol/hotfix/dashboard-ui
+    
+    fix(farms): synthesize modal UI layout with updated form fields
+
+commit 502b945fcad471b3fa03a4c105dfe6f6bf9618ce
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 14:40:23 2026 -0400
+
+    chore: flake
+
+commit 8ecc73861fd6364669a8d9b7f74c1e6cb9d2071f
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 14:38:47 2026 -0400
+
+    flake 8
+
+commit c69987f584f59f0abdeeb1145dc72dc12258df3f
+Merge: 0ea58ce 70798ca
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 14:32:27 2026 -0400
+
+    Merge branch 'hotfix/dashboard-ui' of https://github.com/squid-protocol/help_farmers_farm into hotfix/dashboard-ui
+
+commit 0ea58ce17641675c43587eda545d2d448efdd03f
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 14:21:01 2026 -0400
+
+    fix(core): restore missing forms, views, urls, and smart logging logic
+
+commit 70798caa5d7630676a1222b342ae8578ff3943dc
+Merge: a0fb157 1a39f0f
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 13:54:16 2026 -0400
+
+    Merge branch 'main' into hotfix/dashboard-ui
+
+commit a0fb1576e43df8edafacad042d262492093f00e5
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 13:51:31 2026 -0400
+
+    fix(farms): synthesize modal UI layout with updated form fields
+
+commit 1a39f0f95f4984faa2aff6cf8ac938696e32ad47
+Merge: 84e7da7 437d3c6
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 13:39:24 2026 -0400
+
+    Merge pull request #6 from squid-protocol/feature/managing_farm
+    
+    Feature/managing farm
+
+commit 437d3c6e866fe7e28bbeea477dc3b9709eead3f2
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 13:33:32 2026 -0400
+
+    feat(logs): add new activity choices and conditional crop requirement logic
+
+commit e5bee6d77453364b6210327a42d6851c3bb0fc74
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 13:33:27 2026 -0400
+
+    feat(farms): add email field and fix field order in volunteer creation modal
+
+commit 84e7da7bc7579484bb2c0ee4a29250a8142e4f4c
+Merge: 16727e0 97e5ea5
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 12:57:11 2026 -0400
+
+    Merge pull request #5 from squid-protocol/feature/managing_farm
+    
+    Feature/managing farm
+
+commit 97e5ea5b07cedae5ce2dca0a1b82e51e75ae5e9c
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 12:55:02 2026 -0400
+
+    test(farms): update security tests for soft-delete endpoints
+
+commit cc406ff6b11ee449b6a67c107de4947f77eb5809
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 12:48:19 2026 -0400
+
+    style(farms): remove extra blank lines to resolve E303
+
+commit 295ca88357777e755aa6fe4d822f03ab268e89fd
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 12:46:21 2026 -0400
+
+    fix(farms): move VolunteerEditForm import to top of file to resolve E402
+
+commit fc43c6e3f5193b9e023cb4b68d09806f5f706308
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 12:42:25 2026 -0400
+
+    feat(accounts): add optional phone number field to volunteer profiles and admin views
+
+commit 9c1d39337576c7b4c697489daaed1c881be2ce7b
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 12:42:21 2026 -0400
+
+    feat(farms): add visual symbol choices to work commitments
+
+commit 5a6401e98d63566252f85a829f04995e8dd243ad
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 12:42:17 2026 -0400
+
+    feat(farms): redesign manager dashboard with modals and inline edit workflows
+
+commit c939504aecf04e4c46d208f89a56411823d09096
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 12:40:15 2026 -0400
+
+    chore: ignore production data dumps
+
+commit 16727e09c14e4612b32807f90be8113cc2af2f34
+Merge: e7b2d51 dc59cb5
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 10:20:15 2026 -0400
+
+    Merge pull request #4 from squid-protocol/feature/old_data_migration-ETL
+    
+    Feature/old data migration etl
+
+commit dc59cb5ad38cec1b0f33a3f6ef01c3ee993653a5
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 10:18:05 2026 -0400
+
+    chore: remove linting error from generate_content.py
+
+commit b8161a30f9209c6a0206709f06c52946c95a7bc7
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 10:12:45 2026 -0400
+
+    test: add mock emails to accounts and analytics to bypass tollbooth
+
+commit e16452c9f4af08d6b61cdf9bafa386082f709a3d
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 09:39:05 2026 -0400
+
+    style: add missing EOF newlines to test files
+
+commit d0c6d6ec31b7e974fc7185c05d154d2459ef25bc
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 09:37:00 2026 -0400
+
+    style: fix PEP 8 linting errors in test files
+
+commit 7bce2612ef8dd2aa38474fb082d4d7f70e6d4d00
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 09:31:47 2026 -0400
+
+    test: add mock emails to test users to bypass middleware tollbooth
+
+commit 6a2b35c26a0ef52aeead6205bef192699a8f8617
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 09:29:48 2026 -0400
+
+    chore: ignore database dump files
+
+commit 6f3aa00a4f6435770fa8a8e19817e9e6648f57b2
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 09:22:20 2026 -0400
+
+    chore: add dummy db for testing env
+
+commit a6ec77532c2271c33e590731cffd871c8cc64233
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 09:17:09 2026 -0400
+
+    chore: black .
+
+commit 2ec0f93b880a33b121023ae0e3cd3f10cfdc1330
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 09:14:55 2026 -0400
+
+    feat(accounts): add middleware tollbooth to require user emails
+
+commit 23ef13cfbbf4bf9a2cc50b6e1453b96da5a886c1
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Sun May 17 09:14:48 2026 -0400
+
+    chore: ignore database dump files
+
+commit e7b2d518d1a43bd38facf201d931086e6649b77d
+Merge: 26f86eb d881265
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Thu May 14 20:13:53 2026 -0400
+
+    Merge pull request #3 from squid-protocol/feature/old_data_migration-ETL
+    
+    This PR introduces the foundational ETL pipeline to safely migrate our legacy SQLite data into the new system. To visualize this newly imported data, the analytics impact dashboard has been completely overhauled with high-level KPI metrics and improved chart rendering. It also includes a quality-of-life UX fix for the logging forms and a thorough code-cleanup to ensure CI/CD pipelines pass smoothly.
+    
+    🚀 New Features & Enhancements
+    
+    ETL Pipeline: Added the import_legacy_db management command to handle the extraction, transformation, and loading of legacy SQLite logs into the production database.
+    
+    Analytics Dashboard: Completely rebuilt the Farm Impact dashboard. Added a new KPI statistics section to track global farm labor and broke down seasonal hours more clearly.
+    
+    🐛 Bug Fixes & UX Improvements
+    
+    Form UX: Updated the duration_hours input step to 0.25. This prevents the browser from stepping by 0.01 increments and forces a much cleaner quarter-hour logging experience for users.
+    
+    🧹 Code Quality & Maintenance
+    
+    Linting & CI/CD: Scrubbed the codebase to pass strict flake8 checks.
+    
+    Removed unused imports.
+    
+    Fixed E501 (Line too long) errors in the dashboard HTML strings.
+    
+    Cleared W293 / W291 trailing whitespace errors.
+    
+    Applied black formatting for consistent code style.
+
+commit d88126536ce6c5269d515985cdc86560951fedee
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Thu May 14 20:06:20 2026 -0400
+
+    chore: trailing white spaces
+
+commit d0db8a26ad263c52dbda6af8c795168d13117930
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Thu May 14 20:00:28 2026 -0400
+
+    E501 (Line too long) and W293 (Trailing whitespace) errors corrections
+
+commit 907cec8d90b09080afe863f16343f409abe6eb25
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Thu May 14 19:56:19 2026 -0400
+
+    chore: remove unused imports
+
+commit ca51507198d3c02d9719166ec83e993119aab61d
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Thu May 14 09:28:51 2026 -0400
+
+    chore: black correction
+
+commit 5a05d8d7bcf7dd00d839b0d0f3784698e93e6e6d
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Thu May 14 09:28:06 2026 -0400
+
+    fix(logs): set duration step to 0.25 for quarter-hour logging UX
+
+commit bca3d5c531aa44f1259131b0a7351d644983cf4d
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Thu May 14 09:28:03 2026 -0400
+
+    feat(analytics): overhaul impact dashboard, add KPI metrics, and fix plotly rendering gaps
+
+commit cd5860a18365f164e5e2c3b4946cf0189dc3d393
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Thu May 14 09:28:00 2026 -0400
+
+    feat(etl): add import_legacy_db management command for SQLite migration
+
+commit 26f86eb0ad5b4a3d11bb29ddf04b55683ab0f677
+Merge: b3a302e b160a9a
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Thu May 14 08:17:46 2026 -0400
+
+    Merge pull request #2 from squid-protocol/feature/documentation_updates
+    
+    docs: implement LLM-optimized READMEs across core apps and project root
+
+commit b160a9afb80e8283441b2101f7d0474d072b9f14
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Thu May 14 08:17:14 2026 -0400
+
+    docs: implement LLM-optimized READMEs across core apps and project root
+
+commit b3a302e28c7234065e5796a89b763992aab91afe
+Merge: 600ad18 8dcde3c
+Author: Joe Esquibel <joe.m.esquibel@gmail.com>
+Date:   Thu May 14 07:59:38 2026 -0400
+
+    Merge pull request #1 from squid-protocol/feature/secrets_hiding
+    
+    security): implement django-environ and secure hardcoded secrets
+
+commit 8dcde3c39c8565ca7383907e39352699b456e97b
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Thu May 14 07:56:13 2026 -0400
+
+    test: disable ssl redirects and secure cookies during automated testing
+
+commit 8fdeb65f6758feba42addb1a43e30c4ba5f16007
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Thu May 14 07:47:23 2026 -0400
+
+    fix(deps): correctly update backend requirements file
+
+commit 0a4d54ffbafaac0e9d8d012d1952ed9a7581226b
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Thu May 14 07:44:16 2026 -0400
+
+    build: add django-environ to requirements.txt
+
+commit ad89737fe637f99eb5cb70e42f4d18143c2d406c
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Thu May 14 07:41:31 2026 -0400
+
+    chore: reference env in helpfarmers/settings.py
+
+commit 8c749ab4a950485531e836884c0e7e686f544811
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Thu May 14 07:31:47 2026 -0400
+
+    chore(security): implement django-environ and secure hardcoded secrets
+
+commit 600ad186238ce00c49bad0f130b366e42f2f45b1
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Thu May 14 07:13:27 2026 -0400
+
+    chore(dev): add honcho procfile and auto-launch browser on startup
+
+commit fbe80a145f5e49d5f2b4c2dcf9d350c04bc3ae40
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Thu May 14 07:13:24 2026 -0400
+
+    build(ui): replace tailwind cdn with local node-based build pipeline
+
+commit e910a6cbb66ceba2ede77eba1f901f179be24975
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Thu May 14 07:13:20 2026 -0400
+
+    fix(farms): restore impact graphs and correct dashboard template routing
+
+commit 0159719c0bcc2a4b2d716201366160e691d34b79
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 16:45:16 2026 -0400
+
+    refactor(farms): unify manager templates with global layout and tab navigation
+
+commit bf4747f23cb7d6213fb29e5b917d9b389564849d
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 16:45:13 2026 -0400
+
+    feat(farms): create progress report view and routing
+
+commit 9dca116326b0b5c15721dafe1c477bc9758aa139
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 16:02:38 2026 -0400
+
+    feat(logs): add dynamic weekly pacing engine to volunteer dashboard
+
+commit d08ab621615af7b7daf231b1f3edf2a8a8bcc2d3
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 16:02:03 2026 -0400
+
+    fix(accounts): add work commitment to user admin and update readme
+
+commit 50c6c14a0e78c42aa5b8c9508d58285402f34138
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 15:38:29 2026 -0400
+
+    chore: black . corrections
+
+commit e8963b320dda1b3eb106bbdfda8168324358db2e
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 15:36:40 2026 -0400
+
+    fix(logs): pass user to LogEntryForm to resolve crop filtering and fix tests
+
+commit 1328ba534d024575bdbcff76b6d217e30d771395
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 15:36:37 2026 -0400
+
+    feat(farms): add season start and end dates to manager dashboard
+
+commit af662f8c68f874e69ce171bbb683e949b801a12c
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 15:01:02 2026 -0400
+
+    chore: black . corrections
+
+commit 26004edace4f34ea2a319ae5d26573b57993f972
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 14:59:20 2026 -0400
+
+    docs: add app-level readmes for accounts and farms
+
+commit 0a0d7f4b974ba1f3b86ff46be0db94a00ee715ce
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 14:59:17 2026 -0400
+
+    refactor: migrate impact dashboard from profile to log hours view
+
+commit c0d34982e172656f8f71225009ef73bb54f6915f
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 14:45:51 2026 -0400
+
+    chore: flake 8 linter correction from tailwind CSS strings
+
+commit 4b9c712c7ceaec88e8e0b0b691082a7b16ae5b34
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 14:41:11 2026 -0400
+
+    docs: update project readme
+
+commit 20540a4b14355f6de8213ab2bb3e0e5dd9f824ab
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 14:41:08 2026 -0400
+
+    feat(accounts): link users to work commitments and add personal impact dashboard
+
+commit ae3877f7af1ca3e9b43eddaed44bdee19e7af9fe
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 14:41:04 2026 -0400
+
+    feat(farms): add dynamic multi-tenant work commitments to manager dashboard
+
+commit 0df7cf82e516343d1f3e71af7455e3c68ff5aeec
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 14:41:01 2026 -0400
+
+    feat(analytics): add seasonal workflow timeline chart to farm impact dashboard
+
+commit ac6026f8d801bb6bf092e064f09d1a04057e9fbb
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 13:58:10 2026 -0400
+
+    chore: black whitespace
+
+commit fb339032e917bdf962aae4799e162e5e3a9851d1
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 13:56:26 2026 -0400
+
+    style: fix pep8 line length error in avatar base64 test string
+
+commit 31640ff4eca8da9bd004f94b20960c8f5182fbc3
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 13:54:12 2026 -0400
+
+    style: apply Black auto-formatting to test and view files
+
+commit 4d18780c8610cbf7c2a3f6a9835b4e8288f123c4
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 13:51:35 2026 -0400
+
+    test: expand view coverage for accounts and analytics to pass CI requirements
+
+commit 14013f11e3aa5f0ebe5738dbe00d26f1fd9e70c6
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 13:49:00 2026 -0400
+
+    test: expand view coverage for analytics and accounts to pass CI requirements
+
+commit 8fcd0e19566d9129d2bb0148026d476917bcd961
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 13:35:20 2026 -0400
+
+    test(analytics): add basic view tests to satisfy coverage requirements
+
+commit bf691e7206dd1406332aff829ff4d25532031a2e
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 13:31:52 2026 -0400
+
+    chore(deps): add pandas and plotly to requirements for CI pipeline
+
+commit 599dae3e4509c0d64401f1115c5b5c9e45b5d978
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 13:28:05 2026 -0400
+
+    style(analytics): remove unused import and fix pep8 line length in empty state
+
+commit b9eba1ff7587e46062ac5fbb95a5187453becff9
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 13:24:15 2026 -0400
+
+    style(analytics): apply Black auto-formatting
+
+commit a784ab8ab0cf7ae7e254093ba9beea0d97d0a601
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 13:23:42 2026 -0400
+
+    feat(analytics): add term frequency heatmap and remove dependency on standalone python scripts
+
+commit a789a22ec05752d0dc177681f1d834c1cf743864
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 13:15:55 2026 -0400
+
+    feat(analytics): implement dominant activity heatmap with dynamic HTMX filters
+
+commit 43e5a0bb6dc05cb02a8afe37acbb9f846bff29c7
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 13:15:52 2026 -0400
+
+    fix(ui): upgrade globally loaded Plotly CDN and resolve partials directory structure
+
+commit fd74fdd6993b9a962ec9b90f0a2d83c1ba235b2a
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 12:43:13 2026 -0400
+
+    style: remove trailing whitespace on blank line
+
+commit e25acae403f8c38395dd80bc50c3a66088c7771f
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 12:40:25 2026 -0400
+
+    style: fix remaining pep8 linting errors
+
+commit acbce80ed33a4107e833f022c5bcc5d2a0231082
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 12:37:07 2026 -0400
+
+    style: apply Black auto-formatting and remove unused imports
+
+commit 0b7bed7e0f48c16d2ee56427ddedcce3852c397f
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 12:28:48 2026 -0400
+
+    refactor(farms): strip chart logic and implement HTMX dynamic filters
+
+commit 1712f5f5c693bbb7734131252316b266f8ef9272
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 12:28:44 2026 -0400
+
+    feat(analytics): extract impact chart logic into dedicated analytics app
+
+commit 18199f2449ce9c9d3c472062117d7f851d605400
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 12:19:03 2026 -0400
+
+    feat(logs): implement HTMX no-reload form and toast notification
+
+commit 6d48ce2d033730817c3ba5d3676efb11f962abd9
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 12:18:59 2026 -0400
+
+    fix(logs): filter crop dropdown by user's assigned farm
+
+commit a7eb391c344e92ddc48cfdc8f951b2c761550320
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 12:18:56 2026 -0400
+
+    feat(ui): implement interactive avatar cropper and update navbar
+
+commit e348a24da9bcdd694e96e3228e93ae06d95c4a50
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 12:18:53 2026 -0400
+
+    feat(accounts): add base64 avatar upload view and routing
+
+commit d27a0d55015f0badeec458ab91eb1107c504b54b
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 12:18:50 2026 -0400
+
+    feat(accounts): add avatar ImageField and configure media serving
+
+commit fad237a5a963df2099e6fb30c22ee57707e16942
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 11:32:45 2026 -0400
+
+    style: format remaining test suite files to clear flake8
+
+commit 8b1ad2aa40c10e8046f76f6cf9f17f11f5b231e1
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 11:28:38 2026 -0400
+
+    style: format test_views.py to resolve flake8 linting errors
+
+commit 093de81e8ce950d9fd0f475fc037109e91fbeed4
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 11:18:07 2026 -0400
+
+    ci: implement github actions workflow and requirements for automated testing
+
+commit 41c89db487e24d401778452ed73e33ab62ea3139
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 11:18:04 2026 -0400
+
+    chore: add flake8 configuration for standardized code linting
+
+commit f3cf70a1f9f4a93fb9672da61851bbe5992340a2
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 11:18:00 2026 -0400
+
+    test: refactor test architecture into modular directories and add comprehensive suites
+
+commit 000d3d25431cd3304332187ad29fe48005df6f1d
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 10:46:23 2026 -0400
+
+    style: apply black auto-formatting and resolve flake8 linting errors
+
+commit 0bf6a3f3e76de8d15d3174156bb6285431566a96
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 10:40:32 2026 -0400
+
+    feat(auth): add self-service profile editing and password reset pipeline
+
+commit d129dc9256aa39a4d729fef168bdb7b51eccf124
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 10:40:29 2026 -0400
+
+    security: implement django-axes brute-force protection and fix IDOR in volunteer view
+
+commit 617f99071f4cd64f052f3c073de45965bf6d2d97
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 10:23:15 2026 -0400
+
+    feat(analytics): add live farm impact dashboard using optimized ORM and plotly
+
+commit fe918d0681db353d27ede5b7bd2569749842e4d1
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 10:23:11 2026 -0400
+
+    feat(logs): implement robust data validation, safe deletions, and duplicate prevention
+
+commit a00030b87ed78368f6906321c7652dfc36b81935
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 09:54:32 2026 -0400
+
+    feat(ui): add landing page, global footer, and styled login portal
+
+commit 39bb16fd45eef805b5610b81a385efb89e78f135
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 09:45:08 2026 -0400
+
+    feat(ui): integrate tailwind css and crispy forms with master layout
+
+commit b301f7011d362f10a8e6057e219d6b4c54a5a6b9
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 09:30:18 2026 -0400
+
+    feat(farms): implement secure user deletion and detailed volunteer analytics view
+
+commit 88c6530d2530d98267b5511466003e640e5bd711
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 09:30:15 2026 -0400
+
+    feat(logs): display total hours and recent shifts on personal dashboard
+
+commit acd4aaf688b318816fda4c491137386cbb6d493e
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 09:30:10 2026 -0400
+
+    chore(logs): generate initial migrations for LogEntry model
+
+commit 8f6df99c786262b36849ac8cfec306ba05ef4ee1
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 09:10:28 2026 -0400
+
+    feat(farms): add self-serve volunteer management to manager dashboard
+
+commit 42dcafd6e4236235e14e0bffd0629c400f9e9898
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 08:53:00 2026 -0400
+
+    feat(core): configure authentication flow, login templates, and root routing
+
+commit d51c8df35ad93ce918b14152ef499cbf14420303
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 08:52:57 2026 -0400
+
+    feat(logs): create frontend form and views for logging volunteer hours
+
+commit 73f0730c12c8d71e9dd7fed3aa4c2bbd033f3f62
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 08:52:53 2026 -0400
+
+    feat(accounts): implement user role hierarchy and read-only friend status
+
+commit 721d112504f16709122efc74c3961985fc7d0345
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 08:52:49 2026 -0400
+
+    chore: configure gitignore and initialize utility directories
+
+commit 2045035ff17509a43731ddcb49591f10dcd065e8
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 08:25:43 2026 -0400
+
+    feat: complete database models for Farm, Crop, and LogEntry with admin integration
+
+commit 269605aaf8efca47e09f3e4ad8b914705c8c7149
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 08:13:01 2026 -0400
+
+    feat: Initial Django setup with CustomUser and PostgreSQL integration
+
+commit be4c0e8aefb84c54e749b27267fc854ef4cd906e
+Author: squid-protocol <joe.m.esquibel@gmail.com>
+Date:   Wed May 13 07:37:06 2026 -0400
+
+    first commit
