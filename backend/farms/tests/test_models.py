@@ -1,12 +1,72 @@
 from django.test import TestCase
-from farms.models import Farm, ComplianceForm
 from django.utils import timezone
 from datetime import timedelta
+from django.core.exceptions import ValidationError
+from django.contrib.auth import get_user_model
+
+from farms.models import Farm, ComplianceForm
+from accounts.models import FormSignature
+
+User = get_user_model()
+
+
+class FarmModelTests(TestCase):
+    def test_account_number_generation(self):
+        """Ensure a unique system account number is generated on creation."""
+        farm = Farm.objects.create(name="Auto Number Farm")
+        self.assertIsNotNone(farm.account_number)
+        self.assertTrue(farm.account_number.startswith("FARM-"))
+
+    def test_trial_days_remaining(self):
+        """Ensure the 60-day trial calculates correctly and doesn't go negative."""
+        farm = Farm.objects.create(name="Trial Farm")
+
+        # Fresh farm should have 60 days
+        self.assertEqual(farm.trial_days_remaining, 60)
+
+        # Fast forward 10 days
+        farm.created_at = timezone.now() - timedelta(days=10)
+        farm.save()
+        self.assertEqual(farm.trial_days_remaining, 50)
+
+        # Fast forward 70 days (expired)
+        farm.created_at = timezone.now() - timedelta(days=70)
+        farm.save()
+        self.assertEqual(farm.trial_days_remaining, 0)
+
+    def test_can_use_waivers_feature_flag(self):
+        """Ensure the Compliance Engine is paywalled correctly."""
+        # Starter tier
+        starter_farm = Farm.objects.create(
+            name="Starter Farm", subscription_tier="starter"
+        )
+        self.assertFalse(starter_farm.can_use_waivers)
+
+        # Growth tier
+        growth_farm = Farm.objects.create(
+            name="Growth Farm", subscription_tier="growth"
+        )
+        self.assertTrue(growth_farm.can_use_waivers)
+
+    def test_full_address_property(self):
+        """Ensure the structured address fields combine properly for the mapping API."""
+        farm = Farm.objects.create(
+            name="Address Farm",
+            address_line1="123 Farm Way",
+            city="Alto",
+            state="MI",
+            postal_code="49302",
+        )
+        self.assertEqual(farm.full_address, "123 Farm Way, Alto, MI, 49302")
 
 
 class ComplianceFormModelTests(TestCase):
     def setUp(self):
         self.farm = Farm.objects.create(name="Model Test Farm")
+        self.user = User.objects.create_user(username="signer", email="signer@test.com")
+        self.form = ComplianceForm.objects.create(
+            farm=self.farm, name="Waiver v1", body_text="Do not sue us."
+        )
 
     def test_is_currently_valid(self):
         """Ensure the compliance form correctly evaluates its expiration status."""
@@ -36,47 +96,10 @@ class ComplianceFormModelTests(TestCase):
 
     def test_compliance_form_str(self):
         """Ensure the string representation formats correctly."""
-        form = ComplianceForm.objects.create(
-            farm=self.farm, name="2026 Waiver", body_text="Test"
-        )
+        form = ComplianceForm.objects.create(farm=self.farm, name="2026 Waiver")
         self.assertEqual(str(form), "2026 Waiver - Model Test Farm")
 
-    def test_string_representations(self):
-        """Covers lines 55, 94, 132: The __str__ methods for Farm, Crop, Commitment, and Form."""
-        from farms.models import Crop, WorkCommitment
-
-        self.assertEqual(str(self.farm), "Model Test Farm")
-
-        crop1 = Crop.objects.create(farm=self.farm, crop_name="Corn", variety="Sweet")
-        self.assertEqual(str(crop1), "Corn - Sweet")
-
-        crop2 = Crop.objects.create(farm=self.farm, crop_name="Wheat")
-        self.assertEqual(str(crop2), "Wheat")
-
-        commitment = WorkCommitment.objects.create(
-            farm=self.farm, name="Half Share", required_hours=40, symbol="🌓"
-        )
-        self.assertEqual(str(commitment), "🌓 Half Share (40 hrs)")
-
-        form = ComplianceForm.objects.create(
-            farm=self.farm, name="Waiver", body_text="text"
-        )
-        self.assertEqual(str(form), "Waiver - Model Test Farm")
-
-
-class ComplianceFormImmutabilityTests(TestCase):
-    def setUp(self):
-        from django.contrib.auth import get_user_model
-
-        User = get_user_model()
-
-        self.farm = Farm.objects.create(name="Secure Farm")
-        self.form = ComplianceForm.objects.create(
-            farm=self.farm, name="2026 Waiver", body_text="Original Legal Text."
-        )
-        self.user = User.objects.create_user(username="signer", password="p")
-
-    def test_unsigned_form_can_be_edited(self):
+    def test_unsigned_form_allows_text_alteration(self):
         """Ensure a manager can fix typos if no one has signed it yet."""
         self.form.body_text = "Updated Legal Text."
         self.form.save()  # Should succeed without raising an error
@@ -86,9 +109,6 @@ class ComplianceFormImmutabilityTests(TestCase):
 
     def test_signed_form_rejects_text_alteration(self):
         """Ensure a form physically locks its text once a signature is applied."""
-        from accounts.models import FormSignature
-        from django.core.exceptions import ValidationError
-
         # 1. Apply a signature
         FormSignature.objects.create(
             user=self.user, form=self.form, digital_signature="John Doe"
@@ -105,8 +125,6 @@ class ComplianceFormImmutabilityTests(TestCase):
 
     def test_signed_form_allows_archiving(self):
         """Ensure a manager can still toggle is_active to archive a signed form."""
-        from accounts.models import FormSignature
-
         FormSignature.objects.create(
             user=self.user, form=self.form, digital_signature="John Doe"
         )

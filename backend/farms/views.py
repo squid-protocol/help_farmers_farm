@@ -1,31 +1,44 @@
-# --- Django Core & Utility Imports ---
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import get_user_model
-from django.core.exceptions import PermissionDenied
-from django.db.models import Sum, Q
-from django.views.decorators.http import require_POST
-from django.contrib import messages
-from django.utils import timezone
-from django.core.cache import cache
-import json  # Ensure this is imported at the top of your file
+# 1. Standard Library Imports
+import json
 
-# --- Local App Imports (Farms) ---
-from .models import Farm, Crop, WorkCommitment, ComplianceForm, FarmProfile, FarmImage
+# 2. Django Core Imports
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from django.contrib import messages
+from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db.models import Q, Sum
+from django.utils import timezone
+from django.core.exceptions import PermissionDenied
+from django.core.cache import cache
+from django.views.decorators.http import require_POST
+
+# 3. Third-Party Imports
+from django_q.tasks import async_task
+
+# 4. Local App Imports
+from .models import (
+    Farm,
+    FarmProfile,
+    FarmImage,
+    Crop,
+    WorkCommitment,
+    ComplianceForm,
+)
 from .forms import (
+    FarmSettingsForm,
     CropForm,
     VolunteerCreationForm,
-    WorkCommitmentForm,
-    FarmSettingsForm,
     VolunteerEditForm,
+    WorkCommitmentForm,
     ComplianceFormSetup,
     FarmProfileForm,
 )
+from .tasks import send_volunteer_welcome_email
 
-# --- Other App Imports ---
+# 5. Cross-App Imports
+from accounts.models import FarmMembership, FormSignature
 from logs.models import LogEntry
-from accounts.models import FarmMembership, FormSignature  # <-- UPDATED IMPORT
-from farms.tasks import send_volunteer_welcome_email
 
 User = get_user_model()
 
@@ -86,12 +99,14 @@ def manager_dashboard(request):
             farm_form = FarmSettingsForm(request.POST, instance=my_farm)
             if farm_form.is_valid():
                 farm_form.save()
+
+                # TRIGGER THE BACKGROUND GEOCODER
+                async_task("farms.tasks.geocode_farm_address", farm_id=my_farm.id)
+
                 messages.success(request, "Farm settings updated successfully!")
                 return redirect("manager_dashboard")
 
         elif "submit_broadcast" in request.POST:
-            from django_q.tasks import async_task
-
             subject = request.POST.get("broadcast_subject")
             body = request.POST.get("broadcast_body")
             audience = request.POST.get("audience", "all")
@@ -255,16 +270,20 @@ def manager_dashboard(request):
 
         waiver_status = "manual"
         if requires_waivers:
-            missing_waiver = False
-            for cform in active_forms:
-                applies = (
-                    cform.assignment_type == "all" or vol in cform.assigned_users.all()
-                )
-                if applies:
-                    if (vol.id, cform.id) not in sig_set:
-                        missing_waiver = True
-                        break
-            waiver_status = "missing" if missing_waiver else "compliant"
+            if not active_forms:
+                waiver_status = "none_setup"
+            else:
+                missing_waiver = False
+                for cform in active_forms:
+                    applies = (
+                        cform.assignment_type == "all"
+                        or vol in cform.assigned_users.all()
+                    )
+                    if applies:
+                        if (vol.id, cform.id) not in sig_set:
+                            missing_waiver = True
+                            break
+                waiver_status = "missing" if missing_waiver else "compliant"
 
         vol_data = {
             "user": vol,
@@ -693,19 +712,36 @@ def farm_search_view(request):
     # 1. Base Query: ONLY show farms that have actively opted into the public directory
     farms = Farm.objects.filter(profile__is_public=True).select_related("profile")
 
+    # --- NEW: Build Map Data ---
+    map_data = []
+    for f in farms:
+        if f.latitude and f.longitude:
+            map_data.append(
+                {
+                    "id": f.id,
+                    "name": f.name,
+                    "lat": f.latitude,
+                    "lng": f.longitude,
+                    "is_accepting": f.profile.is_accepting_volunteers,
+                    "url": reverse("public_farm_detail", args=[f.id]),
+                }
+            )
+    map_data_json = json.dumps(map_data)
+    # ---------------------------
+
     if query:
-        # Use Q objects to search across multiple fields at once!
         farms = farms.filter(
             Q(name__icontains=query)
-            | Q(address__icontains=query)
+            | Q(address_line1__icontains=query)
+            | Q(city__icontains=query)
+            | Q(state__icontains=query)
             | Q(profile__short_description__icontains=query)
             | Q(profile__tags__icontains=query)
             | Q(profile__volunteer_perks__icontains=query)
         ).distinct()
 
-    farms = farms[:15]  # Limit results to keep UI fast
+    farms = farms[:15]
 
-    # 2. Get a list of IDs for farms they've already requested to join
     pending_requests = FarmMembership.objects.filter(
         user=request.user, is_approved=False
     ).values_list("farm_id", flat=True)
@@ -713,7 +749,12 @@ def farm_search_view(request):
     return render(
         request,
         "farms/farm_search.html",
-        {"farms": farms, "query": query, "pending_requests": pending_requests},
+        {
+            "farms": farms,
+            "query": query,
+            "pending_requests": pending_requests,
+            "map_data_json": map_data_json,  # Pass to template
+        },
     )
 
 
@@ -828,7 +869,7 @@ def volunteer_roster_view(request):
                     user=new_user,
                     farm=my_farm,
                     is_approved=True,
-                    agreed_to_waiver=True,
+                    agreed_to_waiver=False,  # <-- FIX: Force new accounts to sign upon first login
                     work_commitment=volunteer_form.cleaned_data.get("work_commitment"),
                 )
 
@@ -960,12 +1001,20 @@ def public_farm_detail_view(request, farm_id):
             }
         )
 
+    # Check if the user has already requested to join this farm
+    pending_requests = []
+    if request.user.is_authenticated:
+        pending_requests = FarmMembership.objects.filter(
+            user=request.user, is_approved=False
+        ).values_list("farm_id", flat=True)
+
     context = {
         "farm": farm,
         "profile": profile,
         "total_hours": total_hours,
         "active_volunteers": active_volunteers,
         "plotly_traces_json": json.dumps(plotly_traces),
+        "pending_requests": pending_requests,
     }
 
     return render(request, "farms/public_farm_detail.html", context)

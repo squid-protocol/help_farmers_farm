@@ -17,10 +17,10 @@
                 🧑‍🌾 Agricultural Record
             </button>
             <button onclick="switchProfileTab('settings')" id="nav-settings" class="profile-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                ⚙️ Account Settings
+                ⚙️ Profile & Account
             </button>
             <button onclick="switchProfileTab('vault')" id="nav-vault" class="profile-tab whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                ⚖️ Legal Vault
+                ⚖️ Waivers Vault
             </button>
         </nav>
     </div>
@@ -145,7 +145,7 @@
                         <span class="text-white text-sm font-bold">Change Photo</span>
                     </div>
                 </div>
-                <p class="text-sm text-gray-500 mt-2">Click to update avatar</p>
+                <p class="text-sm text-gray-500 mt-2">Click to update your photo</p>
                 <input type="file" id="avatar-upload" class="hidden" accept="image/png, image/jpeg, image/jpg">
             </div>
 
@@ -167,7 +167,10 @@
 
     <div id="tab-vault" class="profile-panel hidden">
         <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm max-w-3xl mx-auto">
-            <h2 class="text-2xl font-extrabold text-gray-900 mb-6">Signed Legal Documents</h2>
+            Waivers Vault
+            <p class="text-sm text-gray-600 mt-1 mb-4">
+                To make volunteering easier, if a farm requires a liability waiver or safety agreement, we keep a permanent, secure copy of your signed documents right here for your convenience.
+            </p>
             
             {% if signatures %}
                 <ul class="divide-y divide-gray-100 border-t border-gray-100">
@@ -185,7 +188,7 @@
                     {% endfor %}
                 </ul>
             {% else %}
-                <p class="text-gray-500 italic bg-gray-50 p-4 rounded-xl border border-gray-100 text-center">You have not signed any legal documents yet.</p>
+                <p class="text-gray-500 italic bg-gray-50 p-4 rounded-xl border border-gray-100 text-center">You haven't needed to sign any farm's waivers through our system yet!</p>
             {% endif %}
         </div>
     </div>

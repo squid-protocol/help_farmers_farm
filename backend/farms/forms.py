@@ -165,17 +165,16 @@ class VolunteerEditForm(forms.ModelForm):
 class FarmSettingsForm(forms.ModelForm):
     class Meta:
         model = Farm
-        # THE FIX: Removed liability_waiver_text, added the new contact fields!
         fields = [
             "name",
-            "address",
+            "address_line1",
+            "city",
+            "state",
+            "postal_code",
             "contact_email",
             "phone_number",
-            "welcome_email_subject",
-            "welcome_email_body",
             "season_start",
             "season_end",
-            "allows_joint_accounts",
         ]
         help_texts = {
             "phone_number": "Format: (555) 123-4567 or +15551234567",

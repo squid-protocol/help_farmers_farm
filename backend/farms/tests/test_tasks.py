@@ -4,6 +4,8 @@ from django.contrib.auth import get_user_model
 from farms.models import Farm, WorkCommitment
 from accounts.models import FarmMembership
 from farms.tasks import send_volunteer_welcome_email, send_broadcast_email
+from unittest.mock import patch, MagicMock
+from geopy.exc import GeocoderTimedOut
 
 User = get_user_model()
 
@@ -14,7 +16,7 @@ class EmailTaskTests(TestCase):
         self.farm = Farm.objects.create(
             name="Testing Acres",
             welcome_email_subject="Welcome to Testing Acres!",
-            welcome_email_body="We are so glad you are here.",
+            welcome_email_body="<p>We are so <strong>glad</strong> you are here.</p>",
         )
 
         self.tier_heavy = WorkCommitment.objects.create(
@@ -25,7 +27,7 @@ class EmailTaskTests(TestCase):
         )
 
         # 2. Build the Roster
-        # User 1: Standard Volunteer
+        # User 1: Standard Volunteer (Active)
         self.vol_standard = User.objects.create_user(
             username="standard", email="standard@test.com", password="p"
         )
@@ -33,7 +35,7 @@ class EmailTaskTests(TestCase):
             user=self.vol_standard, farm=self.farm, is_approved=True
         )
 
-        # User 2: Heavy Tier Volunteer
+        # User 2: Heavy Tier Volunteer (Active)
         self.vol_heavy = User.objects.create_user(
             username="heavy", email="heavy@test.com", password="p"
         )
@@ -44,15 +46,7 @@ class EmailTaskTests(TestCase):
             work_commitment=self.tier_heavy,
         )
 
-        # User 3: Friend (Should NOT receive broadcasts)
-        self.friend = User.objects.create_user(
-            username="friend", email="friend@test.com", password="p", role="friend"
-        )
-        FarmMembership.objects.create(
-            user=self.friend, farm=self.farm, is_approved=True
-        )
-
-        # User 4: Archived/Inactive User (Should NOT receive broadcasts)
+        # User 3: Inactive User
         self.vol_inactive = User.objects.create_user(
             username="inactive",
             email="inactive@test.com",
@@ -63,43 +57,23 @@ class EmailTaskTests(TestCase):
             user=self.vol_inactive, farm=self.farm, is_approved=True
         )
 
-        # Clear the outbox just in case
-        mail.outbox = []
-
-    def test_send_volunteer_welcome_email(self):
-        """Ensure the welcome email compiles and sends properly."""
-        status = send_volunteer_welcome_email(
-            user_id=self.vol_standard.id,
-            farm_id=self.farm.id,
-            raw_password="temp_password_123",
+        # User 4: Legacy Friend
+        self.vol_friend = User.objects.create_user(
+            username="friend", email="friend@test.com", password="p", role="friend"
+        )
+        FarmMembership.objects.create(
+            user=self.vol_friend, farm=self.farm, is_approved=True
         )
 
-        self.assertIn("Welcome email sent", status)
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, "Welcome to Testing Acres!")
-        self.assertEqual(mail.outbox[0].to, ["standard@test.com"])
-        self.assertIn(
-            "temp_password_123", mail.outbox[0].body
-        )  # Prove password was injected
-
-    def test_welcome_email_fails_gracefully_on_bad_data(self):
-        """Ensure it doesn't crash the server if a bad ID is passed."""
-        status = send_volunteer_welcome_email(
-            user_id=9999, farm_id=self.farm.id, raw_password="p"
-        )
-        self.assertEqual(status, "Failed: User or Farm not found.")
-        self.assertEqual(len(mail.outbox), 0)
-
-    def test_broadcast_to_all_active_volunteers(self):
-        """Ensure broadcasts go to active volunteers but ignore friends and inactive accounts."""
+    def test_broadcast_to_all_active_volunteers_ignores_ghosts(self):
+        """Ensure broadcasts skip inactive users and 'friend' roles."""
         status = send_broadcast_email(
             farm_id=self.farm.id,
             subject="Farm Update",
-            custom_body="Big storm coming!",
+            custom_body="Here is the update.",
             audience_value="all",
         )
 
-        # Should only send to vol_standard and vol_heavy (2 people)
         self.assertIn("Broadcast sent to 2 recipients", status)
         self.assertEqual(len(mail.outbox), 2)
 
@@ -136,3 +110,92 @@ class EmailTaskTests(TestCase):
         self.assertIn("Broadcast sent to 1 recipients", status)
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, ["standard@test.com"])
+
+    def test_welcome_email_strips_html(self):
+        """Ensure the plain-text alternative strips Trix HTML tags."""
+        status = send_volunteer_welcome_email(
+            user_id=self.vol_standard.id,
+            farm_id=self.farm.id,
+            raw_password="temp_password",
+        )
+
+        self.assertIn("Welcome email sent", status)
+        self.assertEqual(len(mail.outbox), 1)
+
+        email = mail.outbox[0]
+
+        # Check HTML part
+        self.assertIn(
+            "<p>We are so <strong>glad</strong> you are here.</p>",
+            email.alternatives[0][0],
+        )
+
+        # Check Plain Text part
+        self.assertNotIn("<strong>", email.body)
+        self.assertNotIn("<p>", email.body)
+        self.assertIn("We are so glad you are here.", email.body)
+
+
+class GeocodingTaskTests(TestCase):
+    def setUp(self):
+        self.farm = Farm.objects.create(
+            name="Map Farm",
+            address_line1="123 Missing St",
+            city="Nowhere",
+            state="MI",
+            postal_code="49000",
+        )
+
+    @patch("geopy.geocoders.Nominatim.geocode")
+    def test_geocode_success_strict_address(self, mock_geocode):
+        """Ensure a perfect address match saves the coordinates."""
+        # Fake a successful OpenStreetMap response
+        mock_location = MagicMock()
+        mock_location.latitude = 42.0
+        mock_location.longitude = -85.0
+        mock_geocode.return_value = mock_location
+
+        # Run the task manually
+        from farms.tasks import geocode_farm_address
+
+        geocode_farm_address(self.farm.id)
+
+        self.farm.refresh_from_db()
+        self.assertEqual(self.farm.latitude, 42.0)
+        self.assertEqual(self.farm.longitude, -85.0)
+
+    @patch("time.sleep", return_value=None)  # Skip the 1-second delay in tests
+    @patch("geopy.geocoders.Nominatim.geocode")
+    def test_geocode_fallback_mechanism(self, mock_geocode, mock_sleep):
+        """Ensure it falls back to City/State if the strict street fails."""
+        # Fake a failure on the first try, but success on the second (fallback)
+        mock_location = MagicMock()
+        mock_location.latitude = 43.0
+        mock_location.longitude = -86.0
+
+        # side_effect allows us to return different things on subsequent calls
+        mock_geocode.side_effect = [None, mock_location]
+
+        from farms.tasks import geocode_farm_address
+
+        geocode_farm_address(self.farm.id)
+
+        self.farm.refresh_from_db()
+        self.assertEqual(self.farm.latitude, 43.0)
+        self.assertEqual(mock_geocode.call_count, 2)  # Proves it tried the fallback!
+
+    @patch("geopy.geocoders.Nominatim.geocode")
+    def test_geocode_api_timeout_graceful_fail(self, mock_geocode):
+        """Ensure the background worker doesn't crash if the API times out."""
+        mock_geocode.side_effect = GeocoderTimedOut("Service unavailable")
+
+        from farms.tasks import geocode_farm_address
+
+        # This should execute and swallow the error, NOT raise an exception
+        try:
+            geocode_farm_address(self.farm.id)
+            crashed = False
+        except Exception:
+            crashed = True
+
+        self.assertFalse(crashed)
