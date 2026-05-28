@@ -14,6 +14,9 @@ from decimal import Decimal
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_POST
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -56,13 +59,10 @@ def log_hours_view(request):
                 messages.success(request, "Shift logged successfully!")
                 return redirect("log_hours")
             except Exception as e:
-                # Log the real error to Sentry/Console in the background, but show a clean message
-                import logging
-
-                logging.getLogger("django").error(f"Database error logging shift: {e}")
+                logger.exception("CRITICAL: Database error saving volunteer shift log.")
                 messages.error(
                     request,
-                    "There was a network issue saving your shift. Please try again.",
+                    "There was a network issue saving your shift. Our engineering team has been notified.",
                 )
     else:
         form = LogEntryForm(user=request.user)
