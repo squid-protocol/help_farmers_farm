@@ -580,7 +580,7 @@ def verify_turnstile(request):
     if not turnstile_response:
         return False
 
-    verify_url = "https://challenges.cloudflare.com/turnstile/v0/siteverifyf"
+    verify_url = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
     data = {
         "secret": settings.TURNSTILE_SECRET_KEY,
         "response": turnstile_response,
