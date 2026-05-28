@@ -27,6 +27,8 @@ from logs.models import LogEntry
 
 from .forms import ProfileUpdateForm, AccountClaimForm
 
+logger = logging.getLogger(__name__)
+
 # Formally load the CustomUser model
 User = get_user_model()
 
@@ -262,7 +264,8 @@ def upload_avatar(request):
                 messages.success(request, "Avatar updated successfully!")
 
             except Exception as e:
-                messages.error(request, f"There was an error updating your avatar: {e}")
+                logger.exception(f"Avatar upload failed for user {request.user.id}")
+                messages.error(request, "There was a critical error updating your avatar. Our engineering team has been notified.")
         else:
             messages.error(request, "No image data was received. Please try again.")
 
@@ -591,8 +594,9 @@ def verify_turnstile(request):
         response = requests.post(verify_url, data=data, timeout=5)
         outcome = response.json()
         return outcome.get("success", False)
-    except requests.RequestException:
+    except requests.RequestException as e:
         # If Cloudflare's API is down or times out, fail secure
+        logger.error(f"Cloudflare Turnstile API request failed: {e}")
         return False
 
 
@@ -699,10 +703,11 @@ def farm_signup_view(request):
                 )
                 return redirect("manager_dashboard")
 
-            except Exception:
+            except Exception as e:
+                logger.exception("CRITICAL: Failed to provision new farm and manager account.")
                 messages.error(
                     request,
-                    "There was a critical error provisioning your farm. Please try again.",
+                    "There was a critical error setting up your account. Our engineering team has been notified.",
                 )
     else:
         form = FarmSignUpForm()
