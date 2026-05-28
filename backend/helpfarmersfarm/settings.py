@@ -136,7 +136,9 @@ AXES_COOLOFF_TIME = 1  # Lock out for 1 hour
 AXES_RESET_ON_SUCCESS = True  # Reset the counter if they log in successfully
 
 # --- EMAIL CONFIGURATION ---
-EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
+EMAIL_BACKEND = env(
+    "EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"
+)
 EMAIL_HOST = env("EMAIL_HOST", default="smtp-relay.brevo.com")
 EMAIL_PORT = env.int("EMAIL_PORT", default=587)
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
