@@ -108,7 +108,7 @@ class VolunteerSignUpForm(UserCreationForm):
 
     class Meta(UserCreationForm.Meta):
         model = User
-        fields = ("first_name", "last_name", "email", "phone_number")
+        fields = ("username", "first_name", "last_name", "email", "phone_number")
         # Notice: 'address' is explicitly omitted
 
 
@@ -137,6 +137,7 @@ class FarmSignUpForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = User
         fields = (
+            "username",
             "first_name",
             "last_name",
             "email",

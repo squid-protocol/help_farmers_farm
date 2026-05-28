@@ -17,7 +17,12 @@ class Farm(models.Model):
     invite_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
 
     # --- NEW: General Farm Info ---
-    address = models.TextField(blank=True, null=True)
+    address_line1 = models.CharField(max_length=255, blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    state = models.CharField(max_length=2, blank=True, null=True)
+    postal_code = models.CharField(max_length=20, blank=True, null=True)
+    latitude = models.FloatField(blank=True, null=True)
+    longitude = models.FloatField(blank=True, null=True)
     phone_number = PhoneNumberField(blank=True, null=True)
     contact_email = models.EmailField(blank=True, null=True)
 
@@ -73,6 +78,12 @@ class Farm(models.Model):
     def is_active_account(self):
         """Returns True if they paid, are comped, or are still in the 90-day trial."""
         return self.is_paid or self.is_comped or self.trial_days_remaining > 0
+
+    @property
+    def full_address(self):
+        """Combines the structured fields into a single string for geocoding and display."""
+        parts = [self.address_line1, self.city, self.state, self.postal_code]
+        return ", ".join(filter(None, parts))
 
     def __str__(self):
         return self.name

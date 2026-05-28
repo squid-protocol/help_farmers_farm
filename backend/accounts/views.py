@@ -634,7 +634,9 @@ def volunteer_signup_view(request):
             user.role = "volunteer"  # Enforce the role
             user.save()
 
-            login(request, user)
+            login(
+                request, user, backend="accounts.backends.EmailOrUsernameModelBackend"
+            )
             messages.success(request, "Welcome! You can now apply to join a farm.")
             return redirect("home")  # Redirect to their unattached dashboard
     else:
@@ -683,6 +685,10 @@ def farm_signup_view(request):
                     new_farm = Farm.objects.create(
                         name=form.cleaned_data["farm_name"],
                         phone_number=form.cleaned_data["farm_phone"],
+                        address_line1=form.cleaned_data["address_line1"],
+                        city=form.cleaned_data["city"],
+                        state=form.cleaned_data["state"],
+                        postal_code=form.cleaned_data["postal_code"],
                         is_paid=False,  # Trial mode active
                         subscription_tier="trial",
                     )
@@ -695,7 +701,21 @@ def farm_signup_view(request):
                     )
 
                 # If we made it here, the transaction was a complete success
-                login(request, user)
+                login(
+                    request,
+                    user,
+                    backend="accounts.backends.EmailOrUsernameModelBackend",
+                )
+
+                # Set the active session so the middleware knows which dashboard to load
+                request.session["active_farm_id"] = new_farm.id
+
+                # If we made it here, the transaction was a complete success
+                login(
+                    request,
+                    user,
+                    backend="accounts.backends.EmailOrUsernameModelBackend",
+                )
 
                 # Set the active session so the middleware knows which dashboard to load
                 request.session["active_farm_id"] = new_farm.id

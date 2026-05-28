@@ -2,8 +2,8 @@
 {% load tailwind_filters %}
 
 {% block content %}
-<link href="[https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css](https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css)" rel="stylesheet" type="text/css" />
-<script src="[https://cdn.jsdelivr.net/npm/@yaireo/tagify](https://cdn.jsdelivr.net/npm/@yaireo/tagify)"></script>
+<link href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" rel="stylesheet" type="text/css" />
+<script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
 
 <div class="mb-6">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -72,7 +72,7 @@
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer">
                     {{ profile_form.is_public }}
-                    <div class="w-14 h-7 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-purple-600"></div>
+                    <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-focus:outline-none peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
                 </label>
             </div>
 
@@ -83,7 +83,7 @@
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer">
                     {{ profile_form.is_accepting_volunteers }}
-                    <div class="w-14 h-7 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-600"></div>
+                    <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-focus:outline-none peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                 </label>
             </div>
         </div>

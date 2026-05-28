@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from farms.models import Farm, ComplianceForm
 from accounts.models import FarmMembership, FormSignature
+from accounts.forms import VolunteerSignUpForm, FarmSignUpForm
 from django.core import mail
 from django.core.signing import TimestampSigner
 from unittest.mock import patch
@@ -894,6 +895,10 @@ class RegistrationSecurityTests(TestCase):
         mock_form.cleaned_data = {
             "farm_name": "Atomic Farm",
             "farm_phone": "(555) 123-4567",
+            "address_line1": "123 Mockingbird Lane",
+            "city": "Testville",
+            "state": "MI",
+            "postal_code": "49000",
         }
 
         # Form.save(commit=False) normally returns a new unsaved user object
@@ -950,7 +955,9 @@ class RegistrationSecurityTests(TestCase):
         self.assertEqual(response.status_code, 200)
         msgs = list(response.context["messages"])
         self.assertTrue(
-            any("critical error setting up your account" in str(m.message) for m in msgs)
+            any(
+                "critical error setting up your account" in str(m.message) for m in msgs
+            )
         )
 
         # CRITICAL ATOMIC CHECK: Neither the user nor the farm should exist in the DB!
@@ -1190,3 +1197,56 @@ class AccountAnonymizationTests(TestCase):
             Sum("duration_hours")
         )["duration_hours__sum"]
         self.assertEqual(total_hours, Decimal("4.50"))
+
+
+class VolunteerSignUpFormTests(TestCase):
+    def test_volunteer_form_saves_username(self):
+        """Ensure the Volunteer form successfully captures and saves the username."""
+        form_data = {
+            "username": "test_volunteer",
+            "first_name": "John",
+            "last_name": "Doe",
+            "email": "john@example.com",
+            "phone_number": "(201) 555-0123",
+            "password1": "securepassword123!",
+            "password2": "securepassword123!",
+        }
+        form = VolunteerSignUpForm(data=form_data)
+
+        # We don't need to test password validation here, just the field mapping
+        self.assertTrue(form.is_valid(), form.errors)
+
+        # Save the form and commit to the test DB
+        user = form.save(commit=True)
+
+        # Pull it back out of the DB and verify the username made the trip
+        db_user = User.objects.get(id=user.id)
+        self.assertEqual(db_user.username, "test_volunteer")
+
+
+class FarmSignUpFormTests(TestCase):
+    def test_farm_manager_form_saves_username(self):
+        """Ensure the Farm Manager form successfully captures and saves the username."""
+        form_data = {
+            "username": "test_manager",
+            "first_name": "Jane",
+            "last_name": "Smith",
+            "email": "jane@example.com",
+            "phone_number": "(201) 555-0123",
+            "address_line1": "123 Farm Way",
+            "city": "Farmingville",
+            "state": "MI",
+            "postal_code": "48103",
+            "farm_name": "Test Farm",
+            "farm_phone": "(201) 555-0199",
+            "password1": "securepassword123!",
+            "password2": "securepassword123!",
+        }
+        form = FarmSignUpForm(data=form_data)
+
+        self.assertTrue(form.is_valid(), form.errors)
+
+        user = form.save(commit=True)
+
+        db_user = User.objects.get(id=user.id)
+        self.assertEqual(db_user.username, "test_manager")

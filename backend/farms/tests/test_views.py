@@ -9,12 +9,96 @@ from django.core.cache import cache
 from logs.models import LogEntry
 from farms.models import FarmImage
 
-User = get_user_model()
+from django.utils import timezone
+from datetime import timedelta
 
 User = get_user_model()
 
 
 class SecurityIDORTests(TestCase):
+    def test_cross_tenant_idor_prevention(self):
+        """Manager A cannot edit Farm B's crop via direct URL hacking."""
+        crop_b = Crop.objects.create(farm=self.farm_b, crop_name="Stolen Tomatoes")
+
+        self.client.force_login(self.manager_a)
+        session = self.client.session
+        session["active_farm_id"] = self.farm_a.id
+        session.save()
+
+        url = reverse("edit_crop", args=[crop_b.id])
+        response = self.client.post(
+            url, {"crop_name": "Hacked Tomatoes", "is_active": True}
+        )
+
+        self.assertEqual(response.status_code, 404)
+        crop_b.refresh_from_db()
+        self.assertEqual(crop_b.crop_name, "Stolen Tomatoes")
+
+    def test_compliance_gate_paywall(self):
+        """A Manager on the Starter tier cannot bypass the UI to create a compliance form."""
+        self.farm_b.subscription_tier = "starter"
+        self.farm_b.save()
+
+        mgr_b = User.objects.create_user(
+            username="temp_mgr_b", password="p", role="farm_manager"
+        )
+        FarmMembership.objects.create(user=mgr_b, farm=self.farm_b, is_approved=True)
+
+        self.client.force_login(mgr_b)
+        session = self.client.session
+        session["active_farm_id"] = self.farm_b.id
+        session.save()
+
+        url = reverse("manager_dashboard")
+        self.client.post(
+            url,
+            {
+                "submit_compliance_form": "true",
+                "name": "Sneaky Waiver",
+                "body_text": "Sign this.",
+                "assignment_type": "all",
+                "is_active": True,
+            },
+        )
+
+        forms_count = ComplianceForm.objects.filter(farm=self.farm_b).count()
+        self.assertEqual(
+            forms_count, 0, "Starter tier successfully bypassed the Compliance paywall!"
+        )
+
+    def test_expired_trial_tollbooth(self):
+        """A Manager on an Expired Trial is blocked from adding new crops."""
+        self.farm_b.is_paid = False
+        self.farm_b.subscription_tier = "trial"
+        self.farm_b.save()
+
+        expired_date = timezone.now() - timedelta(days=65)
+        Farm.objects.filter(id=self.farm_b.id).update(created_at=expired_date)
+
+        mgr_c = User.objects.create_user(
+            username="temp_mgr_c", password="p", role="farm_manager"
+        )
+        FarmMembership.objects.create(user=mgr_c, farm=self.farm_b, is_approved=True)
+
+        self.client.force_login(mgr_c)
+        session = self.client.session
+        session["active_farm_id"] = self.farm_b.id
+        session.save()
+
+        url = reverse("manager_dashboard")
+        self.client.post(
+            url,
+            {
+                "submit_crop": "true",
+                "crop_name": "Freeloader Potatoes",
+            },
+        )
+
+        crops_count = Crop.objects.filter(
+            farm=self.farm_b, crop_name="Freeloader Potatoes"
+        ).count()
+        self.assertEqual(crops_count, 0, "Expired trial successfully added a crop!")
+
     def setUp(self):
         self.client = Client()
 
@@ -138,6 +222,41 @@ class SecurityIDORTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "farms/manager_dashboard.html")
+
+    @patch("farms.views.async_task")
+    def test_manager_dashboard_triggers_geocoding(self, mock_async):
+        """Ensure updating the address triggers the background mapping task."""
+        self.client.force_login(
+            self.manager_a
+        )  # Assuming manager_a is setup in your class
+        session = self.client.session
+        session["active_farm_id"] = self.farm_a.id
+        session.save()
+
+        url = reverse("manager_dashboard")
+        response = self.client.post(
+            url,
+            {
+                "submit_farm_settings": "true",
+                "name": "Updated Farm Name",
+                "address_line1": "999 Test Ave",
+                "city": "Grand Rapids",
+                "state": "MI",
+                "postal_code": "49504",
+                "contact_email": "farm@example.com",
+                "phone_number": "+12015550123",
+                "season_start": "2026-01-01",
+                "season_end": "2026-12-31",
+            },
+        )
+
+        # Ensure the view accepted the form and redirected
+        self.assertRedirects(response, url)
+
+        # Ensure the background task was called with the correct function and farm ID
+        mock_async.assert_called_with(
+            "farms.tasks.geocode_farm_address", farm_id=self.farm_a.id
+        )
 
 
 class ManagerDashboardActionTests(TestCase):
@@ -743,7 +862,7 @@ class FarmUnhappyPathTests(TestCase):
         self.assertEqual(self.farm.welcome_email_subject, "New Subject!")
 
         # 2. Fire Broadcast (Mocked to prevent actual SMTP connection and async queueing)
-        with patch("django_q.tasks.async_task") as mock_async:
+        with patch("farms.views.async_task") as mock_async:
             response2 = self.client.post(
                 self.dashboard_url,
                 {

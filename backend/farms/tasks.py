@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from farms.models import Farm
 from accounts.models import FarmMembership
+import time
 
 User = get_user_model()
 
@@ -29,7 +30,7 @@ def send_volunteer_welcome_email(user_id, farm_id, raw_password):
             "raw_password": raw_password,
             # The |safe filter in the template renders the Trix HTML properly
             "custom_body": farm.welcome_email_body,
-            "login_url": "https://helpingfarmersfarm.com/accounts/login/",
+            "login_url": "[https://helpingfarmersfarm.com/accounts/login/](https://helpingfarmersfarm.com/accounts/login/)",
         },
     )
 
@@ -117,3 +118,35 @@ def send_broadcast_email(
         connection.close()
 
     return f"Broadcast sent to {len(messages)} recipients in batches of {batch_size}."
+
+
+def geocode_farm_address(farm_id):
+    """Background task to fetch GPS coordinates with graceful fallback."""
+    from geopy.geocoders import Nominatim
+    from farms.models import Farm
+
+    try:
+        farm = Farm.objects.get(id=farm_id)
+        if not farm.full_address:
+            return
+
+        geolocator = Nominatim(user_agent="help_farmers_farm_locator")
+
+        # ATTEMPT 1: Try the strict, exact street address
+        location = geolocator.geocode(farm.full_address, timeout=10)
+
+        # ATTEMPT 2: Fallback to just City, State, and ZIP
+        if not location and farm.city and farm.state:
+            fallback_addr = (
+                f"{farm.city}, {farm.state} {farm.postal_code or ''}".strip()
+            )
+            time.sleep(1.1)  # Respect OpenStreetMap API rate limits
+            location = geolocator.geocode(fallback_addr, timeout=10)
+
+        if location:
+            # Use update() to save without triggering the model's save() method again
+            Farm.objects.filter(id=farm.id).update(
+                latitude=location.latitude, longitude=location.longitude
+            )
+    except Exception as e:
+        print(f"Geocoding failed for Farm {farm_id}: {e}")

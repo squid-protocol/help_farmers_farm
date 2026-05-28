@@ -1,109 +1,133 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-12">
+<div class="max-w-4xl mx-auto mt-10 mb-20 px-4">
     
-    <div class="border-b border-gray-200 pb-8">
-        <a href="{% url 'farm_search' %}" class="text-emerald-600 hover:text-emerald-800 font-medium text-sm mb-4 inline-block">&larr; Back to Search</a>
-        <div class="flex justify-between items-start">
-            <div>
-                <h1 class="text-4xl font-extrabold text-gray-900">{{ farm.name }}</h1>
-                <p class="text-xl text-gray-500 mt-2">{{ profile.short_description }}</p>
-                
-                <div class="mt-4 flex flex-wrap gap-2">
-                    {% for tag in profile.tags %}
-                        <span class="bg-gray-100 text-gray-700 text-xs font-bold px-3 py-1 rounded-full border border-gray-200 shadow-sm">{{ tag }}</span>
-                    {% endfor %}
+    <!-- Back Button -->
+    <div class="mb-6">
+        <a href="{% url 'farm_search' %}" class="text-gray-500 hover:text-emerald-600 font-bold transition flex items-center gap-1">
+            ← Back to Directory
+        </a>
+    </div>
+
+    <!-- Farm Header Section -->
+    <div class="text-center mb-10">
+        <h1 class="text-5xl font-extrabold text-gray-900 tracking-tight">{{ farm.name }}</h1>
+        
+        {% if farm.full_address %}
+            <p class="text-lg text-gray-600 mt-3 flex items-center justify-center gap-2">
+                <span>📍</span> {{ farm.full_address }}
+            </p>
+        {% endif %}
+
+        {% if farm.profile.short_description %}
+            <p class="text-xl text-emerald-700 font-serif italic mt-4 max-w-2xl mx-auto">
+                "{{ farm.profile.short_description }}"
+            </p>
+        {% endif %}
+    </div>
+
+    <!-- Action / Request to Join Section -->
+    <div class="flex justify-center mb-12">
+        {% if not farm.profile.is_accepting_volunteers %}
+            <div class="bg-gray-50 text-gray-500 font-bold py-3 px-8 rounded-xl border border-gray-200 text-lg cursor-not-allowed shadow-sm">
+                🛑 Not currently accepting volunteers
+            </div>
+        {% elif farm.id in pending_requests %}
+            <div class="bg-amber-100 text-amber-800 font-bold py-3 px-8 rounded-xl border border-amber-200 shadow-sm text-lg cursor-not-allowed">
+                ⏳ Request Pending
+            </div>
+        {% else %}
+            <button onclick="document.getElementById('join_modal').showModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition text-lg">
+                Request to Join
+            </button>
+        {% endif %}
+    </div>
+
+    <!-- Main Details Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+        <div class="md:col-span-2 space-y-8">
+            
+            {% if farm.profile.about_us %}
+            <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+                <h2 class="text-2xl font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2">About Us</h2>
+                <div class="prose max-w-none text-gray-700">
+                    {{ farm.profile.about_us|safe }}
                 </div>
+            </div>
+            {% endif %}
+
+            {% if farm.profile.volunteer_perks %}
+            <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+                <h2 class="text-2xl font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2 flex items-center gap-2"><span>🎁</span> Volunteer Perks</h2>
+                <p class="text-gray-700 whitespace-pre-wrap">{{ farm.profile.volunteer_perks }}</p>
+            </div>
+            {% endif %}
+            
+        </div>
+
+        <div class="space-y-8">
+            
+            {% if farm.profile.physical_requirements %}
+            <div class="bg-amber-50 p-6 rounded-2xl border border-amber-100 shadow-sm">
+                <h2 class="text-lg font-bold text-amber-900 mb-3 flex items-center gap-2"><span>💪</span> Physical Requirements</h2>
+                <p class="text-amber-800 text-sm whitespace-pre-wrap">{{ farm.profile.physical_requirements }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Stats Snippet -->
+            <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 shadow-sm text-center">
+                <span class="block text-4xl font-black text-emerald-600 mb-1">{{ total_hours|default:"0" }}</span>
+                <span class="text-sm font-bold text-emerald-800 uppercase tracking-widest">Total Hours Logged</span>
             </div>
             
-            {% if profile.is_accepting_volunteers %}
-                <button class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-xl shadow-md transition transform hover:-translate-y-1">
-                    Request to Join
-                </button>
-            {% else %}
-                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-2 font-bold shadow-sm">
-                    🛑 Not accepting volunteers
-                </div>
-            {% endif %}
+            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 shadow-sm text-center">
+                <span class="block text-4xl font-black text-blue-600 mb-1">{{ total_volunteers|default:"0" }}</span>
+                <span class="text-sm font-bold text-blue-800 uppercase tracking-widest">Historical Volunteers</span>
+            </div>
+            
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
-        <div class="md:col-span-2 space-y-8">
-            <section>
-                <h2 class="text-2xl font-bold text-gray-900 mb-4">About Us</h2>
-                <div class="prose max-w-none text-gray-600">
-                    {{ profile.about_us|safe }}
-                </div>
-            </section>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <section class="bg-green-50 p-6 rounded-2xl border border-green-100">
-                    <h3 class="text-lg font-bold text-green-900 mb-3">Volunteer Perks</h3>
-                    <div class="text-green-800 whitespace-pre-line text-sm">
-                        {{ profile.volunteer_perks }}
-                    </div>
-                </section>
-                
-                <section class="bg-amber-50 p-6 rounded-2xl border border-amber-100">
-                    <h3 class="text-lg font-bold text-amber-900 mb-3">Physical Requirements</h3>
-                    <div class="text-amber-800 text-sm">
-                        {{ profile.physical_requirements }}
-                    </div>
-                </section>
-            </div>
-        </div>
-
-        <div class="md:col-span-1 space-y-4">
-            <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm text-center">
-                <p class="text-4xl font-extrabold text-emerald-600 mb-1">{{ total_hours|floatformat:0 }}</p>
-                <p class="text-sm font-bold text-gray-500 uppercase">Total Hours Logged</p>
-            </div>
-            <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm text-center">
-                <p class="text-4xl font-extrabold text-emerald-600 mb-1">{{ active_volunteers }}</p>
-                <p class="text-sm font-bold text-gray-500 uppercase">Historical Volunteers</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="pt-8 border-t border-gray-200">
+    <!-- Historical Labor Breakdown -->
+    <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
         <h2 class="text-2xl font-bold text-gray-900 mb-2">Historical Labor Breakdown</h2>
         <p class="text-gray-500 mb-6">See exactly what kind of tasks volunteers perform for each crop on the farm.</p>
         
-        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-            {% if plotly_traces_json != "[]" %}
-                <div id="stackedBarChart" class="w-full h-[400px]"></div>
-            {% else %}
-                <p class="text-sm text-gray-500 italic text-center py-12">No historical data available yet.</p>
-            {% endif %}
-        </div>
+        {% if has_historical_data %}
+            <!-- This is where your chart logic goes if they have data -->
+            <div id="chart-container" hx-get="{% url 'public_farm_chart' farm.id %}" hx-trigger="load">
+                <div class="flex justify-center items-center h-48">
+                    <p class="text-gray-400 animate-pulse">Loading analytics...</p>
+                </div>
+            </div>
+        {% else %}
+            <div class="text-center p-8 bg-gray-50 rounded-xl border border-gray-100 text-gray-500 italic">
+                No historical data available yet.
+            </div>
+        {% endif %}
     </div>
-
 </div>
 
-{% if plotly_traces_json != "[]" %}
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        var rawData = {{ plotly_traces_json|safe }};
-        
-        var layout = {
-            barmode: 'stack',
-            margin: { t: 30, b: 80, l: 40, r: 10 },
-            paper_bgcolor: 'rgba(0,0,0,0)',
-            plot_bgcolor: 'rgba(0,0,0,0)',
-            showlegend: true,
-            legend: { 
-                orientation: 'h', 
-                y: -0.3,
-                xanchor: 'center',
-                x: 0.5
-            },
-            xaxis: { tickangle: -45 }
-        };
-
-        Plotly.newPlot('stackedBarChart', rawData, layout, {displayModeBar: false, responsive: true});
-    });
-</script>
+<!-- Join Modal -->
+{% if farm.profile.is_accepting_volunteers and farm.id not in pending_requests %}
+<dialog id="join_modal" class="p-8 rounded-2xl shadow-2xl border border-blue-100 backdrop:bg-slate-900/50 w-full max-w-md">
+    <div class="flex justify-between items-center mb-6">
+        <h3 class="text-2xl font-bold text-blue-900">Join {{ farm.name }}</h3>
+        <button type="button" onclick="document.getElementById('join_modal').close()" class="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
+    </div>
+    <form action="{% url 'request_join' farm.id %}" method="POST">
+        {% csrf_token %}
+        <div class="mb-6">
+            <label class="block text-sm font-bold text-gray-700 mb-2">Message to the Farm Manager</label>
+            <textarea name="applicant_message" rows="4" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 custom-scrollbar" placeholder="Briefly explain your experience, availability, or why you want to volunteer..."></textarea>
+        </div>
+        <div class="flex justify-end gap-3">
+            <button type="button" onclick="document.getElementById('join_modal').close()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg transition">Cancel</button>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow transition">Send Application</button>
+        </div>
+    </form>
+</dialog>
 {% endif %}
+
 {% endblock %}
