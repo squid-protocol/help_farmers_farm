@@ -950,7 +950,7 @@ class RegistrationSecurityTests(TestCase):
         self.assertEqual(response.status_code, 200)
         msgs = list(response.context["messages"])
         self.assertTrue(
-            any("critical error provisioning your farm" in str(m.message) for m in msgs)
+            any("critical error setting up your account" in str(m.message) for m in msgs)
         )
 
         # CRITICAL ATOMIC CHECK: Neither the user nor the farm should exist in the DB!
