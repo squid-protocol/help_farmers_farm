@@ -8,6 +8,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 import logging
 
+logger = logging.getLogger(__name__)
+
 # IMPORTANT: Import your Farm model so the webhook can update it!
 from farms.models import Farm
 
@@ -49,8 +51,9 @@ def create_checkout_session(request):
             return response
 
         except Exception as e:
+            logger.exception("CRITICAL: Failed to create Stripe checkout session.")
             messages.error(
-                request, f"There was an error connecting to Stripe: {str(e)}"
+                request, "There was a critical error connecting to our payment processor. Our engineering team has been notified."
             )
             return redirect("pricing")
 
@@ -81,7 +84,6 @@ def billing_success(request):
         except Exception as e:
             # If the API ping fails for any reason, fail gracefully.
             # The background webhook will still eventually catch it.
-            logger = logging.getLogger("django")
             safe_session_id = str(session_id).replace("\r", "").replace("\n", "")
             logger.warning(
                 f"Active Stripe verification failed for Session {safe_session_id}: {e}"
@@ -117,7 +119,8 @@ def customer_portal(request):
             return response
 
         except Exception as e:
-            messages.error(request, f"Error connecting to billing portal: {str(e)}")
+            logger.exception("CRITICAL: Failed to generate Stripe customer portal link.")
+            messages.error(request, "There was a critical error securely connecting to the billing portal. Our engineering team has been notified.")
             return redirect("manager_dashboard")
 
     # Fallback if someone tries to GET this URL directly instead of POSTing
@@ -159,12 +162,10 @@ def stripe_webhook(request):
                 # CRITICAL: Save the Stripe Customer ID so we can look them up later if a card fails
                 farm.stripe_customer_id = session.get("customer")
                 farm.save()
-
-                print(f"✅ Farm ID {farm_id} successfully upgraded!")
+                logger.info(f"✅ Farm ID {farm_id} successfully upgraded via Stripe webhook!")
             except Farm.DoesNotExist:
                 # The farm record was deleted locally or not yet created.
                 # There is nothing to revoke, so it is safe to ignore this webhook.
-                logger = logging.getLogger("django")
                 logger.warning(
                     f"⚠️ Checkout webhook received for unknown farm ID {farm_id}."
                 )
@@ -181,7 +182,8 @@ def stripe_webhook(request):
                 farm = Farm.objects.get(stripe_customer_id=customer_id)
                 farm.is_paid = False
                 farm.save()
-                print(f"⚠️ Farm {farm.name} payment failed. Premium access revoked.")
+                farm.save()
+                logger.warning(f"⚠️ Farm {farm.name} payment failed. Premium access revoked.")
             except Farm.DoesNotExist:
                 pass  # Farm doesn't exist, nothing to revoke
 
@@ -197,7 +199,7 @@ def stripe_webhook(request):
                 farm = Farm.objects.get(stripe_customer_id=customer_id)
                 farm.is_paid = False
                 farm.save()
-                print(
+                logger.warning(
                     f"⚠️ Farm {farm.name} subscription ended. Premium access revoked."
                 )
             except Farm.DoesNotExist:
@@ -239,7 +241,7 @@ def stripe_webhook(request):
                     farm.is_paid = False
 
                 farm.save()
-                print(f"🔄 Farm {farm.name} subscription updated (Status: {status}).")
+                logger.info(f"🔄 Farm {farm.name} subscription updated (Status: {status}).")
 
             except Farm.DoesNotExist:
                 # Safely ignore webhooks for deleted farms
