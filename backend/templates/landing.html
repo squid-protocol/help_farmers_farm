@@ -132,13 +132,17 @@
             const statusBadge = farm.is_accepting 
                 ? "<span class='text-emerald-600 font-bold text-xs'>Accepting Volunteers</span>" 
                 : "<span class='text-amber-600 font-bold text-xs'>Roster Full</span>";
+            
+            // Conditionally render the link or a "Private" badge
+            const profileLink = farm.url 
+                ? `<br><a href="${farm.url}" class="inline-block mt-2 text-sm text-blue-600 hover:text-blue-800 font-semibold">View Profile &rarr;</a>`
+                : `<br><span class="inline-block mt-2 text-sm text-gray-400 font-semibold italic">Private Farm</span>`;
                 
             radiusBubble.bindPopup(`
                 <div class="text-center p-1">
                     <h3 class="font-bold text-gray-900 mb-1">${farm.name}</h3>
                     ${statusBadge}
-                    <br>
-                    <a href="${farm.url}" class="inline-block mt-2 text-sm text-blue-600 hover:text-blue-800 font-semibold">View Profile &rarr;</a>
+                    ${profileLink}
                 </div>
             `);
 

@@ -960,28 +960,50 @@ def landing_page_view(request):
     dashboard_metrics = cache.get("landing_dashboard_metrics")
 
     if not dashboard_metrics:
+        # Define what constitutes a "real" farm and a "real" independent volunteer
+        real_farms = Farm.objects.exclude(name__istartswith="test")
+        real_vols = User.objects.filter(role="volunteer").exclude(username__istartswith="test")
+
         dashboard_metrics = {
-            "total_farms": Farm.objects.exclude(name__istartswith="test").count(),
-            "recruiting_farms": FarmProfile.objects.filter(is_accepting_volunteers=True).count(),
-            "connections_made": FarmMembership.objects.filter(is_approved=True).count(),
-            "active_volunteers": FarmMembership.objects.filter(is_approved=True).values("user").distinct().count(),
+            "total_farms": real_farms.count(),
+            # Count profiles that are actively recruiting AND belong to a real farm
+            "recruiting_farms": FarmProfile.objects.filter(farm__in=real_farms, is_accepting_volunteers=True).count(),
+            # Connections: The total number of approved roster spots held by independent volunteers
+            "connections_made": FarmMembership.objects.filter(
+                farm__in=real_farms, user__in=real_vols, is_approved=True
+            ).count(),
+            # Active Volunteers: Distinct human volunteers who hold at least one approved spot
+            "active_volunteers": FarmMembership.objects.filter(
+                farm__in=real_farms, user__in=real_vols, is_approved=True
+            )
+            .values("user")
+            .distinct()
+            .count(),
         }
-        cache.set("landing_dashboard_metrics", dashboard_metrics, 300)
+
+        # Lowered to 60 seconds (1 minute) so updates reflect much faster
+        cache.set("landing_dashboard_metrics", dashboard_metrics, 60)
 
     # 2. Build the fuzzy Map Data for the landing page
-    farms_qs = Farm.objects.filter(profile__is_public=True).select_related("profile")
+    # Fetch ALL real farms to make the map look full, public or private
+    farms_qs = Farm.objects.exclude(name__istartswith="test").select_related("profile")
     map_data = []
 
     for f in farms_qs:
         if f.latitude and f.longitude:
+            # Safely check profile attributes in case a farm doesn't have one yet
+            is_accepting = getattr(f.profile, "is_accepting_volunteers", False) if hasattr(f, "profile") else False
+            is_public = getattr(f.profile, "is_public", False) if hasattr(f, "profile") else False
+
             map_data.append(
                 {
                     "id": f.id,
                     "name": f.name,
                     "lat": f.latitude + random.uniform(-0.1, 0.1),
                     "lng": f.longitude + random.uniform(-0.1, 0.1),
-                    "is_accepting": f.profile.is_accepting_volunteers,
-                    "url": reverse("public_farm_detail", args=[f.id]),
+                    "is_accepting": is_accepting,
+                    # Only provide a clickable link if the farm is actually public
+                    "url": reverse("public_farm_detail", args=[f.id]) if is_public else "",
                 }
             )
 
