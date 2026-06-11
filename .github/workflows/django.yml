@@ -56,6 +56,8 @@ jobs:
         python manage.py makemigrations --check --dry-run
 
     - name: Run Tests & Generate Report
+      env:
+        DJANGO_SETTINGS_MODULE: helpfarmersfarm.settings
       run: |
         cd backend
         coverage run -m pytest
