@@ -36,6 +36,11 @@ IGNORE_FILES = {
     "package-lock.json",
     "package.json",
     ".coverage",
+    "django_errors.log",
+    "final_schuler_data.json",
+    ".env",
+    "pytest.ini",
+    ".gitignore",
 }
 
 
