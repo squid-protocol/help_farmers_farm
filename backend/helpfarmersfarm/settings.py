@@ -4,7 +4,7 @@ import environ
 import sentry_sdk
 import sys
 
-TESTING = "test" in sys.argv
+TESTING = "test" in sys.argv or os.environ.get("GITHUB_ACTIONS") == "true"
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
