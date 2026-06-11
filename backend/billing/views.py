@@ -37,8 +37,7 @@ def create_checkout_session(request):
                 allow_promotion_codes=True,
                 client_reference_id=str(request.user.farm.id),
                 success_url=(
-                    request.build_absolute_uri(reverse("billing_success"))
-                    + "?session_id={CHECKOUT_SESSION_ID}"
+                    request.build_absolute_uri(reverse("billing_success")) + "?session_id={CHECKOUT_SESSION_ID}"
                 ),
                 cancel_url=request.build_absolute_uri(reverse("pricing")),
             )
@@ -84,9 +83,7 @@ def billing_success(request):
             # If the API ping fails for any reason, fail gracefully.
             # The background webhook will still eventually catch it.
             safe_session_id = str(session_id).replace("\r", "").replace("\n", "")
-            logger.warning(
-                f"Active Stripe verification failed for Session {safe_session_id}: {e}"
-            )
+            logger.warning(f"Active Stripe verification failed for Session {safe_session_id}: {e}")
 
     return render(request, "billing/success.html")
 
@@ -99,9 +96,7 @@ def customer_portal(request):
 
         # Safety check: Do they actually have a Stripe ID?
         if not farm.stripe_customer_id:
-            messages.error(
-                request, "We couldn't find an active billing account for this farm."
-            )
+            messages.error(request, "We couldn't find an active billing account for this farm.")
             return redirect("manager_dashboard")
 
         try:
@@ -118,9 +113,7 @@ def customer_portal(request):
             return response
 
         except Exception:
-            logger.exception(
-                "CRITICAL: Failed to generate Stripe customer portal link."
-            )
+            logger.exception("CRITICAL: Failed to generate Stripe customer portal link.")
             messages.error(
                 request,
                 "There was a critical error securely connecting to the billing portal. Our engineering team has been notified.",
@@ -139,9 +132,7 @@ def stripe_webhook(request):
 
     try:
         # Verify the message actually came from Stripe using your webhook secret
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
-        )
+        event = stripe.Webhook.construct_event(payload, sig_header, settings.STRIPE_WEBHOOK_SECRET)
     except ValueError:
         # Invalid payload
         return HttpResponse(status=400)
@@ -166,15 +157,11 @@ def stripe_webhook(request):
                 # CRITICAL: Save the Stripe Customer ID so we can look them up later if a card fails
                 farm.stripe_customer_id = session.get("customer")
                 farm.save()
-                logger.info(
-                    f"✅ Farm ID {farm_id} successfully upgraded via Stripe webhook!"
-                )
+                logger.info(f"✅ Farm ID {farm_id} successfully upgraded via Stripe webhook!")
             except Farm.DoesNotExist:
                 # The farm record was deleted locally or not yet created.
                 # There is nothing to revoke, so it is safe to ignore this webhook.
-                logger.warning(
-                    f"⚠️ Checkout webhook received for unknown farm ID {farm_id}."
-                )
+                logger.warning(f"⚠️ Checkout webhook received for unknown farm ID {farm_id}.")
 
     # ---------------------------------------------------------
     # 2. Handle Failed Payments (Expired Cards, Insufficient Funds)
@@ -189,9 +176,7 @@ def stripe_webhook(request):
                 farm.is_paid = False
                 farm.save()
                 farm.save()
-                logger.warning(
-                    f"⚠️ Farm {farm.name} payment failed. Premium access revoked."
-                )
+                logger.warning(f"⚠️ Farm {farm.name} payment failed. Premium access revoked.")
             except Farm.DoesNotExist:
                 pass  # Farm doesn't exist, nothing to revoke
 
@@ -207,9 +192,7 @@ def stripe_webhook(request):
                 farm = Farm.objects.get(stripe_customer_id=customer_id)
                 farm.is_paid = False
                 farm.save()
-                logger.warning(
-                    f"⚠️ Farm {farm.name} subscription ended. Premium access revoked."
-                )
+                logger.warning(f"⚠️ Farm {farm.name} subscription ended. Premium access revoked.")
             except Farm.DoesNotExist:
                 pass
 
@@ -236,9 +219,7 @@ def stripe_webhook(request):
                     farm.subscription_tier = "starter"
                 elif new_price_id == "price_1TbLHZ6EZATAzdVSRo4kyEjN":
                     farm.subscription_tier = "growth"
-                elif (
-                    new_price_id == "price_1TbLHZ6EZATAzdVSFracrHkT"
-                ):  # <-- PREMIUM ADDED
+                elif new_price_id == "price_1TbLHZ6EZATAzdVSFracrHkT":  # <-- PREMIUM ADDED
                     farm.subscription_tier = "institutional"
 
                 # Ensure their paid status matches the new subscription state
@@ -249,9 +230,7 @@ def stripe_webhook(request):
                     farm.is_paid = False
 
                 farm.save()
-                logger.info(
-                    f"🔄 Farm {farm.name} subscription updated (Status: {status})."
-                )
+                logger.info(f"🔄 Farm {farm.name} subscription updated (Status: {status}).")
 
             except Farm.DoesNotExist:
                 # Safely ignore webhooks for deleted farms

@@ -33,9 +33,7 @@ class LogEntry(models.Model):
         null=True,
         related_name="logs",
     )
-    crop = models.ForeignKey(
-        Crop, on_delete=models.SET_NULL, null=True, related_name="logs"
-    )
+    crop = models.ForeignKey(Crop, on_delete=models.SET_NULL, null=True, related_name="logs")
 
     activity = models.CharField(max_length=1, choices=ACTIVITY_CHOICES)
 
@@ -45,9 +43,7 @@ class LogEntry(models.Model):
         decimal_places=2,
         validators=[
             MinValueValidator(0.01, message="Hours must be greater than 0."),
-            MaxValueValidator(
-                24.00, message="You cannot log more than 24 hours in a single entry."
-            ),
+            MaxValueValidator(24.00, message="You cannot log more than 24 hours in a single entry."),
         ],
     )
 

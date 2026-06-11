@@ -47,9 +47,7 @@ class MergeConflictMarkerTest(TestCase):
                             # We use startswith() and an exact match for "=======" to avoid
                             # triggering false positives on comment dividers or this script itself!
                             is_conflict = (
-                                line.startswith("<<<<<<< ")
-                                or line.strip() == "======="
-                                or line.startswith(">>>>>>> ")
+                                line.startswith("<<<<<<< ") or line.strip() == "=======" or line.startswith(">>>>>>> ")
                             )
 
                             if is_conflict:
@@ -61,7 +59,7 @@ class MergeConflictMarkerTest(TestCase):
                                 error_msg = (
                                     f"\n🚨 Merge conflict marker found in {file_path.relative_to(project_root)} "
                                     f"at line {i + 1}:\n\n{context_lines}\n"
-                                    f"{'-'*50}"
+                                    f"{'-' * 50}"
                                 )
                                 conflicts_found.append(error_msg)
 

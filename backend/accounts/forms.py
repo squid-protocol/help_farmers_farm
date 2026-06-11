@@ -43,9 +43,7 @@ class ProfileUpdateForm(forms.ModelForm):
         if state:
             state = state.strip().upper()
             if len(state) != 2 or not state.isalpha():
-                raise forms.ValidationError(
-                    "Please enter a valid 2-letter state abbreviation (e.g., MI)."
-                )
+                raise forms.ValidationError("Please enter a valid 2-letter state abbreviation (e.g., MI).")
         return state
 
     def clean_postal_code(self):
@@ -54,9 +52,7 @@ class ProfileUpdateForm(forms.ModelForm):
         if postal_code:
             postal_code = postal_code.strip()
             if not re.match(r"^\d{5}(-\d{4})?$", postal_code):
-                raise forms.ValidationError(
-                    "Please enter a valid 5-digit ZIP code (e.g., 49302)."
-                )
+                raise forms.ValidationError("Please enter a valid 5-digit ZIP code (e.g., 49302).")
         return postal_code
 
     def clean_city(self):
@@ -76,19 +72,13 @@ class CustomLoginForm(AuthenticationForm):
 
 # --- The Form for claiming a legacy account ---
 class AccountClaimForm(forms.ModelForm):
-    password = forms.CharField(
-        widget=forms.PasswordInput(attrs={"placeholder": "Create a secure password"})
-    )
-    confirm_password = forms.CharField(
-        widget=forms.PasswordInput(attrs={"placeholder": "Confirm your password"})
-    )
+    password = forms.CharField(widget=forms.PasswordInput(attrs={"placeholder": "Create a secure password"}))
+    confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={"placeholder": "Confirm your password"}))
 
     class Meta:
         model = User
         fields = ["email"]
-        widgets = {
-            "email": forms.EmailInput(attrs={"placeholder": "Enter your email address"})
-        }
+        widgets = {"email": forms.EmailInput(attrs={"placeholder": "Enter your email address"})}
 
     def clean(self):
         cleaned_data = super().clean()
@@ -116,23 +106,15 @@ class FarmSignUpForm(UserCreationForm):
     """Heavy registration that requires address and provisions a new farm workspace."""
 
     # Manager Specific Fields (Address is mandatory here)
-    address_line1 = forms.CharField(
-        max_length=255, required=True, label="Street Address"
-    )
-    address_line2 = forms.CharField(
-        max_length=255, required=False, label="Apt / Suite / Other"
-    )
+    address_line1 = forms.CharField(max_length=255, required=True, label="Street Address")
+    address_line2 = forms.CharField(max_length=255, required=False, label="Apt / Suite / Other")
     city = forms.CharField(max_length=100, required=True, label="City")
     state = forms.CharField(max_length=2, required=True, label="State (e.g., MI)")
-    postal_code = forms.CharField(
-        max_length=20, required=True, label="ZIP / Postal Code"
-    )
+    postal_code = forms.CharField(max_length=20, required=True, label="ZIP / Postal Code")
 
     # Farm Workspace Fields
     farm_name = forms.CharField(max_length=255, required=True, label="Farm Name")
-    farm_phone = forms.CharField(
-        max_length=20, required=True, label="Farm Phone Number"
-    )
+    farm_phone = forms.CharField(max_length=20, required=True, label="Farm Phone Number")
 
     class Meta(UserCreationForm.Meta):
         model = User
@@ -155,9 +137,7 @@ class FarmSignUpForm(UserCreationForm):
         if state:
             state = state.strip().upper()
             if len(state) != 2 or not state.isalpha():
-                raise forms.ValidationError(
-                    "Please enter a valid 2-letter state abbreviation (e.g., MI)."
-                )
+                raise forms.ValidationError("Please enter a valid 2-letter state abbreviation (e.g., MI).")
         return state
 
     def clean_postal_code(self):
@@ -166,9 +146,7 @@ class FarmSignUpForm(UserCreationForm):
         if postal_code:
             postal_code = postal_code.strip()
             if not re.match(r"^\d{5}(-\d{4})?$", postal_code):
-                raise forms.ValidationError(
-                    "Please enter a valid 5-digit ZIP code (e.g., 49302)."
-                )
+                raise forms.ValidationError("Please enter a valid 5-digit ZIP code (e.g., 49302).")
         return postal_code
 
     def clean_city(self):

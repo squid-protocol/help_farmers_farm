@@ -27,9 +27,7 @@ class LoginActionTests(TestCase):
             email="test_vol@example.com",
             password="my_secure_password123",
         )
-        FarmMembership.objects.create(
-            user=self.user, farm=self.farm, is_approved=True, agreed_to_waiver=True
-        )
+        FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True, agreed_to_waiver=True)
         self.login_url = reverse("login")
 
     def test_successful_login_redirects(self):
@@ -40,9 +38,7 @@ class LoginActionTests(TestCase):
         self.assertRedirects(response, "/log-hours/", target_status_code=200)
 
     def test_failed_login_shows_error(self):
-        response = self.client.post(
-            self.login_url, {"username": "test_volunteer", "password": "wrongpassword"}
-        )
+        response = self.client.post(self.login_url, {"username": "test_volunteer", "password": "wrongpassword"})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Your username and password didn't match")
 
@@ -61,9 +57,7 @@ class ProfileViewsTests(TestCase):
             state="MI",
             postal_code="48103",
         )
-        FarmMembership.objects.create(
-            user=self.user, farm=self.farm, is_approved=True, agreed_to_waiver=True
-        )
+        FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True, agreed_to_waiver=True)
         self.client.force_login(self.user)
 
     def test_profile_view_get(self):
@@ -91,9 +85,7 @@ class ProfileViewsTests(TestCase):
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1"
             "HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
         )
-        response = self.client.post(
-            reverse("upload_avatar"), {"avatar_base64": dummy_base64_image}
-        )
+        response = self.client.post(reverse("upload_avatar"), {"avatar_base64": dummy_base64_image})
         self.assertRedirects(response, reverse("profile"))
         self.user.refresh_from_db()
         self.assertTrue(bool(self.user.avatar))
@@ -106,9 +98,7 @@ class ProfileViewsTests(TestCase):
     def test_upload_avatar_blocks_xss_file_extension(self):
         """Ensure the backend hardcodes .jpg and ignores forged HTML MIME types."""
         malicious_base64 = "data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg=="
-        response = self.client.post(
-            reverse("upload_avatar"), {"avatar_base64": malicious_base64}
-        )
+        response = self.client.post(reverse("upload_avatar"), {"avatar_base64": malicious_base64})
         self.assertRedirects(response, reverse("profile"))
         self.user.refresh_from_db()
         self.assertTrue(bool(self.user.avatar))
@@ -140,12 +130,8 @@ class ProfileViewsTests(TestCase):
         from accounts.models import FormSignature
 
         # Give them a signed form
-        form = ComplianceForm.objects.create(
-            farm=self.farm, name="Test Doc", body_text="text"
-        )
-        FormSignature.objects.create(
-            user=self.user, form=form, digital_signature="Test Name"
-        )
+        form = ComplianceForm.objects.create(farm=self.farm, name="Test Doc", body_text="text")
+        FormSignature.objects.create(user=self.user, form=form, digital_signature="Test Name")
 
         response = self.client.get(reverse("profile"))
 
@@ -179,9 +165,7 @@ class ProfileViewsTests(TestCase):
         self.user.is_email_verified = True
         self.user.save()
 
-        form_to_sign = ComplianceForm.objects.create(
-            farm=self.farm, name="Test Form", is_active=True
-        )
+        form_to_sign = ComplianceForm.objects.create(farm=self.farm, name="Test Form", is_active=True)
 
         response = self.client.post(
             reverse("sign_waiver"),
@@ -213,9 +197,7 @@ class ProfileViewsTests(TestCase):
         self.user.is_email_verified = True
         self.user.save()
 
-        form_to_sign = ComplianceForm.objects.create(
-            farm=self.farm, name="Test Form", is_active=True
-        )
+        form_to_sign = ComplianceForm.objects.create(farm=self.farm, name="Test Form", is_active=True)
 
         response = self.client.post(
             reverse("sign_waiver"),
@@ -227,9 +209,7 @@ class ProfileViewsTests(TestCase):
         )
 
         messages = list(response.context["messages"])
-        self.assertTrue(
-            any("match your first and last name" in str(m) for m in messages)
-        )
+        self.assertTrue(any("match your first and last name" in str(m) for m in messages))
 
     def test_verify_email_wrong_user_token(self):
         """Security: User clicks an email verification link meant for someone else."""
@@ -242,23 +222,17 @@ class ProfileViewsTests(TestCase):
 
         # Login as self.user
         self.client.force_login(self.user)
-        response = self.client.get(
-            reverse("verify_email_link", args=[token]), follow=True
-        )
+        response = self.client.get(reverse("verify_email_link", args=[token]), follow=True)
 
         # Should fail security check
         messages = list(response.context["messages"])
-        self.assertTrue(
-            any("belongs to a different account" in str(m) for m in messages)
-        )
+        self.assertTrue(any("belongs to a different account" in str(m) for m in messages))
         self.assertFalse(self.user.is_email_verified)
 
     def test_verify_email_invalid_token(self):
         """Unhappy Path: User clicks a corrupted or expired email link."""
         self.client.force_login(self.user)
-        response = self.client.get(
-            reverse("verify_email_link", args=["garbage:token:123"]), follow=True
-        )
+        response = self.client.get(reverse("verify_email_link", args=["garbage:token:123"]), follow=True)
 
         messages = list(response.context["messages"])
         self.assertTrue(any("invalid or has expired" in str(m) for m in messages))
@@ -269,9 +243,7 @@ class LegacyClaimFlowTests(TestCase):
         self.client = Client()
         self.farm = Farm.objects.create(name="Legacy Farm")
 
-        self.ghost_user = User.objects.create(
-            username="john_doe", first_name="John", last_name="Doe", email=""
-        )
+        self.ghost_user = User.objects.create(username="john_doe", first_name="John", last_name="Doe", email="")
         self.ghost_user.set_unusable_password()
         self.ghost_user.save()
 
@@ -304,9 +276,7 @@ class LegacyClaimFlowTests(TestCase):
                 "confirm_password": "newsecurepassword123",
             },
         )
-        self.assertRedirects(
-            response, reverse("log_hours"), fetch_redirect_response=False
-        )
+        self.assertRedirects(response, reverse("log_hours"), fetch_redirect_response=False)
         self.ghost_user.refresh_from_db()
         self.assertEqual(self.ghost_user.email, "john.doe@newemail.com")
         self.assertTrue(self.ghost_user.has_usable_password())
@@ -334,12 +304,8 @@ class EmailTollboothTests(TestCase):
     def setUp(self):
         self.client = Client()
         self.farm = Farm.objects.create(name="Tollbooth Farm")
-        self.no_email_user = User.objects.create_user(
-            username="no_email_guy", email="", password="securepassword"
-        )
-        FarmMembership.objects.create(
-            user=self.no_email_user, farm=self.farm, is_approved=True
-        )
+        self.no_email_user = User.objects.create_user(username="no_email_guy", email="", password="securepassword")
+        FarmMembership.objects.create(user=self.no_email_user, farm=self.farm, is_approved=True)
         self.update_url = reverse("update_email")
 
     def test_tollbooth_forces_redirect_for_missing_email(self):
@@ -349,9 +315,7 @@ class EmailTollboothTests(TestCase):
 
     def test_successful_email_update_clears_tollbooth(self):
         self.client.force_login(self.no_email_user)
-        response = self.client.post(
-            self.update_url, {"email": "nowihaveanemail@example.com"}
-        )
+        response = self.client.post(self.update_url, {"email": "nowihaveanemail@example.com"})
         self.assertRedirects(response, "/")
         self.no_email_user.refresh_from_db()
         self.assertEqual(self.no_email_user.email, "nowihaveanemail@example.com")
@@ -408,9 +372,7 @@ class ComplianceGateTests(TestCase):
             postal_code="48103",
             is_email_verified=True,
         )
-        self.membership = FarmMembership.objects.create(
-            user=self.user, farm=self.farm, is_approved=True
-        )
+        self.membership = FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True)
 
         session = self.client.session
         session["active_farm_id"] = self.farm.id
@@ -423,14 +385,10 @@ class ComplianceGateTests(TestCase):
         self.assertRedirects(response, reverse("sign_waiver"))
 
     def test_successful_signature_unlocks_account(self):
-        response = self.client.post(
-            reverse("sign_waiver"), {"signature": "John Doe", "sign_document": "true"}
-        )
+        response = self.client.post(reverse("sign_waiver"), {"signature": "John Doe", "sign_document": "true"})
         self.assertRedirects(response, reverse("log_hours"))
 
-        signature_exists = FormSignature.objects.filter(
-            user=self.user, form=self.compliance_form
-        ).exists()
+        signature_exists = FormSignature.objects.filter(user=self.user, form=self.compliance_form).exists()
         self.assertTrue(signature_exists)
 
     def test_waiver_get_request_renders_form(self):
@@ -439,13 +397,9 @@ class ComplianceGateTests(TestCase):
         self.assertTemplateUsed(response, "accounts/sign_waiver.html")
 
     def test_waiver_rejects_wrong_name(self):
-        response = self.client.post(
-            reverse("sign_waiver"), {"signature": "Wrong Name", "sign_document": "true"}
-        )
+        response = self.client.post(reverse("sign_waiver"), {"signature": "Wrong Name", "sign_document": "true"})
         self.assertEqual(response.status_code, 200)
-        self.assertContains(
-            response, "Your signature must match your first and last name exactly."
-        )
+        self.assertContains(response, "Your signature must match your first and last name exactly.")
         signature_exists = FormSignature.objects.filter(user=self.user).exists()
         self.assertFalse(signature_exists)
 
@@ -456,9 +410,7 @@ class ComplianceGateTests(TestCase):
         self.assertNotEqual(response.status_code, 302)
 
     def test_waiver_redirects_if_none_pending(self):
-        FormSignature.objects.create(
-            user=self.user, form=self.compliance_form, digital_signature="John Doe"
-        )
+        FormSignature.objects.create(user=self.user, form=self.compliance_form, digital_signature="John Doe")
         response = self.client.get(reverse("sign_waiver"))
         self.assertRedirects(response, reverse("log_hours"))
 
@@ -470,9 +422,7 @@ class ComplianceGateTests(TestCase):
             is_active=True,
             assignment_type="all",
         )
-        response = self.client.post(
-            reverse("sign_waiver"), {"signature": "John Doe", "sign_document": "true"}
-        )
+        response = self.client.post(reverse("sign_waiver"), {"signature": "John Doe", "sign_document": "true"})
         self.assertRedirects(response, reverse("sign_waiver"))
 
     def test_specific_assignment_waiver_logic(self):
@@ -547,17 +497,13 @@ class ComplianceGateTests(TestCase):
         """Ensure unverified users cannot post a signature."""
         self.user.is_email_verified = False
         self.user.save()
-        response = self.client.post(
-            reverse("sign_waiver"), {"signature": "John Doe", "sign_document": "true"}
-        )
+        response = self.client.post(reverse("sign_waiver"), {"signature": "John Doe", "sign_document": "true"})
 
         # It should bounce them back to the waiver page with the error message
         self.assertRedirects(response, reverse("sign_waiver"))
 
         # Verify the database physically rejected the signature creation
-        signature_exists = FormSignature.objects.filter(
-            user=self.user, form=self.compliance_form
-        ).exists()
+        signature_exists = FormSignature.objects.filter(user=self.user, form=self.compliance_form).exists()
         self.assertFalse(signature_exists)
 
 
@@ -594,9 +540,7 @@ class EmailVerificationTests(TestCase):
         self.user.is_email_verified = False
         self.user.save()
 
-        self.membership = FarmMembership.objects.create(
-            user=self.user, farm=self.farm, is_approved=True
-        )
+        self.membership = FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True)
 
         session = self.client.session
         session["active_farm_id"] = self.farm.id
@@ -606,9 +550,7 @@ class EmailVerificationTests(TestCase):
 
     def test_send_verification_email(self):
         """Ensure the view generates a token and sends an email."""
-        response = self.client.post(
-            reverse("sign_waiver"), {"send_verification": "true"}
-        )
+        response = self.client.post(reverse("sign_waiver"), {"send_verification": "true"})
         self.assertRedirects(response, reverse("sign_waiver"))
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn("Verify your signature account", mail.outbox[0].subject)
@@ -626,9 +568,7 @@ class EmailVerificationTests(TestCase):
     def test_verify_email_link_wrong_user(self):
         """Ensure a user cannot use someone else's token to verify their own account."""
         signer = TimestampSigner()
-        other_user = User.objects.create_user(
-            username="other", email="other@example.com", password="p"
-        )
+        other_user = User.objects.create_user(username="other", email="other@example.com", password="p")
         token = signer.sign(other_user.id)
 
         self.client.get(reverse("verify_email_link", args=[token]))
@@ -675,17 +615,11 @@ class EmailVerificationTests(TestCase):
         self.user.save()
 
         # Test Standard Signature
-        sig1 = FormSignature.objects.create(
-            user=self.user, form=self.compliance_form, digital_signature="John Doe"
-        )
-        self.assertEqual(
-            str(sig1), f"test_volunteer signed {self.compliance_form.name}"
-        )
+        sig1 = FormSignature.objects.create(user=self.user, form=self.compliance_form, digital_signature="John Doe")
+        self.assertEqual(str(sig1), f"test_volunteer signed {self.compliance_form.name}")
 
         # Test Guardian Signature (Use a second form to avoid the unique DB constraint)
-        form2 = ComplianceForm.objects.create(
-            farm=self.farm, name="Minor Safety Addendum", body_text="text"
-        )
+        form2 = ComplianceForm.objects.create(farm=self.farm, name="Minor Safety Addendum", body_text="text")
         sig2 = FormSignature.objects.create(
             user=self.user,
             form=form2,
@@ -693,9 +627,7 @@ class EmailVerificationTests(TestCase):
             is_guardian_signature=True,
             guardian_relationship="Mother",
         )
-        self.assertEqual(
-            str(sig2), f"Jane Doe (Guardian) signed {form2.name} for test_volunteer"
-        )
+        self.assertEqual(str(sig2), f"Jane Doe (Guardian) signed {form2.name} for test_volunteer")
 
 
 class SignatureEvasionTests(TestCase):
@@ -703,9 +635,7 @@ class SignatureEvasionTests(TestCase):
         self.client = Client()
 
         # 1. Build the target farm and form
-        self.farm_a = Farm.objects.create(
-            name="Authorized Farm", subscription_tier="growth"
-        )
+        self.farm_a = Farm.objects.create(name="Authorized Farm", subscription_tier="growth")
         self.form_a = ComplianceForm.objects.create(
             farm=self.farm_a,
             name="2026 Liability Waiver",
@@ -739,9 +669,7 @@ class SignatureEvasionTests(TestCase):
             is_email_verified=True,
         )
 
-        FarmMembership.objects.create(
-            user=self.volunteer, farm=self.farm_a, is_approved=True
-        )
+        FarmMembership.objects.create(user=self.volunteer, farm=self.farm_a, is_approved=True)
 
         self.client.force_login(self.volunteer)
 
@@ -837,17 +765,13 @@ class RegistrationSecurityTests(TestCase):
 
     def test_honeypot_trap_volunteer(self):
         """Ensure bots filling out the hidden website_url field are dropped silently."""
-        response = self.client.post(
-            self.vol_url, {"website_url": "[http://spam.com](http://spam.com)"}
-        )
+        response = self.client.post(self.vol_url, {"website_url": "[http://spam.com](http://spam.com)"})
         self.assertRedirects(response, "/")
         self.assertEqual(User.objects.count(), 0)
 
     def test_honeypot_trap_farm(self):
         """Ensure farm registration honeypot works."""
-        response = self.client.post(
-            self.farm_url, {"website_url": "[http://spam.com](http://spam.com)"}
-        )
+        response = self.client.post(self.farm_url, {"website_url": "[http://spam.com](http://spam.com)"})
         self.assertRedirects(response, "/")
         self.assertEqual(Farm.objects.count(), 0)
 
@@ -862,9 +786,7 @@ class RegistrationSecurityTests(TestCase):
     def test_turnstile_api_timeout_fails_securely(self, mock_post):
         """Ensure a Cloudflare API outage defaults to failing the registration."""
         mock_post.side_effect = requests.RequestException("Timeout")
-        response = self.client.post(
-            self.vol_url, {"cf-turnstile-response": "valid_token"}
-        )
+        response = self.client.post(self.vol_url, {"cf-turnstile-response": "valid_token"})
         self.assertEqual(response.status_code, 200)
         msgs = list(response.context["messages"])
         self.assertTrue(any("Security check failed" in str(m.message) for m in msgs))
@@ -909,9 +831,7 @@ class RegistrationSecurityTests(TestCase):
         response = self.client.post(self.farm_url, {"dummy": "data"})
 
         # View redirects to manager_dashboard on success
-        self.assertRedirects(
-            response, reverse("manager_dashboard"), fetch_redirect_response=False
-        )
+        self.assertRedirects(response, reverse("manager_dashboard"), fetch_redirect_response=False)
 
         # Verify DB state
         self.assertTrue(User.objects.filter(username="atomic_manager").exists())
@@ -920,16 +840,12 @@ class RegistrationSecurityTests(TestCase):
         # Ensure the user was elevated to a farm_manager
         db_user = User.objects.get(username="atomic_manager")
         self.assertEqual(db_user.role, "farm_manager")
-        self.assertTrue(
-            FarmMembership.objects.filter(user=db_user, is_approved=True).exists()
-        )
+        self.assertTrue(FarmMembership.objects.filter(user=db_user, is_approved=True).exists())
 
     @patch("accounts.views.FarmMembership.objects.create")
     @patch("accounts.views.FarmSignUpForm")
     @patch("accounts.views.verify_turnstile", return_value=True)
-    def test_farm_atomic_provisioning_rollback(
-        self, mock_turnstile, MockFormClass, mock_membership_create
-    ):
+    def test_farm_atomic_provisioning_rollback(self, mock_turnstile, MockFormClass, mock_membership_create):
         """Ensure a failure mid-provisioning rolls back the ENTIRE transaction."""
         mock_form = MockFormClass.return_value
         mock_form.is_valid.return_value = True
@@ -954,11 +870,7 @@ class RegistrationSecurityTests(TestCase):
         # It should catch the exception and rerender the form
         self.assertEqual(response.status_code, 200)
         msgs = list(response.context["messages"])
-        self.assertTrue(
-            any(
-                "critical error setting up your account" in str(m.message) for m in msgs
-            )
-        )
+        self.assertTrue(any("critical error setting up your account" in str(m.message) for m in msgs))
 
         # CRITICAL ATOMIC CHECK: Neither the user nor the farm should exist in the DB!
         self.assertFalse(User.objects.filter(username="rollback_target").exists())
@@ -966,9 +878,7 @@ class RegistrationSecurityTests(TestCase):
 
     @patch("farms.models.Farm.objects.create")
     @patch("accounts.views.verify_turnstile", return_value=True)
-    def test_farm_creation_failure_rolls_back_user(
-        self, mock_turnstile, mock_farm_create
-    ):
+    def test_farm_creation_failure_rolls_back_user(self, mock_turnstile, mock_farm_create):
         """STABILITY: Ensure a database failure during registration doesn't leave orphaned users."""
         # Force the database to crash when trying to create the Farm
         mock_farm_create.side_effect = Exception("Database Outage Simulation")
@@ -1024,9 +934,7 @@ class AvatarUploadTests(TestCase):
     def setUp(self):
         self.client = Client()
         # Ensure we have a valid logged-in user to test with
-        self.user = User.objects.create_user(
-            username="avatar_user", email="avatar@test.com", password="password123"
-        )
+        self.user = User.objects.create_user(username="avatar_user", email="avatar@test.com", password="password123")
 
     def test_avatar_upload_handles_missing_data(self):
         """Unhappy Path: Submit the avatar form with an empty payload."""
@@ -1056,32 +964,24 @@ class AvatarUploadTests(TestCase):
 class CustomAuthenticationTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()  # <-- NEW: Simulate HTTP Requests
-        self.user = User.objects.create_user(
-            username="real_user", email="real@test.com", password="correct_password"
-        )
+        self.user = User.objects.create_user(username="real_user", email="real@test.com", password="correct_password")
 
     def test_auth_backend_rejects_unknown_user(self):
         """Unhappy Path: Logging in with an email that doesn't exist."""
         request = self.factory.get("/login/")
-        user = authenticate(
-            request=request, username="nobody@test.com", password="password"
-        )
+        user = authenticate(request=request, username="nobody@test.com", password="password")
         self.assertIsNone(user)
 
     def test_auth_backend_rejects_bad_password(self):
         """Unhappy Path: Valid email, wrong password."""
         request = self.factory.get("/login/")
-        user = authenticate(
-            request=request, username="real@test.com", password="wrong_password"
-        )
+        user = authenticate(request=request, username="real@test.com", password="wrong_password")
         self.assertIsNone(user)
 
     def test_auth_backend_accepts_valid_email(self):
         """Happy Path: Ensure the custom backend actually works for emails."""
         request = self.factory.get("/login/")
-        user = authenticate(
-            request=request, username="real@test.com", password="correct_password"
-        )
+        user = authenticate(request=request, username="real@test.com", password="correct_password")
         self.assertIsNotNone(user)
         self.assertEqual(user.username, "real_user")
 
@@ -1193,9 +1093,7 @@ class AccountAnonymizationTests(TestCase):
         self.assertIsNotNone(self.log_entry)
         self.assertEqual(self.log_entry.volunteer, self.user)
 
-        total_hours = LogEntry.objects.filter(farm=self.farm).aggregate(
-            Sum("duration_hours")
-        )["duration_hours__sum"]
+        total_hours = LogEntry.objects.filter(farm=self.farm).aggregate(Sum("duration_hours"))["duration_hours__sum"]
         self.assertEqual(total_hours, Decimal("4.50"))
 
 

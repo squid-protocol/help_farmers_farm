@@ -22,19 +22,11 @@ class CustomUser(AbstractUser):
     phone_number = PhoneNumberField(blank=True, null=True)
 
     # --- NEW: Physical Address for Legal Identity ---
-    address_line1 = models.CharField(
-        max_length=255, blank=True, null=True, verbose_name="Street Address"
-    )
-    address_line2 = models.CharField(
-        max_length=255, blank=True, null=True, verbose_name="Apt/Suite/Other"
-    )
+    address_line1 = models.CharField(max_length=255, blank=True, null=True, verbose_name="Street Address")
+    address_line2 = models.CharField(max_length=255, blank=True, null=True, verbose_name="Apt/Suite/Other")
     city = models.CharField(max_length=100, blank=True, null=True)
-    state = models.CharField(
-        max_length=2, blank=True, null=True, help_text="2-letter abbreviation"
-    )
-    postal_code = models.CharField(
-        max_length=20, blank=True, null=True, verbose_name="ZIP/Postal Code"
-    )
+    state = models.CharField(max_length=2, blank=True, null=True, help_text="2-letter abbreviation")
+    postal_code = models.CharField(max_length=20, blank=True, null=True, verbose_name="ZIP/Postal Code")
 
     # --- NEW: Legal Verification ---
     is_email_verified = models.BooleanField(default=False)
@@ -96,9 +88,7 @@ class CustomUser(AbstractUser):
 
 
 class FarmMembership(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="memberships"
-    )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="memberships")
     farm = models.ForeignKey(Farm, on_delete=models.CASCADE, related_name="memberships")
 
     # NEW: Moved work_commitment to the bridge table!
@@ -132,12 +122,8 @@ class FarmMembership(models.Model):
 
 
 class FormSignature(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="signatures"
-    )
-    form = models.ForeignKey(
-        "farms.ComplianceForm", on_delete=models.CASCADE, related_name="signatures"
-    )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="signatures")
+    form = models.ForeignKey("farms.ComplianceForm", on_delete=models.CASCADE, related_name="signatures")
 
     digital_signature = models.CharField(max_length=255)
     signed_at = models.DateTimeField(auto_now_add=True)
@@ -149,9 +135,7 @@ class FormSignature(models.Model):
 
     # --- NEW: Immutable WORM Data ---
     signer_ip_address = models.GenericIPAddressField(null=True, blank=True)
-    document_hash = models.CharField(
-        max_length=64, null=True, blank=True, help_text="SHA-256 Cryptographic Hash"
-    )
+    document_hash = models.CharField(max_length=64, null=True, blank=True, help_text="SHA-256 Cryptographic Hash")
     pdf_receipt = models.FileField(upload_to="waivers/vault/", null=True, blank=True)
 
     class Meta:

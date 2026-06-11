@@ -130,9 +130,7 @@ def manager_dashboard(request):
 
         elif "submit_welcome_email" in request.POST:
             # Handle the Welcome Email update from the Comms tab
-            my_farm.welcome_email_subject = request.POST.get(
-                "welcome_email_subject", ""
-            )
+            my_farm.welcome_email_subject = request.POST.get("welcome_email_subject", "")
             my_farm.welcome_email_body = request.POST.get("welcome_email_body", "")
             my_farm.save()
             messages.success(request, "Automated Welcome Email template updated!")
@@ -147,9 +145,7 @@ def manager_dashboard(request):
                 )
                 return redirect("manager_dashboard")
 
-            compliance_setup_form = ComplianceFormSetup(
-                request.POST, farm=my_farm
-            )  # Pass farm here!
+            compliance_setup_form = ComplianceFormSetup(request.POST, farm=my_farm)  # Pass farm here!
             if compliance_setup_form.is_valid():
                 new_cform = compliance_setup_form.save(commit=False)
                 new_cform.farm = my_farm
@@ -158,26 +154,20 @@ def manager_dashboard(request):
                 # CRITICAL: Save the specific users to the database!
                 compliance_setup_form.save_m2m()
 
-                messages.success(
-                    request, f"Compliance Form '{new_cform.name}' added successfully!"
-                )
+                messages.success(request, f"Compliance Form '{new_cform.name}' added successfully!")
                 return redirect("manager_dashboard")
 
     # Fetch data using the membership bridge
     crops = Crop.objects.filter(farm=my_farm).order_by("-is_active", "crop_name")
 
     # We now get volunteers by looking through the FarmMembership bridge
-    memberships = FarmMembership.objects.filter(farm=my_farm).select_related(
-        "user", "work_commitment"
-    )
+    memberships = FarmMembership.objects.filter(farm=my_farm).select_related("user", "work_commitment")
     volunteers = [m.user for m in memberships]
 
     commitments = WorkCommitment.objects.filter(farm=my_farm)
 
     # --- THE MISSING QUERY ---
-    compliance_forms = ComplianceForm.objects.filter(farm=my_farm).order_by(
-        "-is_active", "name"
-    )
+    compliance_forms = ComplianceForm.objects.filter(farm=my_farm).order_by("-is_active", "name")
 
     active_crop_count = crops.filter(is_active=True).count()
 
@@ -188,19 +178,13 @@ def manager_dashboard(request):
                 "name": c.name,
                 "symbol": getattr(c, "symbol", "⏱️"),
                 "count": sum(
-                    1
-                    for m in memberships
-                    if m.work_commitment == c
-                    and m.user.is_active
-                    and m.user.role != "friend"
+                    1 for m in memberships if m.work_commitment == c and m.user.is_active and m.user.role != "friend"
                 ),
             }
         )
 
     standard_vol_count = sum(
-        1
-        for m in memberships
-        if m.work_commitment is None and m.user.is_active and m.user.role != "friend"
+        1 for m in memberships if m.work_commitment is None and m.user.is_active and m.user.role != "friend"
     )
 
     recent_notes = (
@@ -236,9 +220,7 @@ def manager_dashboard(request):
         .annotate(
             total_hours=Sum(
                 "user__logs__duration_hours",
-                filter=Q(
-                    user__logs__date_logged__year=current_year, user__logs__farm=my_farm
-                ),
+                filter=Q(user__logs__date_logged__year=current_year, user__logs__farm=my_farm),
             )
         )
     )
@@ -247,13 +229,9 @@ def manager_dashboard(request):
     active_forms = []
 
     if requires_waivers:
-        all_active = ComplianceForm.objects.filter(
-            farm=my_farm, is_active=True
-        ).prefetch_related("assigned_users")
+        all_active = ComplianceForm.objects.filter(farm=my_farm, is_active=True).prefetch_related("assigned_users")
         active_forms = [f for f in all_active if f.is_currently_valid()]
-        user_signatures = FormSignature.objects.filter(form__farm=my_farm).values_list(
-            "user_id", "form_id"
-        )
+        user_signatures = FormSignature.objects.filter(form__farm=my_farm).values_list("user_id", "form_id")
         sig_set = set(user_signatures)
     else:
         sig_set = set()
@@ -275,10 +253,7 @@ def manager_dashboard(request):
             else:
                 missing_waiver = False
                 for cform in active_forms:
-                    applies = (
-                        cform.assignment_type == "all"
-                        or vol in cform.assigned_users.all()
-                    )
+                    applies = cform.assignment_type == "all" or vol in cform.assigned_users.all()
                     if applies:
                         if (vol.id, cform.id) not in sig_set:
                             missing_waiver = True
@@ -294,9 +269,7 @@ def manager_dashboard(request):
             "waiver_status": waiver_status,
         }
 
-        group_key = (
-            mem.work_commitment.name if mem.work_commitment else "Standard Volunteers"
-        )
+        group_key = mem.work_commitment.name if mem.work_commitment else "Standard Volunteers"
         if group_key not in grouped_data:
             grouped_data[group_key] = []
         grouped_data[group_key].append(vol_data)
@@ -334,7 +307,6 @@ def edit_farm_profile_view(request):
     profile, _ = FarmProfile.objects.get_or_create(farm=my_farm)
 
     if request.method == "POST":
-
         # Action 1: Handle an image deletion request
         if "delete_image" in request.POST:
             image_id = request.POST.get("delete_image")
@@ -378,18 +350,12 @@ def volunteer_detail_view(request, volunteer_id):
     volunteer = get_object_or_404(User, id=volunteer_id)
 
     # Check if they have a membership to the manager's farm
-    if not FarmMembership.objects.filter(
-        user=volunteer, farm=request.active_farm
-    ).exists():
+    if not FarmMembership.objects.filter(user=volunteer, farm=request.active_farm).exists():
         if not request.user.is_staff:
-            raise PermissionDenied(
-                "You do not have permission to view volunteers outside your farm."
-            )
+            raise PermissionDenied("You do not have permission to view volunteers outside your farm.")
 
     user_logs = LogEntry.objects.filter(volunteer=volunteer, farm=request.active_farm)
-    total_hours = (
-        user_logs.aggregate(Sum("duration_hours"))["duration_hours__sum"] or 0.0
-    )
+    total_hours = user_logs.aggregate(Sum("duration_hours"))["duration_hours__sum"] or 0.0
     recent_logs = user_logs.order_by("-date_logged")[:15]
 
     context = {
@@ -448,9 +414,7 @@ def progress_report_view(request):
         .annotate(
             total_hours=Sum(
                 "user__logs__duration_hours",
-                filter=Q(
-                    user__logs__date_logged__year=current_year, user__logs__farm=farm
-                )
+                filter=Q(user__logs__date_logged__year=current_year, user__logs__farm=farm)
                 & ~Q(user__logs__crop__crop_name__iexact="General / Deleted"),
             )
         )
@@ -473,9 +437,7 @@ def progress_report_view(request):
             "is_behind": is_behind,
         }
 
-        group_key = (
-            mem.work_commitment.name if mem.work_commitment else "Standard Volunteers"
-        )
+        group_key = mem.work_commitment.name if mem.work_commitment else "Standard Volunteers"
 
         if group_key not in grouped_data:
             grouped_data[group_key] = []
@@ -499,9 +461,7 @@ def progress_report_view(request):
 def toggle_user_status_view(request, user_id):
     user_to_toggle = get_object_or_404(User, id=user_id)
 
-    if not FarmMembership.objects.filter(
-        user=user_to_toggle, farm=request.active_farm
-    ).exists():
+    if not FarmMembership.objects.filter(user=user_to_toggle, farm=request.active_farm).exists():
         if not request.user.is_staff:
             raise PermissionDenied("Cannot modify users outside your farm.")
 
@@ -509,9 +469,7 @@ def toggle_user_status_view(request, user_id):
         "account_manager",
         "farm_manager",
     ]:
-        raise PermissionDenied(
-            "Farm Managers do not have permission to modify other managers."
-        )
+        raise PermissionDenied("Farm Managers do not have permission to modify other managers.")
 
     if request.user == user_to_toggle:
         raise PermissionDenied("You cannot deactivate yourself.")
@@ -536,9 +494,7 @@ def toggle_crop_status_view(request, crop_id):
 @user_passes_test(is_manager, login_url="/log-hours/")
 def toggle_compliance_status_view(request, form_id):
     """Allows managers to archive old waivers so new volunteers don't have to sign them."""
-    compliance_form = get_object_or_404(
-        ComplianceForm, id=form_id, farm=request.active_farm
-    )
+    compliance_form = get_object_or_404(ComplianceForm, id=form_id, farm=request.active_farm)
     compliance_form.is_active = not compliance_form.is_active
     compliance_form.save()
     messages.success(
@@ -572,9 +528,7 @@ def edit_crop_view(request, crop_id):
 def edit_volunteer_view(request, volunteer_id):
     volunteer = get_object_or_404(User, id=volunteer_id)
 
-    if not FarmMembership.objects.filter(
-        user=volunteer, farm=request.active_farm
-    ).exists():
+    if not FarmMembership.objects.filter(user=volunteer, farm=request.active_farm).exists():
         if not request.user.is_staff:
             raise PermissionDenied("Cannot edit users outside your farm.")
 
@@ -621,9 +575,7 @@ def edit_volunteer_view(request, volunteer_id):
 @login_required
 @user_passes_test(is_manager, login_url="/log-hours/")
 def edit_commitment_view(request, commitment_id):
-    commitment = get_object_or_404(
-        WorkCommitment, id=commitment_id, farm=request.active_farm
-    )
+    commitment = get_object_or_404(WorkCommitment, id=commitment_id, farm=request.active_farm)
     if request.method == "POST":
         form = WorkCommitmentForm(request.POST, instance=commitment)
         if form.is_valid():
@@ -646,9 +598,7 @@ def switch_active_farm(request):
     if farm_id:
         # Security check: Prove they are actually a member before switching
 
-        is_member = FarmMembership.objects.filter(
-            user=request.user, farm_id=farm_id, is_approved=True
-        ).exists()
+        is_member = FarmMembership.objects.filter(user=request.user, farm_id=farm_id, is_approved=True).exists()
 
         if is_member:
             request.session["active_farm_id"] = int(farm_id)
@@ -668,11 +618,7 @@ def compliance_audit_view(request, form_id):
     compliance_form = get_object_or_404(ComplianceForm, id=form_id, farm=farm)
 
     # 2. Fetch every signature for this specific form, ordered by newest first
-    signatures = (
-        FormSignature.objects.filter(form=compliance_form)
-        .select_related("user")
-        .order_by("-signed_at")
-    )
+    signatures = FormSignature.objects.filter(form=compliance_form).select_related("user").order_by("-signed_at")
 
     context = {
         "farm": farm,
@@ -688,9 +634,7 @@ def invite_link_view(request, token):
     farm = get_object_or_404(Farm, invite_token=token)
 
     # Create the bridge record. If they are already pending, this updates them to approved.
-    membership, created = FarmMembership.objects.get_or_create(
-        user=request.user, farm=farm
-    )
+    membership, created = FarmMembership.objects.get_or_create(user=request.user, farm=farm)
 
     if created or not membership.is_approved:
         membership.is_approved = True
@@ -742,9 +686,9 @@ def farm_search_view(request):
 
     farms = farms[:15]
 
-    pending_requests = FarmMembership.objects.filter(
-        user=request.user, is_approved=False
-    ).values_list("farm_id", flat=True)
+    pending_requests = FarmMembership.objects.filter(user=request.user, is_approved=False).values_list(
+        "farm_id", flat=True
+    )
 
     return render(
         request,
@@ -776,9 +720,7 @@ def request_join_farm_view(request, farm_id):
         membership.applicant_message = message
         membership.save()
 
-    messages.success(
-        request, f"Your application to join {farm.name} has been sent to the manager!"
-    )
+    messages.success(request, f"Your application to join {farm.name} has been sent to the manager!")
     return redirect("farm_search")
 
 
@@ -787,9 +729,7 @@ def request_join_farm_view(request, farm_id):
 @user_passes_test(is_manager, login_url="/log-hours/")
 def approve_membership_view(request, membership_id):
     """Manager Control: Approve or Deny pending volunteers"""
-    membership = get_object_or_404(
-        FarmMembership, id=membership_id, farm=request.active_farm
-    )
+    membership = get_object_or_404(FarmMembership, id=membership_id, farm=request.active_farm)
     action = request.POST.get("action")
 
     if action == "approve":
@@ -801,9 +741,7 @@ def approve_membership_view(request, membership_id):
         )
 
         # Fire the automated welcome email since they are now officially on the roster
-        send_volunteer_welcome_email(
-            membership.user.id, request.active_farm.id, raw_password="Set during signup"
-        )
+        send_volunteer_welcome_email(membership.user.id, request.active_farm.id, raw_password="Set during signup")
 
     elif action == "deny":
         membership.delete()
@@ -853,16 +791,12 @@ def volunteer_roster_view(request):
                 )
                 return redirect("volunteer_roster")
 
-            volunteer_form = VolunteerCreationForm(
-                request.POST, request_user=request.user, farm=my_farm
-            )
+            volunteer_form = VolunteerCreationForm(request.POST, request_user=request.user, farm=my_farm)
             if volunteer_form.is_valid():
                 new_user = volunteer_form.save(commit=False)
                 new_user.set_password(volunteer_form.cleaned_data["password"])
                 new_user.role = "volunteer"
-                new_user.is_email_verified = (
-                    True  # Auto-verify manager-created accounts
-                )
+                new_user.is_email_verified = True  # Auto-verify manager-created accounts
                 new_user.save()
 
                 FarmMembership.objects.create(
@@ -879,9 +813,7 @@ def volunteer_roster_view(request):
                     raw_password=volunteer_form.cleaned_data["password"],
                 )
 
-                messages.success(
-                    request, f"Volunteer created successfully! {email_status}"
-                )
+                messages.success(request, f"Volunteer created successfully! {email_status}")
                 return redirect("volunteer_roster")
 
     # Fetch all memberships in one optimized query
@@ -930,9 +862,7 @@ def live_stats_fragment(request):
             "searching_farms": real_farms.filter(
                 profile__is_accepting_volunteers=True, profile__is_public=True
             ).count(),
-            "active_volunteers": LogEntry.objects.filter(
-                date_logged__year=current_year, volunteer__in=real_users
-            )
+            "active_volunteers": LogEntry.objects.filter(date_logged__year=current_year, volunteer__in=real_users)
             .values("volunteer")
             .distinct()
             .count(),
@@ -965,9 +895,7 @@ def public_farm_detail_view(request, farm_id):
 
     # 3. Build the Stacked Bar Chart Data (Crops vs Activities)
     activity_choices = dict(LogEntry._meta.get_field("activity").choices)
-    raw_data = logs.values("crop__crop_name", "activity").annotate(
-        total_hours=Sum("duration_hours")
-    )
+    raw_data = logs.values("crop__crop_name", "activity").annotate(total_hours=Sum("duration_hours"))
 
     chart_data = {}
     crop_names_set = set()
@@ -1004,9 +932,9 @@ def public_farm_detail_view(request, farm_id):
     # Check if the user has already requested to join this farm
     pending_requests = []
     if request.user.is_authenticated:
-        pending_requests = FarmMembership.objects.filter(
-            user=request.user, is_approved=False
-        ).values_list("farm_id", flat=True)
+        pending_requests = FarmMembership.objects.filter(user=request.user, is_approved=False).values_list(
+            "farm_id", flat=True
+        )
 
     context = {
         "farm": farm,

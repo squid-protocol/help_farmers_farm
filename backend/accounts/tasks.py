@@ -74,8 +74,6 @@ def purge_unverified_accounts():
     if count > 0:
         # Django's .delete() on a queryset is highly efficient
         ghosts.delete()
-        logger.info(
-            f"Nightly Purge: Successfully deleted {count} unverified ghost accounts."
-        )
+        logger.info(f"Nightly Purge: Successfully deleted {count} unverified ghost accounts.")
     else:
         logger.info("Nightly Purge: No unverified ghost accounts found.")

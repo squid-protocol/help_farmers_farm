@@ -37,15 +37,11 @@ class FarmModelTests(TestCase):
     def test_can_use_waivers_feature_flag(self):
         """Ensure the Compliance Engine is paywalled correctly."""
         # Starter tier
-        starter_farm = Farm.objects.create(
-            name="Starter Farm", subscription_tier="starter"
-        )
+        starter_farm = Farm.objects.create(name="Starter Farm", subscription_tier="starter")
         self.assertFalse(starter_farm.can_use_waivers)
 
         # Growth tier
-        growth_farm = Farm.objects.create(
-            name="Growth Farm", subscription_tier="growth"
-        )
+        growth_farm = Farm.objects.create(name="Growth Farm", subscription_tier="growth")
         self.assertTrue(growth_farm.can_use_waivers)
 
     def test_full_address_property(self):
@@ -64,9 +60,7 @@ class ComplianceFormModelTests(TestCase):
     def setUp(self):
         self.farm = Farm.objects.create(name="Model Test Farm")
         self.user = User.objects.create_user(username="signer", email="signer@test.com")
-        self.form = ComplianceForm.objects.create(
-            farm=self.farm, name="Waiver v1", body_text="Do not sue us."
-        )
+        self.form = ComplianceForm.objects.create(farm=self.farm, name="Waiver v1", body_text="Do not sue us.")
 
     def test_is_currently_valid(self):
         """Ensure the compliance form correctly evaluates its expiration status."""
@@ -83,15 +77,11 @@ class ComplianceFormModelTests(TestCase):
         self.assertFalse(form2.is_currently_valid())
 
         # 3. Expired yesterday
-        form3 = ComplianceForm(
-            farm=self.farm, is_active=True, does_expire=True, expiration_date=yesterday
-        )
+        form3 = ComplianceForm(farm=self.farm, is_active=True, does_expire=True, expiration_date=yesterday)
         self.assertFalse(form3.is_currently_valid())
 
         # 4. Expiring tomorrow
-        form4 = ComplianceForm(
-            farm=self.farm, is_active=True, does_expire=True, expiration_date=tomorrow
-        )
+        form4 = ComplianceForm(farm=self.farm, is_active=True, does_expire=True, expiration_date=tomorrow)
         self.assertTrue(form4.is_currently_valid())
 
     def test_compliance_form_str(self):
@@ -110,9 +100,7 @@ class ComplianceFormModelTests(TestCase):
     def test_signed_form_rejects_text_alteration(self):
         """Ensure a form physically locks its text once a signature is applied."""
         # 1. Apply a signature
-        FormSignature.objects.create(
-            user=self.user, form=self.form, digital_signature="John Doe"
-        )
+        FormSignature.objects.create(user=self.user, form=self.form, digital_signature="John Doe")
 
         # 2. Attempt a malicious rewrite
         self.form.body_text = "You now owe the farm $1,000,000."
@@ -125,9 +113,7 @@ class ComplianceFormModelTests(TestCase):
 
     def test_signed_form_allows_archiving(self):
         """Ensure a manager can still toggle is_active to archive a signed form."""
-        FormSignature.objects.create(
-            user=self.user, form=self.form, digital_signature="John Doe"
-        )
+        FormSignature.objects.create(user=self.user, form=self.form, digital_signature="John Doe")
 
         # We are only changing the active status, NOT the text
         self.form.is_active = False
