@@ -30,4 +30,5 @@ prod_data.json
 
 # Node / Tailwind CSS
 **/node_modules/
-npm-debug.log
+npm-debug.logcontext_*.md
+.env
