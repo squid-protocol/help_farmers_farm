@@ -126,7 +126,6 @@ class FarmAdmin(admin.ModelAdmin):
         CropInline,
         ComplianceFormInline,
     ]
-
     fieldsets = (
         (
             "Identity & Contact",
@@ -136,7 +135,12 @@ class FarmAdmin(admin.ModelAdmin):
                     "account_number",
                     "contact_email",
                     "phone_number",
-                    "address",
+                    "address_line1",
+                    "city",
+                    "state",
+                    "postal_code",
+                    "latitude",
+                    "longitude",
                 )
             },
         ),
