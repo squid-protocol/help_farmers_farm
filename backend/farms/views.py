@@ -665,7 +665,7 @@ def farm_search_view(request):
             # +/- 0.1 degrees shifts the center of the bubble randomly by ~6 miles
             jitter_lat = random.uniform(-0.1, 0.1)
             jitter_lng = random.uniform(-0.1, 0.1)
-            
+
             map_data.append(
                 {
                     "id": f.id,
@@ -957,36 +957,35 @@ def public_farm_detail_view(request, farm_id):
 def landing_page_view(request):
     """The brains for the main public landing page (landing.html)."""
     # 1. Grab or calculate the dashboard metrics
-    dashboard_metrics = cache.get('landing_dashboard_metrics')
+    dashboard_metrics = cache.get("landing_dashboard_metrics")
 
     if not dashboard_metrics:
         dashboard_metrics = {
-            'total_farms': Farm.objects.exclude(name__istartswith='test').count(),
-            'recruiting_farms': FarmProfile.objects.filter(is_accepting_volunteers=True).count(),
-            'connections_made': FarmMembership.objects.filter(is_approved=True).count(),
-            'active_volunteers': FarmMembership.objects.filter(is_approved=True).values('user').distinct().count(),
+            "total_farms": Farm.objects.exclude(name__istartswith="test").count(),
+            "recruiting_farms": FarmProfile.objects.filter(is_accepting_volunteers=True).count(),
+            "connections_made": FarmMembership.objects.filter(is_approved=True).count(),
+            "active_volunteers": FarmMembership.objects.filter(is_approved=True).values("user").distinct().count(),
         }
-        cache.set('landing_dashboard_metrics', dashboard_metrics, 300)
+        cache.set("landing_dashboard_metrics", dashboard_metrics, 300)
 
     # 2. Build the fuzzy Map Data for the landing page
     farms_qs = Farm.objects.filter(profile__is_public=True).select_related("profile")
     map_data = []
-    
+
     for f in farms_qs:
         if f.latitude and f.longitude:
-            map_data.append({
-                "id": f.id,
-                "name": f.name,
-                "lat": f.latitude + random.uniform(-0.1, 0.1),
-                "lng": f.longitude + random.uniform(-0.1, 0.1),
-                "is_accepting": f.profile.is_accepting_volunteers,
-                "url": reverse("public_farm_detail", args=[f.id]),
-            })
+            map_data.append(
+                {
+                    "id": f.id,
+                    "name": f.name,
+                    "lat": f.latitude + random.uniform(-0.1, 0.1),
+                    "lng": f.longitude + random.uniform(-0.1, 0.1),
+                    "is_accepting": f.profile.is_accepting_volunteers,
+                    "url": reverse("public_farm_detail", args=[f.id]),
+                }
+            )
 
     # 3. Send BOTH pieces of data to the template
-    context = {
-        'metrics': dashboard_metrics,
-        'map_data_json': json.dumps(map_data)
-    }
-    
-    return render(request, 'landing.html', context)
+    context = {"metrics": dashboard_metrics, "map_data_json": json.dumps(map_data)}
+
+    return render(request, "landing.html", context)
