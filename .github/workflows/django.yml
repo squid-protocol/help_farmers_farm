@@ -42,12 +42,18 @@ jobs:
         python -m pip install --upgrade pip
         cd backend
         pip install -r requirements.txt
-        pip install coverage ruff
+        pip install coverage ruff pytest pytest-django
 
     - name: Lint and Format with Ruff
       run: |
         ruff check backend/
         ruff format --check backend/
+
+    - name: Django System and Migration Check
+      run: |
+        cd backend
+        python manage.py check
+        python manage.py makemigrations --check --dry-run
 
     - name: Run Tests & Generate Report
       run: |
