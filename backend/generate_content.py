@@ -1,30 +1,41 @@
 import os
 
 # Configuration
-# The 6 distinct SaaS subsystems we want to generate separate markdown files for.
-SUBSYSTEMS = {"accounts", "analytics", "billing", "farms", "helpingfarmersfarm", "logs"}
+# The distinct app subsystems we want to generate separate markdown files for.
+SUBSYSTEMS = {
+    "accounts",
+    "analytics",
+    "billing",
+    "cookbooks",
+    "farms",
+    "helpfarmersfarm",
+    "logs",
+    "theme",
+}
 
-# Folders we want to completely skip
+# Folders we want to completely skip (Crucial: ignore node_modules!)
 IGNORE_DIRS = {
     "farm_venv",
+    "node_modules",
     "__pycache__",
     ".git",
-    "theme",
-    "media",
     "migrations",
     ".github",
     "tests",
+    "media",
 }
 
 # File extensions we want to skip (binaries, logs, databases)
-IGNORE_EXTS = {".pyc", ".sqlite3", ".log", ".json", ".png", ".jpg", ".ico"}
+IGNORE_EXTS = {".pyc", ".sqlite3", ".log", ".json", ".png", ".jpg", ".jpeg", ".ico"}
 
-# Specific files to skip (so it doesn't try to read its own output)
+# Specific files to skip (so it doesn't try to read its own output or compiled CSS)
 IGNORE_FILES = {
     "generate_content.py",
     "generate_context.py",
-    "django_errors.log",
-    "final_schuler_data.json",
+    "output.css",
+    "package-lock.json",
+    "package.json",
+    ".coverage",
 }
 
 
@@ -54,7 +65,7 @@ def get_subsystem_name(root_path):
     if top_folder in SUBSYSTEMS:
         return top_folder
 
-    return "core"  # Catch-all for anything outside the 6 main apps
+    return "core"  # Catch-all for anything outside the main apps
 
 
 def build_tree_map(startpath):
@@ -76,7 +87,7 @@ def build_tree_map(startpath):
             if (
                 any(f.endswith(ext) for ext in IGNORE_EXTS)
                 or f in IGNORE_FILES
-                or f.endswith("_context.md")
+                or (f.startswith("context_") and f.endswith(".md"))
             ):
                 continue
             tree.append(f"{subindent}📄 {f}")
@@ -103,7 +114,7 @@ def generate_context():
             if (
                 any(file.endswith(ext) for ext in IGNORE_EXTS)
                 or file in IGNORE_FILES
-                or file.endswith("_context.md")
+                or (file.startswith("context_") and file.endswith(".md"))
             ):
                 continue
 
@@ -115,7 +126,6 @@ def generate_context():
                 with open(file_path, "r", encoding="utf-8") as infile:
                     content = infile.read()
 
-                # Format as clean Markdown
                 # Format as clean Markdown
                 formatted_content = (
                     f"## FILE: `{file_path.removeprefix('./')}`\n\n"
@@ -134,7 +144,7 @@ def generate_context():
         if not contents:
             continue  # Skip creating empty files
 
-        output_filename = f"{subsystem}_context.md"
+        output_filename = f"context_{subsystem}.md"
 
         # Build the tree map for the specific subsystem (or root for core)
         search_path = f"./{subsystem}" if subsystem != "core" else "."
