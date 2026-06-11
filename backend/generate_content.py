@@ -25,6 +25,9 @@ IGNORE_FILES = {
     "generate_context.py",
     "django_errors.log",
     "final_schuler_data.json",
+    ".env",
+    "pytest.ini",
+    ".gitignore",
 }
 
 
