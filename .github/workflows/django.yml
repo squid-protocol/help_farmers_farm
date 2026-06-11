@@ -12,11 +12,11 @@ jobs:
 
     services:
       postgres:
-        image: postgres:14
+        image: postgres:15
         env:
           POSTGRES_DB: farm_logs
-          POSTGRES_USER: farm_user
-          POSTGRES_PASSWORD: super_secret_test_password
+          POSTGRES_USER: farm_admin
+          POSTGRES_PASSWORD: your_secure_password
         ports:
           - 5432:5432
         options: >-
@@ -27,10 +27,12 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Set up Python 3.12
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v5
       with:
         python-version: "3.12"
         cache: 'pip'
@@ -40,20 +42,15 @@ jobs:
         python -m pip install --upgrade pip
         cd backend
         pip install -r requirements.txt
-        pip install flake8 coverage black
+        pip install coverage ruff
 
-    - name: Run Flake8
+    - name: Lint and Format with Ruff
+      run: |
+        ruff check backend/
+        ruff format --check backend/
+
+    - name: Run Tests & Generate Report
       run: |
         cd backend
-        flake8 .
-
-    - name: Run Tests
-      env:
-        # Hardcoded testing values so CI can run perfectly without needing Secrets
-        SECRET_KEY: fake_testing_secret_key_123
-        DATABASE_URL: postgres://farm_user:super_secret_test_password@localhost:5432/farm_logs
-        DEBUG: "False"
-      run: |
-        cd backend
-        coverage run manage.py test
-        coverage report --fail-under=75
+        coverage run -m pytest
+        coverage report
