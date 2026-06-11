@@ -142,12 +142,10 @@ class CustomUserAdmin(UserAdmin):
         ),
     )
 
-    add_fieldsets = UserAdmin.add_fieldsets + (
-        (
-            "Custom App Details",
-            {"fields": ("role", "phone_number", "address", "is_email_verified")},
-        ),
-    )
+
+add_fieldsets = UserAdmin.add_fieldsets + (
+    ("Custom App Details", {"fields": ("role", "phone_number", "is_email_verified")}),
+)
 
 
 # -----------------------------------------------------------------------------
