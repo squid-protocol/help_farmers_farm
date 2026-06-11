@@ -1745,10 +1745,6 @@ input:where([type='file']):focus {
   flex-grow: 1;
 }
 
-.grow {
-  flex-grow: 1;
-}
-
 .border-collapse {
   border-collapse: collapse;
 }
@@ -3306,6 +3302,11 @@ input:where([type='file']):focus {
   border-color: rgb(254 202 202 / var(--tw-border-opacity, 1));
 }
 
+.hover\:bg-blue-100:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(219 234 254 / var(--tw-bg-opacity, 1));
+}
+
 .hover\:bg-blue-200:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(191 219 254 / var(--tw-bg-opacity, 1));
@@ -3787,6 +3788,10 @@ input:where([type='file']):focus {
 
   .md\:p-8 {
     padding: 2rem;
+  }
+
+  .md\:text-left {
+    text-align: left;
   }
 
   .md\:text-5xl {
