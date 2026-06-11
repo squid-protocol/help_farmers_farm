@@ -129,7 +129,15 @@ class CustomUserAdmin(UserAdmin):
     fieldsets = UserAdmin.fieldsets + (
         (
             "Contact & Identity",
-            {"fields": ("phone_number", "address", "avatar")},
+            {"fields": (
+                "phone_number", 
+                "address_line1", 
+                "address_line2", 
+                "city", 
+                "state", 
+                "postal_code", 
+                "avatar"
+            )},
         ),
         (
             "Platform Access & Compliance",
@@ -143,7 +151,16 @@ class CustomUserAdmin(UserAdmin):
     add_fieldsets = UserAdmin.add_fieldsets + (
         (
             "Custom App Details",
-            {"fields": ("role", "phone_number", "address", "is_email_verified")},
+            {"fields": (
+                "role", 
+                "phone_number", 
+                "address_line1", 
+                "address_line2", 
+                "city", 
+                "state", 
+                "postal_code", 
+                "is_email_verified"
+            )},
         ),
     )
 
