@@ -970,10 +970,10 @@ def landing_page_view(request):
             "recruiting_farms": FarmProfile.objects.filter(farm__in=real_farms, is_accepting_volunteers=True).count(),
             # Connections: The total number of approved roster spots held by independent volunteers (organic apps only)
             "connections_made": FarmMembership.objects.filter(
-                farm__in=real_farms, 
-                user__in=real_vols, 
+                farm__in=real_farms,
+                user__in=real_vols,
                 is_approved=True,
-                applicant_message__isnull=False  # <-- THE FIX
+                applicant_message__isnull=False,  # <-- THE FIX
             ).count(),
             # Active Volunteers: Distinct human volunteers who hold at least one approved spot
             "active_volunteers": FarmMembership.objects.filter(
