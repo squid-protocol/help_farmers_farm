@@ -1,22 +1,52 @@
 {% extends "base.html" %}
 
 {% block content %}
+<!-- LEAFLET CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
 <div class="text-center py-20 px-4 sm:px-6 lg:px-8">
     <h1 class="text-5xl md:text-6xl font-extrabold text-gray-900 tracking-tight mb-6">
-        The connection engine for <br class="hidden sm:block">
-        <span class="text-green-600">local agriculture.</span>
+        Find a farm, <span class="text-green-600">volunteer for a season,</span> get veggies.
     </h1>
-    <p class="mt-4 max-w-2xl text-xl text-gray-500 mx-auto mb-10">
-        <strong>Helping Farmers Farm</strong> is a dual-sided discovery platform. We help passionate people find local farms to support for a few hours a week, while providing farms with the tools they need to track labor, manage digital waivers, and honor their workforce.
-    </p>
     
-    <div class="flex flex-col sm:flex-row justify-center gap-4">
+    <div class="flex flex-col sm:flex-row justify-center gap-4 mb-16">
         {% if user.is_authenticated %}
             <a href="{% url 'log_hours' %}" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-10 rounded-xl shadow-lg transition transform hover:-translate-y-1">Go to Dashboard</a>
         {% else %}
             <a href="{% url 'signup_gateway' %}" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-10 rounded-xl shadow-lg transition transform hover:-translate-y-1">I'm a Volunteer (Free)</a>
             <a href="{% url 'pricing' %}" class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-4 px-10 rounded-xl shadow transition transform hover:-translate-y-1">I'm a Farm Manager</a>
         {% endif %}
+    </div>
+
+    <!-- THE INTERACTIVE MAP (NO SEARCH BAR) -->
+    <div id="farm-map" class="w-full h-96 bg-gray-100 rounded-3xl border border-gray-200 shadow-xl mb-16 z-0 relative overflow-hidden text-left"></div>
+</div>
+
+<div class="bg-white pb-16">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <dl class="grid grid-cols-1 gap-0.5 overflow-hidden rounded-3xl text-center sm:grid-cols-2 lg:grid-cols-4 border border-gray-100 shadow-lg">
+            
+            <div class="flex flex-col bg-gray-50 p-8 hover:bg-white transition">
+                <dt class="text-sm font-semibold leading-6 text-gray-500 uppercase tracking-wide mt-2">Active Farms</dt>
+                <dd class="order-first text-4xl font-extrabold tracking-tight text-emerald-700">{{ metrics.total_farms|default:"0" }}</dd>
+            </div>
+
+            <div class="flex flex-col bg-gray-50 p-8 hover:bg-white transition">
+                <dt class="text-sm font-semibold leading-6 text-gray-500 uppercase tracking-wide mt-2">Recruiting Now</dt>
+                <dd class="order-first text-4xl font-extrabold tracking-tight text-blue-600">{{ metrics.recruiting_farms|default:"0" }}</dd>
+            </div>
+
+            <div class="flex flex-col bg-gray-50 p-8 hover:bg-white transition">
+                <dt class="text-sm font-semibold leading-6 text-gray-500 uppercase tracking-wide mt-2">Connections Made</dt>
+                <dd class="order-first text-4xl font-extrabold tracking-tight text-emerald-700">{{ metrics.connections_made|default:"0" }}</dd>
+            </div>
+
+            <div class="flex flex-col bg-gray-50 p-8 hover:bg-white transition">
+                <dt class="text-sm font-semibold leading-6 text-gray-500 uppercase tracking-wide mt-2">Active Volunteers</dt>
+                <dd class="order-first text-4xl font-extrabold tracking-tight text-gray-900">{{ metrics.active_volunteers|default:"0" }}</dd>
+            </div>
+
+        </dl>
     </div>
 </div>
 
@@ -32,11 +62,90 @@
 
         <div class="bg-blue-50 p-10 rounded-3xl border border-blue-100 shadow-sm text-center md:text-left">
             <div class="text-5xl mb-6">🚜</div>
-            <h3 class="text-2xl font-bold text-blue-900 mb-3">For Farms: Compliance & Discovery</h3>
+            <h3 class="text-2xl font-bold text-blue-900 mb-3">For Farms: Compliance & Labor</h3>
             <p class="text-blue-800 mb-4">List your farm on our public directory to attract willing hands. We handle the heavy lifting: digital liability waiver signature monitoring and record keeping, volunteer workforce communication platform and labor tracking reports. We make it easy to manange a volunteer workforce. Save hours of clipboard management and hours tracking. </p>
             <a href="{% url 'pricing' %}" class="inline-block bg-white text-blue-700 hover:bg-blue-100 font-bold py-2 px-4 rounded-lg text-sm shadow-sm border border-blue-200 transition">View Seasonal Pricing &rarr;</a>
         </div>
 
     </div>
 </div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Initialize the map centered on Michigan
+        const map = L.map('farm-map').setView([44.3148, -85.6024], 6);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        const markers = L.markerClusterGroup({
+            iconCreateFunction: function(cluster) {
+                const count = cluster.getChildCount();
+                let bgColor = 'bg-emerald-300';
+                let textColor = 'text-emerald-900';
+
+                if (count >= 50) {
+                    bgColor = 'bg-emerald-800'; 
+                    textColor = 'text-white';
+                } else if (count >= 10) {
+                    bgColor = 'bg-emerald-600'; 
+                    textColor = 'text-white';
+                }
+
+                return L.divIcon({
+                    html: `<div class="${bgColor} ${textColor} flex items-center justify-center font-bold rounded-full w-10 h-10 border-4 border-white shadow-lg opacity-90">${count}</div>`,
+                    className: 'custom-cluster-icon bg-transparent',
+                    iconSize: L.point(40, 40)
+                });
+            },
+            showCoverageOnHover: false,
+            spiderfyOnMaxZoom: false
+        });
+
+        let farmData = [];
+        try {
+            const rawData = '{{ map_data_json|escapejs }}';
+            if (rawData) {
+                farmData = JSON.parse(rawData);
+            }
+        } catch (e) {
+            console.error("Could not parse map data", e);
+        }
+
+        farmData.forEach(function(farm) {
+            const hexColor = farm.is_accepting ? '#10b981' : '#f59e0b';
+            
+            const radiusBubble = L.circle([farm.lat, farm.lng], {
+                color: hexColor,
+                fillColor: hexColor,
+                fillOpacity: 0.35,
+                radius: 40000, 
+                weight: 2
+            });
+            
+            const statusBadge = farm.is_accepting 
+                ? "<span class='text-emerald-600 font-bold text-xs'>Accepting Volunteers</span>" 
+                : "<span class='text-amber-600 font-bold text-xs'>Roster Full</span>";
+                
+            radiusBubble.bindPopup(`
+                <div class="text-center p-1">
+                    <h3 class="font-bold text-gray-900 mb-1">${farm.name}</h3>
+                    ${statusBadge}
+                    <br>
+                    <a href="${farm.url}" class="inline-block mt-2 text-sm text-blue-600 hover:text-blue-800 font-semibold">View Profile &rarr;</a>
+                </div>
+            `);
+
+            markers.addLayer(radiusBubble);
+        });
+
+        map.addLayer(markers);
+    });
+</script>
 {% endblock %}

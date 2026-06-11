@@ -3,12 +3,13 @@ from django.urls import path, include
 from django.views.generic import TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
+from farms import views as farm_views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounts/", include("django.contrib.auth.urls")),
     path("accounts/", include("accounts.urls")),
-    path("", TemplateView.as_view(template_name="landing.html"), name="home"),
+    path("", farm_views.landing_page_view, name="home"),
     path("about/", TemplateView.as_view(template_name="about.html"), name="about"),
     path("faq/", TemplateView.as_view(template_name="faq.html"), name="faq"),
     path("contact/", TemplateView.as_view(template_name="contact.html"), name="contact"),

@@ -11,3 +11,7 @@ exclude = [
 [tool.ruff.lint]
 # E501: Line too long. We let the formatter handle what it can and ignore the rest.
 ignore = ["E501"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "helpfarmersfarm.settings"
+python_files = ["test_*.py", "*_test.py"]
