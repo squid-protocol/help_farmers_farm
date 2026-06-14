@@ -17,9 +17,7 @@ class Command(BaseCommand):
         db_path = "/srv/storage_16tb/projects/schuler_log/farm_log_processor/data/processed/processed_logs.db"
 
         if not os.path.exists(db_path):
-            self.stderr.write(
-                self.style.ERROR(f"Could not find SQLite DB at: {db_path}")
-            )
+            self.stderr.write(self.style.ERROR(f"Could not find SQLite DB at: {db_path}"))
             return
 
         self.stdout.write(self.style.WARNING("Connecting to Legacy SQLite Database..."))
@@ -41,11 +39,7 @@ class Command(BaseCommand):
         crop_lookup = {c.crop_name: c for c in Crop.objects.filter(farm=farm)}
 
         # --- PHASE 2: Granular Logs (with On-the-Fly Generation) ---
-        self.stdout.write(
-            self.style.WARNING(
-                "Importing Granular Logs and generating missing entities..."
-            )
-        )
+        self.stdout.write(self.style.WARNING("Importing Granular Logs and generating missing entities..."))
 
         activity_map = {
             "planting": "P",
@@ -74,9 +68,7 @@ class Command(BaseCommand):
                     username=username,
                     defaults={
                         "first_name": raw_name.split(" ")[0],
-                        "last_name": (
-                            " ".join(raw_name.split(" ")[1:]) if " " in raw_name else ""
-                        ),
+                        "last_name": (" ".join(raw_name.split(" ")[1:]) if " " in raw_name else ""),
                         "role": "volunteer",
                         "farm": farm,
                         "is_active": True,
@@ -84,9 +76,7 @@ class Command(BaseCommand):
                 )
                 volunteer.set_unusable_password()
                 volunteer.save()
-                user_lookup[username] = (
-                    volunteer  # Add to dictionary so we don't query again
-                )
+                user_lookup[username] = volunteer  # Add to dictionary so we don't query again
 
             # 2. Match or Create Crop On-The-Fly
             raw_crop = row["Individual_Veggie"]
@@ -131,11 +121,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(success_msg))
         logger.info(f"ETL Script: {success_msg}")  # Save to the permanent audit file
         if skipped_logs > 0:
-            self.stdout.write(
-                self.style.ERROR(
-                    f"Skipped {skipped_logs} logs due to missing names/dates."
-                )
-            )
+            self.stdout.write(self.style.ERROR(f"Skipped {skipped_logs} logs due to missing names/dates."))
 
         conn.close()
         self.stdout.write(self.style.SUCCESS("ETL Migration Complete!"))

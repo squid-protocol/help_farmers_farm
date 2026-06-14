@@ -18,9 +18,7 @@ class RequireEmailMiddleware:
 
     def __call__(self, request):
         # --- NEW: Let static CSS and images pass through freely ---
-        if request.path.startswith(settings.STATIC_URL) or request.path.startswith(
-            settings.MEDIA_URL
-        ):
+        if request.path.startswith(settings.STATIC_URL) or request.path.startswith(settings.MEDIA_URL):
             return self.get_response(request)
 
         # Only bother checking if the user is actually logged in
@@ -49,16 +47,10 @@ class RequireWaiverMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        if request.path.startswith(settings.STATIC_URL) or request.path.startswith(
-            settings.MEDIA_URL
-        ):
+        if request.path.startswith(settings.STATIC_URL) or request.path.startswith(settings.MEDIA_URL):
             return self.get_response(request)
 
-        if (
-            request.user.is_authenticated
-            and hasattr(request, "active_farm")
-            and request.active_farm
-        ):
+        if request.user.is_authenticated and hasattr(request, "active_farm") and request.active_farm:
             farm = request.active_farm
 
             # 1. Master Switch: Bypass the strict waiver engine for joint accounts
@@ -83,9 +75,9 @@ class RequireWaiverMiddleware:
 
             if valid_forms.exists():
                 # 4. Find which ones the user has ALREADY signed
-                signed_form_ids = FormSignature.objects.filter(
-                    user=request.user, form__in=valid_forms
-                ).values_list("form_id", flat=True)
+                signed_form_ids = FormSignature.objects.filter(user=request.user, form__in=valid_forms).values_list(
+                    "form_id", flat=True
+                )
 
                 # 5. If they are missing any signatures, drop the gate!
                 if len(signed_form_ids) < valid_forms.count():
@@ -98,10 +90,7 @@ class RequireWaiverMiddleware:
                         reverse("upload_avatar"),
                     ]
 
-                    if (
-                        request.path not in allowed_paths
-                        and not request.path.startswith("/accounts/verify-email/")
-                    ):
+                    if request.path not in allowed_paths and not request.path.startswith("/accounts/verify-email/"):
                         return redirect("sign_waiver")
 
         return self.get_response(request)

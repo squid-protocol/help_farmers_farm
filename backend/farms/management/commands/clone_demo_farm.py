@@ -21,9 +21,7 @@ class Command(BaseCommand):
             required=True,
             help="Account Number of the Master Template (e.g., FARM-42A25E49)",
         )
-        parser.add_argument(
-            "--farm-name", type=str, required=True, help="Name of the new Demo Farm"
-        )
+        parser.add_argument("--farm-name", type=str, required=True, help="Name of the new Demo Farm")
         parser.add_argument(
             "--manager-email",
             type=str,
@@ -43,9 +41,7 @@ class Command(BaseCommand):
         try:
             template_farm = Farm.objects.get(account_number=template_account)
         except Farm.DoesNotExist:
-            self.stdout.write(
-                self.style.ERROR(f"Template Farm Account {template_account} not found.")
-            )
+            self.stdout.write(self.style.ERROR(f"Template Farm Account {template_account} not found."))
             return
 
         self.stdout.write(f"Cloning '{template_farm.name}' into '{new_farm_name}'...")
@@ -104,9 +100,7 @@ class Command(BaseCommand):
             # 5. Clone Volunteers & Memberships
             # We MUST create new isolated User objects so prospects don't edit the master template's users
             vol_mapping = {}  # Maps old user ID to new user ID
-            template_memberships = FarmMembership.objects.filter(
-                farm=template_farm
-            ).exclude(user__role="farm_manager")
+            template_memberships = FarmMembership.objects.filter(farm=template_farm).exclude(user__role="farm_manager")
 
             first_names = [
                 "Alex",
@@ -168,9 +162,7 @@ class Command(BaseCommand):
 
                 # Link the new cloned volunteer to the new cloned farm, attaching the new cloned commitment tier
                 new_commitment = (
-                    commitment_mapping.get(membership.work_commitment_id)
-                    if membership.work_commitment_id
-                    else None
+                    commitment_mapping.get(membership.work_commitment_id) if membership.work_commitment_id else None
                 )
                 FarmMembership.objects.create(
                     user=new_user,
@@ -208,11 +200,5 @@ class Command(BaseCommand):
             LogEntry.objects.bulk_create(logs_to_create, batch_size=1000)
 
         end_time = time.time()
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"✅ Deep clone complete in {round(end_time - start_time, 2)} seconds!"
-            )
-        )
-        self.stdout.write(
-            self.style.SUCCESS(f"Manager Login: {manager_email} | Password: demo2026")
-        )
+        self.stdout.write(self.style.SUCCESS(f"✅ Deep clone complete in {round(end_time - start_time, 2)} seconds!"))
+        self.stdout.write(self.style.SUCCESS(f"Manager Login: {manager_email} | Password: demo2026"))

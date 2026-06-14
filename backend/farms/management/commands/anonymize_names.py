@@ -48,14 +48,8 @@ class Command(BaseCommand):
             first_name_lower = user.first_name.lower() if user.first_name else ""
 
             # Safe-guard filter: Skip any user containing 'joe' or 'joseph'
-            if (
-                "joe" in username_lower
-                or "joseph" in username_lower
-                or "joe" in first_name_lower
-            ):
-                self.stdout.write(
-                    self.style.SUCCESS(f"Skipping protected account: {user.username}")
-                )
+            if "joe" in username_lower or "joseph" in username_lower or "joe" in first_name_lower:
+                self.stdout.write(self.style.SUCCESS(f"Skipping protected account: {user.username}"))
                 continue
 
             # Generate random identities
@@ -73,8 +67,4 @@ class Command(BaseCommand):
 
             updated_count += 1
 
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"Successfully anonymized {updated_count} user accounts."
-            )
-        )
+        self.stdout.write(self.style.SUCCESS(f"Successfully anonymized {updated_count} user accounts."))

@@ -72,9 +72,7 @@ class VolunteerCreationForm(forms.ModelForm):
         widgets = {
             "username": forms.TextInput(attrs={"autocomplete": "off"}),
             "email": forms.EmailInput(attrs={"autocomplete": "off"}),
-            "legacy_years_volunteered": forms.NumberInput(
-                attrs={"placeholder": "e.g., 5"}
-            ),
+            "legacy_years_volunteered": forms.NumberInput(attrs={"placeholder": "e.g., 5"}),
             "phone_number": forms.TextInput(attrs={"placeholder": "(555) 123-4567"}),
         }
         help_texts = {
@@ -99,15 +97,10 @@ class VolunteerCreationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         if self.farm:
-            self.fields["work_commitment"].queryset = WorkCommitment.objects.filter(
-                farm=self.farm
-            )
+            self.fields["work_commitment"].queryset = WorkCommitment.objects.filter(farm=self.farm)
 
         if self.request_user:
-            if (
-                not self.request_user.is_staff
-                and self.request_user.role == "farm_manager"
-            ):
+            if not self.request_user.is_staff and self.request_user.role == "farm_manager":
                 self.fields["role"].choices = [
                     choice
                     for choice in self.fields["role"].choices
@@ -145,16 +138,11 @@ class VolunteerEditForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         if self.farm:
-            self.fields["work_commitment"].queryset = WorkCommitment.objects.filter(
-                farm=self.farm
-            )
+            self.fields["work_commitment"].queryset = WorkCommitment.objects.filter(farm=self.farm)
 
         if self.request_user:
             # Prevent farm managers from granting account_manager privileges
-            if (
-                not self.request_user.is_staff
-                and self.request_user.role == "farm_manager"
-            ):
+            if not self.request_user.is_staff and self.request_user.role == "farm_manager":
                 self.fields["role"].choices = [
                     choice
                     for choice in self.fields["role"].choices
@@ -187,9 +175,7 @@ class FarmSettingsForm(forms.ModelForm):
         widgets = {
             "name": forms.TextInput(
                 attrs={
-                    "class": (
-                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
-                    ),
+                    "class": ("bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"),
                 }
             ),
             "address": forms.Textarea(
@@ -204,41 +190,31 @@ class FarmSettingsForm(forms.ModelForm):
             ),
             "contact_email": forms.EmailInput(
                 attrs={
-                    "class": (
-                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
-                    ),
+                    "class": ("bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"),
                     "placeholder": "info@schulerfarms.com",
                 }
             ),
             "phone_number": forms.TextInput(
                 attrs={
-                    "class": (
-                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
-                    ),
+                    "class": ("bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"),
                     "placeholder": "(555) 123-4567",
                 }
             ),
             "season_start": forms.DateInput(
                 attrs={
                     "type": "date",
-                    "class": (
-                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
-                    ),
+                    "class": ("bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"),
                 }
             ),
             "season_end": forms.DateInput(
                 attrs={
                     "type": "date",
-                    "class": (
-                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
-                    ),
+                    "class": ("bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"),
                 }
             ),
             "welcome_email_subject": forms.TextInput(
                 attrs={
-                    "class": (
-                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
-                    ),
+                    "class": ("bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"),
                     "placeholder": "Welcome to the farm!",
                 }
             ),
@@ -269,9 +245,7 @@ class ComplianceFormSetup(forms.ModelForm):
         widgets = {
             "name": forms.TextInput(
                 attrs={
-                    "class": (
-                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
-                    ),
+                    "class": ("bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"),
                     "placeholder": "e.g., Tractor Operation Waiver",
                 }
             ),
@@ -287,9 +261,7 @@ class ComplianceFormSetup(forms.ModelForm):
             ),
             "assignment_type": forms.Select(
                 attrs={
-                    "class": (
-                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
-                    ),
+                    "class": ("bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"),
                 }
             ),
             "assigned_users": forms.CheckboxSelectMultiple(
@@ -300,9 +272,7 @@ class ComplianceFormSetup(forms.ModelForm):
             "expiration_date": forms.DateInput(
                 attrs={
                     "type": "date",
-                    "class": (
-                        "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
-                    ),
+                    "class": ("bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"),
                 }
             ),
         }
@@ -375,9 +345,7 @@ class FarmProfileForm(forms.ModelForm):
     )
 
     # We hide the actual textarea because the Trix editor will write directly into it
-    about_us = forms.CharField(
-        required=False, widget=forms.HiddenInput(attrs={"id": "id_about_us"})
-    )
+    about_us = forms.CharField(required=False, widget=forms.HiddenInput(attrs={"id": "id_about_us"}))
 
     class Meta:
         model = FarmProfile

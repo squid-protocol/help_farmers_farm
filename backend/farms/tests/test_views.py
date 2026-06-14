@@ -26,9 +26,7 @@ class SecurityIDORTests(TestCase):
         session.save()
 
         url = reverse("edit_crop", args=[crop_b.id])
-        response = self.client.post(
-            url, {"crop_name": "Hacked Tomatoes", "is_active": True}
-        )
+        response = self.client.post(url, {"crop_name": "Hacked Tomatoes", "is_active": True})
 
         self.assertEqual(response.status_code, 404)
         crop_b.refresh_from_db()
@@ -39,9 +37,7 @@ class SecurityIDORTests(TestCase):
         self.farm_b.subscription_tier = "starter"
         self.farm_b.save()
 
-        mgr_b = User.objects.create_user(
-            username="temp_mgr_b", password="p", role="farm_manager"
-        )
+        mgr_b = User.objects.create_user(username="temp_mgr_b", password="p", role="farm_manager")
         FarmMembership.objects.create(user=mgr_b, farm=self.farm_b, is_approved=True)
 
         self.client.force_login(mgr_b)
@@ -62,9 +58,7 @@ class SecurityIDORTests(TestCase):
         )
 
         forms_count = ComplianceForm.objects.filter(farm=self.farm_b).count()
-        self.assertEqual(
-            forms_count, 0, "Starter tier successfully bypassed the Compliance paywall!"
-        )
+        self.assertEqual(forms_count, 0, "Starter tier successfully bypassed the Compliance paywall!")
 
     def test_expired_trial_tollbooth(self):
         """A Manager on an Expired Trial is blocked from adding new crops."""
@@ -75,9 +69,7 @@ class SecurityIDORTests(TestCase):
         expired_date = timezone.now() - timedelta(days=65)
         Farm.objects.filter(id=self.farm_b.id).update(created_at=expired_date)
 
-        mgr_c = User.objects.create_user(
-            username="temp_mgr_c", password="p", role="farm_manager"
-        )
+        mgr_c = User.objects.create_user(username="temp_mgr_c", password="p", role="farm_manager")
         FarmMembership.objects.create(user=mgr_c, farm=self.farm_b, is_approved=True)
 
         self.client.force_login(mgr_c)
@@ -94,9 +86,7 @@ class SecurityIDORTests(TestCase):
             },
         )
 
-        crops_count = Crop.objects.filter(
-            farm=self.farm_b, crop_name="Freeloader Potatoes"
-        ).count()
+        crops_count = Crop.objects.filter(farm=self.farm_b, crop_name="Freeloader Potatoes").count()
         self.assertEqual(crops_count, 0, "Expired trial successfully added a crop!")
 
     def setUp(self):
@@ -111,18 +101,14 @@ class SecurityIDORTests(TestCase):
             password="secure",
             role="farm_manager",
         )
-        FarmMembership.objects.create(
-            user=self.manager_a, farm=self.farm_a, is_approved=True
-        )
+        FarmMembership.objects.create(user=self.manager_a, farm=self.farm_a, is_approved=True)
 
         self.volunteer_a = User.objects.create_user(
             username="vol_a",
             email="vol_a@example.com",
             password="secure",
         )
-        FarmMembership.objects.create(
-            user=self.volunteer_a, farm=self.farm_a, is_approved=True
-        )
+        FarmMembership.objects.create(user=self.volunteer_a, farm=self.farm_a, is_approved=True)
 
         # 2. Build Farm B (The Rivals)
         self.farm_b = Farm.objects.create(name="Rival Valley Farms")
@@ -131,9 +117,7 @@ class SecurityIDORTests(TestCase):
             email="vol_b@example.com",
             password="secure",
         )
-        FarmMembership.objects.create(
-            user=self.volunteer_b, farm=self.farm_b, is_approved=True
-        )
+        FarmMembership.objects.create(user=self.volunteer_b, farm=self.farm_b, is_approved=True)
 
         # 3. Build a System Admin (Staff)
         self.staff_user = User.objects.create_user(
@@ -142,9 +126,7 @@ class SecurityIDORTests(TestCase):
             password="secure",
             is_staff=True,
         )
-        FarmMembership.objects.create(
-            user=self.staff_user, farm=self.farm_a, is_approved=True
-        )
+        FarmMembership.objects.create(user=self.staff_user, farm=self.farm_a, is_approved=True)
 
     def test_manager_can_view_own_volunteer(self):
         self.client.force_login(self.manager_a)
@@ -186,9 +168,7 @@ class SecurityIDORTests(TestCase):
             password="secure",
             role="farm_manager",
         )
-        FarmMembership.objects.create(
-            user=manager_a2, farm=self.farm_a, is_approved=True
-        )
+        FarmMembership.objects.create(user=manager_a2, farm=self.farm_a, is_approved=True)
 
         self.client.force_login(self.manager_a)
         url = reverse("toggle_user_status", args=[manager_a2.id])
@@ -226,9 +206,7 @@ class SecurityIDORTests(TestCase):
     @patch("farms.views.async_task")
     def test_manager_dashboard_triggers_geocoding(self, mock_async):
         """Ensure updating the address triggers the background mapping task."""
-        self.client.force_login(
-            self.manager_a
-        )  # Assuming manager_a is setup in your class
+        self.client.force_login(self.manager_a)  # Assuming manager_a is setup in your class
         session = self.client.session
         session["active_farm_id"] = self.farm_a.id
         session.save()
@@ -254,17 +232,13 @@ class SecurityIDORTests(TestCase):
         self.assertRedirects(response, url)
 
         # Ensure the background task was called with the correct function and farm ID
-        mock_async.assert_called_with(
-            "farms.tasks.geocode_farm_address", farm_id=self.farm_a.id
-        )
+        mock_async.assert_called_with("farms.tasks.geocode_farm_address", farm_id=self.farm_a.id)
 
 
 class ManagerDashboardActionTests(TestCase):
     def setUp(self):
         self.client = Client()
-        self.farm = Farm.objects.create(
-            name="Action Test Farm", subscription_tier="starter"
-        )
+        self.farm = Farm.objects.create(name="Action Test Farm", subscription_tier="starter")
 
         # Create a manager with an email so they pass the Email Tollbooth
         self.manager = User.objects.create_user(
@@ -295,9 +269,7 @@ class ManagerDashboardActionTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(
-            Crop.objects.filter(farm=self.farm, crop_name="Ghost Peppers").exists()
-        )
+        self.assertTrue(Crop.objects.filter(farm=self.farm, crop_name="Ghost Peppers").exists())
 
     def test_manager_can_create_volunteer(self):
         self.client.force_login(self.manager)
@@ -323,9 +295,7 @@ class ManagerDashboardActionTests(TestCase):
         self.assertIsNotNone(new_user)
 
         # CRITICAL: Verify the bridge table was created linking them to the farm!
-        self.assertTrue(
-            FarmMembership.objects.filter(user=new_user, farm=self.farm).exists()
-        )
+        self.assertTrue(FarmMembership.objects.filter(user=new_user, farm=self.farm).exists())
 
     @patch("django.db.models.query.QuerySet.count")
     def test_manager_capacity_limit_blocks_creation_starter(self, mock_count):
@@ -382,9 +352,7 @@ class ManagerDashboardActionTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(
-            WorkCommitment.objects.filter(farm=self.farm, name="Quarter Share").exists()
-        )
+        self.assertTrue(WorkCommitment.objects.filter(farm=self.farm, name="Quarter Share").exists())
 
     def test_manager_cannot_create_compliance_form_on_starter_tier(self):
         """Ensure the UI blocks compliance form creation for Starter tiers."""
@@ -404,11 +372,7 @@ class ManagerDashboardActionTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         # Verify the database physically rejected the form creation
-        self.assertFalse(
-            ComplianceForm.objects.filter(
-                farm=self.farm, name="2026 Tractor Safety"
-            ).exists()
-        )
+        self.assertFalse(ComplianceForm.objects.filter(farm=self.farm, name="2026 Tractor Safety").exists())
 
     def test_manager_can_create_compliance_form_on_growth_tier(self):
         """Ensure the form creation works if they upgrade to the Growth tier."""
@@ -429,11 +393,7 @@ class ManagerDashboardActionTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(
-            ComplianceForm.objects.filter(
-                farm=self.farm, name="2026 Tractor Safety"
-            ).exists()
-        )
+        self.assertTrue(ComplianceForm.objects.filter(farm=self.farm, name="2026 Tractor Safety").exists())
 
     def test_manager_can_update_public_profile(self):
         """Ensure managers can successfully update their marketing profile and tags."""
@@ -587,9 +547,7 @@ class FarmEditAndToggleTests(TestCase):
             password="pass",
             role="farm_manager",
         )
-        FarmMembership.objects.create(
-            user=self.manager, farm=self.farm, is_approved=True
-        )
+        FarmMembership.objects.create(user=self.manager, farm=self.farm, is_approved=True)
         self.client.force_login(self.manager)
 
         self.manager_2 = User.objects.create_user(
@@ -598,28 +556,16 @@ class FarmEditAndToggleTests(TestCase):
             password="pass",
             role="farm_manager",
         )
-        FarmMembership.objects.create(
-            user=self.manager_2, farm=self.farm, is_approved=True
-        )
+        FarmMembership.objects.create(user=self.manager_2, farm=self.farm, is_approved=True)
 
-        self.volunteer = User.objects.create_user(
-            username="vol", password="p", role="volunteer"
-        )
-        FarmMembership.objects.create(
-            user=self.volunteer, farm=self.farm, is_approved=True
-        )
+        self.volunteer = User.objects.create_user(username="vol", password="p", role="volunteer")
+        FarmMembership.objects.create(user=self.volunteer, farm=self.farm, is_approved=True)
 
-        self.rival_volunteer = User.objects.create_user(
-            username="rival_vol", password="p", role="volunteer"
-        )
-        FarmMembership.objects.create(
-            user=self.rival_volunteer, farm=self.rival_farm, is_approved=True
-        )
+        self.rival_volunteer = User.objects.create_user(username="rival_vol", password="p", role="volunteer")
+        FarmMembership.objects.create(user=self.rival_volunteer, farm=self.rival_farm, is_approved=True)
 
         self.crop = Crop.objects.create(farm=self.farm, crop_name="Old Tomatoes")
-        self.commitment = WorkCommitment.objects.create(
-            farm=self.farm, name="Old Share", required_hours=10
-        )
+        self.commitment = WorkCommitment.objects.create(farm=self.farm, name="Old Share", required_hours=10)
 
     def test_edit_crop_get_and_post(self):
         url = reverse("edit_crop", args=[self.crop.id])
@@ -629,9 +575,7 @@ class FarmEditAndToggleTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
         # Test POST
-        response = self.client.post(
-            url, {"crop_name": "New Tomatoes", "is_active": True}
-        )
+        response = self.client.post(url, {"crop_name": "New Tomatoes", "is_active": True})
         self.assertRedirects(response, reverse("manager_dashboard"))
         self.crop.refresh_from_db()
         self.assertEqual(self.crop.crop_name, "New Tomatoes")
@@ -652,9 +596,7 @@ class FarmEditAndToggleTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
         # Test POST
-        response = self.client.post(
-            url, {"username": "updated_vol", "role": "volunteer", "is_active": True}
-        )
+        response = self.client.post(url, {"username": "updated_vol", "role": "volunteer", "is_active": True})
         self.assertRedirects(response, reverse("volunteer_roster"))
         self.volunteer.refresh_from_db()
         self.assertEqual(self.volunteer.username, "updated_vol")
@@ -688,9 +630,7 @@ class FarmEditAndToggleTests(TestCase):
 class FarmReportingViewsTests(TestCase):
     def setUp(self):
         self.client = Client()
-        self.farm = Farm.objects.create(
-            name="Report Farm", season_start="2026-01-01", season_end="2026-12-31"
-        )
+        self.farm = Farm.objects.create(name="Report Farm", season_start="2026-01-01", season_end="2026-12-31")
 
         self.manager = User.objects.create_user(
             username="report_manager",
@@ -698,9 +638,7 @@ class FarmReportingViewsTests(TestCase):
             password="pass",
             role="farm_manager",
         )
-        FarmMembership.objects.create(
-            user=self.manager, farm=self.farm, is_approved=True
-        )
+        FarmMembership.objects.create(user=self.manager, farm=self.farm, is_approved=True)
         self.client.force_login(self.manager)
 
     def test_farm_impact_view(self):
@@ -732,12 +670,8 @@ class FarmReportingViewsTests(TestCase):
         from farms.models import ComplianceForm
         from accounts.models import FormSignature
 
-        form = ComplianceForm.objects.create(
-            farm=self.farm, name="Audit Test Form", body_text="text"
-        )
-        FormSignature.objects.create(
-            user=self.manager, form=form, digital_signature="Report Manager"
-        )
+        form = ComplianceForm.objects.create(farm=self.farm, name="Audit Test Form", body_text="text")
+        FormSignature.objects.create(user=self.manager, form=form, digital_signature="Report Manager")
 
         url = reverse("compliance_audit", args=[form.id])
         response = self.client.get(url)
@@ -752,9 +686,7 @@ class FarmReportingViewsTests(TestCase):
         from farms.models import ComplianceForm
 
         other_farm = Farm.objects.create(name="Other Farm")
-        other_form = ComplianceForm.objects.create(
-            farm=other_farm, name="Other Form", body_text="text"
-        )
+        other_form = ComplianceForm.objects.create(farm=other_farm, name="Other Form", body_text="text")
 
         url = reverse("compliance_audit", args=[other_form.id])
         response = self.client.get(url)
@@ -770,9 +702,7 @@ class WorkspaceSwitchTests(TestCase):
         self.farm1 = Farm.objects.create(name="Farm 1")
         self.farm2 = Farm.objects.create(name="Farm 2")
 
-        self.user = User.objects.create_user(
-            username="dual_agent", email="agent@test.com", password="p"
-        )
+        self.user = User.objects.create_user(username="dual_agent", email="agent@test.com", password="p")
         # Approve user in both farms
         FarmMembership.objects.create(user=self.user, farm=self.farm1, is_approved=True)
         FarmMembership.objects.create(user=self.user, farm=self.farm2, is_approved=True)
@@ -783,9 +713,7 @@ class WorkspaceSwitchTests(TestCase):
         url = reverse("switch_active_farm")
 
         # Switch to farm 2
-        response = self.client.post(
-            url, {"farm_id": str(self.farm2.id), "next": "/log-hours/"}
-        )
+        response = self.client.post(url, {"farm_id": str(self.farm2.id), "next": "/log-hours/"})
 
         self.assertRedirects(response, "/log-hours/")
         self.assertEqual(self.client.session["active_farm_id"], self.farm2.id)
@@ -818,9 +746,7 @@ class FarmUnhappyPathTests(TestCase):
             password="p",
             role="farm_manager",
         )
-        FarmMembership.objects.create(
-            user=self.manager, farm=self.farm, is_approved=True
-        )
+        FarmMembership.objects.create(user=self.manager, farm=self.farm, is_approved=True)
 
         self.client.force_login(self.manager)
         self.dashboard_url = reverse("manager_dashboard")
@@ -835,9 +761,7 @@ class FarmUnhappyPathTests(TestCase):
         session.save()
 
         # Attempt to hijack the session by injecting the Rival Farm ID
-        response = self.client.post(
-            url, {"farm_id": str(self.rival_farm.id), "next": "/log-hours/"}
-        )
+        response = self.client.post(url, {"farm_id": str(self.rival_farm.id), "next": "/log-hours/"})
 
         self.assertRedirects(response, "/log-hours/")
 
@@ -877,9 +801,7 @@ class FarmUnhappyPathTests(TestCase):
             # Prove the handoff to the background worker succeeded
             mock_async.assert_called_once()
             # Verify the correct task was queued
-            self.assertEqual(
-                mock_async.call_args[0][0], "farms.tasks.send_broadcast_email"
-            )
+            self.assertEqual(mock_async.call_args[0][0], "farms.tasks.send_broadcast_email")
 
     def test_edit_crop_invalid_data_graceful_fail(self):
         """Ensure editing a crop with blank data safely re-renders the form with errors."""
@@ -954,9 +876,7 @@ class FarmUnhappyPathTests(TestCase):
 class VolunteerOnboardingTests(TestCase):
     def setUp(self):
         self.client = Client()
-        self.farm = Farm.objects.create(
-            name="Public Test Farm", subscription_tier="growth"
-        )
+        self.farm = Farm.objects.create(name="Public Test Farm", subscription_tier="growth")
 
         # The Manager
         self.manager = User.objects.create_user(
@@ -965,9 +885,7 @@ class VolunteerOnboardingTests(TestCase):
             password="p",
             role="farm_manager",
         )
-        FarmMembership.objects.create(
-            user=self.manager, farm=self.farm, is_approved=True
-        )
+        FarmMembership.objects.create(user=self.manager, farm=self.farm, is_approved=True)
 
         # The Unattached Volunteer
         self.volunteer = User.objects.create_user(
@@ -1038,14 +956,10 @@ class VolunteerOnboardingTests(TestCase):
     def test_manager_can_approve_request(self, mock_email):
         """Ensure a manager can approve a pending request and fire the welcome email."""
         # Setup a pending request
-        membership = FarmMembership.objects.create(
-            user=self.volunteer, farm=self.farm, is_approved=False
-        )
+        membership = FarmMembership.objects.create(user=self.volunteer, farm=self.farm, is_approved=False)
 
         self.client.force_login(self.manager)
-        response = self.client.post(
-            reverse("approve_join", args=[membership.id]), {"action": "approve"}
-        )
+        response = self.client.post(reverse("approve_join", args=[membership.id]), {"action": "approve"})
 
         self.assertRedirects(response, reverse("volunteer_roster"))
         membership.refresh_from_db()
@@ -1054,14 +968,10 @@ class VolunteerOnboardingTests(TestCase):
 
     def test_manager_can_deny_request(self):
         """Ensure denying a request permanently deletes the pending membership."""
-        membership = FarmMembership.objects.create(
-            user=self.volunteer, farm=self.farm, is_approved=False
-        )
+        membership = FarmMembership.objects.create(user=self.volunteer, farm=self.farm, is_approved=False)
 
         self.client.force_login(self.manager)
-        response = self.client.post(
-            reverse("approve_join", args=[membership.id]), {"action": "deny"}
-        )
+        response = self.client.post(reverse("approve_join", args=[membership.id]), {"action": "deny"})
 
         self.assertRedirects(response, reverse("volunteer_roster"))
         # The bridge record should be completely annihilated
@@ -1071,17 +981,13 @@ class VolunteerOnboardingTests(TestCase):
         """SECURITY: Ensure Manager A cannot approve a request for Farm B (Cross-Tenant IDOR)."""
         # Create a rival farm and a pending request for it
         rival_farm = Farm.objects.create(name="Rival Farm", subscription_tier="growth")
-        rival_membership = FarmMembership.objects.create(
-            user=self.volunteer, farm=rival_farm, is_approved=False
-        )
+        rival_membership = FarmMembership.objects.create(user=self.volunteer, farm=rival_farm, is_approved=False)
 
         # Log in as Manager of Farm A
         self.client.force_login(self.manager)
 
         # Try to approve the membership belonging to Farm B
-        response = self.client.post(
-            reverse("approve_join", args=[rival_membership.id]), {"action": "approve"}
-        )
+        response = self.client.post(reverse("approve_join", args=[rival_membership.id]), {"action": "approve"})
 
         # The get_object_or_404(..., farm=request.active_farm) should block it
         self.assertEqual(response.status_code, 404)
@@ -1092,17 +998,13 @@ class VolunteerOnboardingTests(TestCase):
 
     def test_volunteer_cannot_access_approval_queue(self):
         """SECURITY: Ensure standard volunteers cannot approve their own requests."""
-        membership = FarmMembership.objects.create(
-            user=self.volunteer, farm=self.farm, is_approved=False
-        )
+        membership = FarmMembership.objects.create(user=self.volunteer, farm=self.farm, is_approved=False)
 
         # Log in as the unapproved volunteer
         self.client.force_login(self.volunteer)
 
         # Try to approve their own request
-        response = self.client.post(
-            reverse("approve_join", args=[membership.id]), {"action": "approve"}
-        )
+        response = self.client.post(reverse("approve_join", args=[membership.id]), {"action": "approve"})
 
         # Should redirect them away (to the login/log-hours fallback)
         self.assertEqual(response.status_code, 302)
@@ -1142,9 +1044,7 @@ class VolunteerOnboardingTests(TestCase):
     def test_request_join_with_message_saves_correctly(self):
         """MARKETPLACE: Ensure a volunteer can send an introductory message with their application."""
         self.client.force_login(self.volunteer)
-        application_message = (
-            "I have 3 years of organic farming experience and love tomatoes!"
-        )
+        application_message = "I have 3 years of organic farming experience and love tomatoes!"
 
         response = self.client.post(
             reverse("request_join", args=[self.farm.id]),
@@ -1227,9 +1127,7 @@ class VolunteerOnboardingTests(TestCase):
 
         # 4. Verify the Manager sees the pitch AND the volunteer details
         self.assertContains(response, app_note)
-        self.assertContains(
-            response, self.volunteer.get_full_name() or self.volunteer.username
-        )
+        self.assertContains(response, self.volunteer.get_full_name() or self.volunteer.username)
         self.assertContains(response, "Applicants")
 
     def test_privacy_anonymous_users_cannot_view_directory(self):
@@ -1240,9 +1138,7 @@ class VolunteerOnboardingTests(TestCase):
         # Attempt to access the search page
         search_response = self.client.get(reverse("farm_search"))
         # Attempt to access a specific public profile
-        detail_response = self.client.get(
-            reverse("public_farm_detail", args=[self.farm.id])
-        )
+        detail_response = self.client.get(reverse("public_farm_detail", args=[self.farm.id]))
 
         # Both should trigger a 302 Redirect to the login screen, NOT a 200 OK
         self.assertEqual(search_response.status_code, 302)
@@ -1320,9 +1216,7 @@ class FarmProfileGalleryTests(TestCase):
             password="p",
             role="farm_manager",
         )
-        FarmMembership.objects.create(
-            user=self.manager, farm=self.farm, is_approved=True
-        )
+        FarmMembership.objects.create(user=self.manager, farm=self.farm, is_approved=True)
         self.profile = FarmProfile.objects.create(farm=self.farm)
 
         # Create a dummy image for testing
@@ -1337,9 +1231,7 @@ class FarmProfileGalleryTests(TestCase):
         self.client.force_login(self.manager)
         img = FarmImage.objects.create(profile=self.profile, image="dummy.jpg")
 
-        response = self.client.post(
-            reverse("edit_farm_profile"), {"delete_image": str(img.id)}
-        )
+        response = self.client.post(reverse("edit_farm_profile"), {"delete_image": str(img.id)})
         self.assertRedirects(response, reverse("edit_farm_profile"))
         self.assertEqual(FarmImage.objects.filter(profile=self.profile).count(), 0)
 
@@ -1379,9 +1271,7 @@ class FarmProfileGalleryTests(TestCase):
         # ☢️ THE AUTOPSY TRIPWIRE ☢️
         # =====================================================================
         if response.status_code == 200:
-            error_log = [
-                "\n\n☢️ FORM VALIDATION FAILED (200 OK instead of 302 Redirect) ☢️\n"
-            ]
+            error_log = ["\n\n☢️ FORM VALIDATION FAILED (200 OK instead of 302 Redirect) ☢️\n"]
 
             req = getattr(response, "wsgi_request", None)
             if req:
@@ -1393,9 +1283,7 @@ class FarmProfileGalleryTests(TestCase):
                 error_log.append("\n--- EXACT FIELD ERRORS ---")
                 error_log.append(form.errors.as_json())
 
-            error_log.append(
-                "\n=====================================================================\n"
-            )
+            error_log.append("\n=====================================================================\n")
             self.fail("\n".join(error_log))
         # =====================================================================
 
@@ -1408,14 +1296,10 @@ class PublicDirectoryTests(TestCase):
         self.client = Client()
 
         self.public_farm = Farm.objects.create(name="Happy Valley Farms")
-        self.public_profile = FarmProfile.objects.create(
-            farm=self.public_farm, is_public=True
-        )
+        self.public_profile = FarmProfile.objects.create(farm=self.public_farm, is_public=True)
 
         self.private_farm = Farm.objects.create(name="Secret Valley Farms")
-        self.private_profile = FarmProfile.objects.create(
-            farm=self.private_farm, is_public=False
-        )
+        self.private_profile = FarmProfile.objects.create(farm=self.private_farm, is_public=False)
 
         # THE FIX: Add an email so the RequireEmailMiddleware doesn't intercept the request!
         self.volunteer = User.objects.create_user(

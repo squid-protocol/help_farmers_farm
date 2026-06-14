@@ -51,9 +51,7 @@ class LogEntryAdmin(admin.ModelAdmin):
     )
 
     list_display_links = ("id", "volunteer")
-    list_editable = (
-        "activity",
-    )  # Removed duration_hours from editable so our HTML badge renders safely
+    list_editable = ("activity",)  # Removed duration_hours from editable so our HTML badge renders safely
     list_per_page = 200
     date_hierarchy = "date_logged"
     save_on_top = True
@@ -159,18 +157,12 @@ class LogEntryAdmin(admin.ModelAdmin):
     @admin.action(description="🍅 BULK ACTION: Change Activity to Harvesting")
     def bulk_set_harvesting(self, request, queryset):
         updated = queryset.update(activity="H")
-        self.message_user(
-            request, f"Successfully updated {updated} logs to Harvesting."
-        )
+        self.message_user(request, f"Successfully updated {updated} logs to Harvesting.")
 
-    @admin.action(
-        description="⛏️ BULK ACTION: Change Activity to Cultivating (Weeding)"
-    )
+    @admin.action(description="⛏️ BULK ACTION: Change Activity to Cultivating (Weeding)")
     def bulk_set_cultivating(self, request, queryset):
         updated = queryset.update(activity="C")
-        self.message_user(
-            request, f"Successfully updated {updated} logs to Cultivating."
-        )
+        self.message_user(request, f"Successfully updated {updated} logs to Cultivating.")
 
     @admin.action(description="❄️ BULK ACTION: Change Activity to Off Season Work")
     def bulk_set_off_season(self, request, queryset):

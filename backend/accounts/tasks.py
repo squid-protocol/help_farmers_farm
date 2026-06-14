@@ -77,9 +77,7 @@ def purge_unverified_accounts():
     if count > 0:
         # Django's .delete() on a queryset is highly efficient
         ghosts.delete()
-        logger.info(
-            f"Nightly Purge: Successfully deleted {count} unverified ghost accounts."
-        )
+        logger.info(f"Nightly Purge: Successfully deleted {count} unverified ghost accounts.")
     else:
         logger.info("Nightly Purge: No unverified ghost accounts found.")
 
@@ -95,9 +93,9 @@ def vault_unsigned_pdfs_to_s3():
         return "Bypassed: Missing AWS credentials."
 
     MAX_SIZE_BYTES = 500 * 1024 * 1024  # 0.5 GB
-    unvaulted_signatures = FormSignature.objects.filter(
-        pdf_receipt__isnull=False, is_vaulted=False
-    ).exclude(pdf_receipt__exact="")
+    unvaulted_signatures = FormSignature.objects.filter(pdf_receipt__isnull=False, is_vaulted=False).exclude(
+        pdf_receipt__exact=""
+    )
 
     if not unvaulted_signatures.exists():
         logger.info("S3 Vault Sync: No new documents to vault.")
@@ -129,9 +127,7 @@ def vault_unsigned_pdfs_to_s3():
         # 2. Enforce 0.5 GB maximum size limit
         try:
             if sig.pdf_receipt.size > MAX_SIZE_BYTES:
-                logger.error(
-                    f"Vault rejected Record {sig.id}: File size exceeds 0.5 GB limit."
-                )
+                logger.error(f"Vault rejected Record {sig.id}: File size exceeds 0.5 GB limit.")
                 fail_count += 1
                 continue
         except Exception as e:
@@ -142,9 +138,7 @@ def vault_unsigned_pdfs_to_s3():
         try:
             # Ensure the file actually exists on local disk before trying to read
             if not sig.pdf_receipt.storage.exists(sig.pdf_receipt.name):
-                logger.error(
-                    f"S3 Vault Sync: Local file missing for Signature ID {sig.id}"
-                )
+                logger.error(f"S3 Vault Sync: Local file missing for Signature ID {sig.id}")
                 fail_count += 1
                 continue
 
@@ -165,14 +159,10 @@ def vault_unsigned_pdfs_to_s3():
             success_count += 1
 
         except (BotoCoreError, ClientError) as e:
-            logger.error(
-                f"S3 Vault Sync: AWS upload failed for Signature ID {sig.id}: {e}"
-            )
+            logger.error(f"S3 Vault Sync: AWS upload failed for Signature ID {sig.id}: {e}")
             fail_count += 1
         except Exception as e:
-            logger.error(
-                f"S3 Vault Sync: Unexpected error for Signature ID {sig.id}: {e}"
-            )
+            logger.error(f"S3 Vault Sync: Unexpected error for Signature ID {sig.id}: {e}")
             fail_count += 1
 
     summary = f"S3 Vault Sync Complete. Success: {success_count}, Failed: {fail_count}."

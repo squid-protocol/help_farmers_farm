@@ -19,26 +19,16 @@ class EmailTaskTests(TestCase):
             welcome_email_body="<p>We are so <strong>glad</strong> you are here.</p>",
         )
 
-        self.tier_heavy = WorkCommitment.objects.create(
-            farm=self.farm, name="Heavy Lifting", required_hours=50
-        )
-        self.tier_light = WorkCommitment.objects.create(
-            farm=self.farm, name="Light Weeding", required_hours=10
-        )
+        self.tier_heavy = WorkCommitment.objects.create(farm=self.farm, name="Heavy Lifting", required_hours=50)
+        self.tier_light = WorkCommitment.objects.create(farm=self.farm, name="Light Weeding", required_hours=10)
 
         # 2. Build the Roster
         # User 1: Standard Volunteer (Active)
-        self.vol_standard = User.objects.create_user(
-            username="standard", email="standard@test.com", password="p"
-        )
-        FarmMembership.objects.create(
-            user=self.vol_standard, farm=self.farm, is_approved=True
-        )
+        self.vol_standard = User.objects.create_user(username="standard", email="standard@test.com", password="p")
+        FarmMembership.objects.create(user=self.vol_standard, farm=self.farm, is_approved=True)
 
         # User 2: Heavy Tier Volunteer (Active)
-        self.vol_heavy = User.objects.create_user(
-            username="heavy", email="heavy@test.com", password="p"
-        )
+        self.vol_heavy = User.objects.create_user(username="heavy", email="heavy@test.com", password="p")
         FarmMembership.objects.create(
             user=self.vol_heavy,
             farm=self.farm,
@@ -53,17 +43,13 @@ class EmailTaskTests(TestCase):
             password="p",
             is_active=False,
         )
-        FarmMembership.objects.create(
-            user=self.vol_inactive, farm=self.farm, is_approved=True
-        )
+        FarmMembership.objects.create(user=self.vol_inactive, farm=self.farm, is_approved=True)
 
         # User 4: Legacy Friend
         self.vol_friend = User.objects.create_user(
             username="friend", email="friend@test.com", password="p", role="friend"
         )
-        FarmMembership.objects.create(
-            user=self.vol_friend, farm=self.farm, is_approved=True
-        )
+        FarmMembership.objects.create(user=self.vol_friend, farm=self.farm, is_approved=True)
 
     def test_broadcast_to_all_active_volunteers_ignores_ghosts(self):
         """Ensure broadcasts skip inactive users and 'friend' roles."""

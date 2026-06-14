@@ -47,9 +47,7 @@ class MergeConflictMarkerTest(TestCase):
                             # We use startswith() and an exact match for "=======" to avoid
                             # triggering false positives on comment dividers or this script itself!
                             is_conflict = (
-                                line.startswith("<<<<<<< ")
-                                or line.strip() == "======="
-                                or line.startswith(">>>>>>> ")
+                                line.startswith("<<<<<<< ") or line.strip() == "=======" or line.startswith(">>>>>>> ")
                             )
 
                             if is_conflict:

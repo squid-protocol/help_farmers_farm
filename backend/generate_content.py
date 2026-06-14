@@ -76,11 +76,7 @@ def build_tree_map(startpath):
 
         subindent = " " * 4 * (level + 1)
         for f in files:
-            if (
-                any(f.endswith(ext) for ext in IGNORE_EXTS)
-                or f in IGNORE_FILES
-                or f.endswith("_context.md")
-            ):
+            if any(f.endswith(ext) for ext in IGNORE_EXTS) or f in IGNORE_FILES or f.endswith("_context.md"):
                 continue
             tree.append(f"{subindent}📄 {f}")
 
@@ -103,11 +99,7 @@ def generate_context():
 
         for file in files:
             # Skip ignored extensions, specific files, and any generated markdown files
-            if (
-                any(file.endswith(ext) for ext in IGNORE_EXTS)
-                or file in IGNORE_FILES
-                or file.endswith("_context.md")
-            ):
+            if any(file.endswith(ext) for ext in IGNORE_EXTS) or file in IGNORE_FILES or file.endswith("_context.md"):
                 continue
 
             file_path = os.path.join(root, file)
@@ -120,7 +112,9 @@ def generate_context():
 
                 # Format as clean Markdown
                 # Format as clean Markdown
-                formatted_content = f"## FILE: `{file_path.removeprefix('./')}`\n\n```{language}\n{content}\n```\n\n---\n\n"
+                formatted_content = (
+                    f"## FILE: `{file_path.removeprefix('./')}`\n\n```{language}\n{content}\n```\n\n---\n\n"
+                )
                 subsystem_contents[subsystem].append(formatted_content)
 
                 files_added += 1

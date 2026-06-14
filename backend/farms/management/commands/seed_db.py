@@ -106,12 +106,8 @@ class Command(BaseCommand):
         ]
 
         # --- 3. BUILD COMMITMENT TIERS ---
-        tier_a, _ = WorkCommitment.objects.get_or_create(
-            farm=farm_a, name="Full Share", required_hours=40
-        )
-        tier_b, _ = WorkCommitment.objects.get_or_create(
-            farm=farm_b, name="Standard", required_hours=20
-        )
+        tier_a, _ = WorkCommitment.objects.get_or_create(farm=farm_a, name="Full Share", required_hours=40)
+        tier_b, _ = WorkCommitment.objects.get_or_create(farm=farm_b, name="Standard", required_hours=20)
 
         # --- 4. THE CORE EDGE-CASE USERS ---
         edge_cases = [
@@ -199,23 +195,17 @@ class Command(BaseCommand):
         FarmMembership.objects.get_or_create(user=mgr_c, farm=farm_c, is_approved=True)
 
         vet = User.objects.get(username="veteran_vol")
-        FarmMembership.objects.get_or_create(
-            user=vet, farm=farm_a, is_approved=True, work_commitment=tier_a
-        )
+        FarmMembership.objects.get_or_create(user=vet, farm=farm_a, is_approved=True, work_commitment=tier_a)
 
         rookie = User.objects.get(username="rookie_vol")
-        FarmMembership.objects.get_or_create(
-            user=rookie, farm=farm_a, is_approved=True
-        )  # No commitment tier yet
+        FarmMembership.objects.get_or_create(user=rookie, farm=farm_a, is_approved=True)  # No commitment tier yet
 
         ghost = User.objects.get(username="legacy_ghost")
         FarmMembership.objects.get_or_create(user=ghost, farm=farm_a, is_approved=True)
 
         # Link Lone Wolf to Alto Micro-Greens (They like working alone with headphones!)
         loner = User.objects.get(username="lone_wolf")
-        FarmMembership.objects.get_or_create(
-            user=loner, farm=farm_b, is_approved=True, work_commitment=tier_b
-        )
+        FarmMembership.objects.get_or_create(user=loner, farm=farm_b, is_approved=True, work_commitment=tier_b)
 
         # --- 5. THE "NORMAL" VOLUNTEER FLEET ---
         # Hardcoded list of realistic generic names to flush out the system
@@ -285,9 +275,7 @@ class Command(BaseCommand):
                     log_date = today - timedelta(days=random_days_ago)
 
                     # 10% chance it's a generic task (no crop attached)
-                    selected_crop = (
-                        None if random.random() < 0.10 else random.choice(crops)
-                    )
+                    selected_crop = None if random.random() < 0.10 else random.choice(crops)
 
                     # Random duration biased towards normal shift lengths
                     duration = Decimal(str(round(random.uniform(1.0, 6.5), 1)))
@@ -324,7 +312,5 @@ class Command(BaseCommand):
             )
 
         self.stdout.write(
-            self.style.SUCCESS(
-                "✅ Matrix seeded successfully. All personas, profiles, and noise data are live."
-            )
+            self.style.SUCCESS("✅ Matrix seeded successfully. All personas, profiles, and noise data are live.")
         )

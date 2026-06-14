@@ -19,9 +19,7 @@ class AnalyticsViewsTest(TestCase):
         FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True)
 
         # 2. Create a dummy crop
-        self.crop = Crop.objects.create(
-            crop_name="Tomatoes", category="Nightshades", farm=self.farm
-        )
+        self.crop = Crop.objects.create(crop_name="Tomatoes", category="Nightshades", farm=self.farm)
 
         # 3. Create a dummy log entry so Pandas has data to crunch!
         LogEntry.objects.create(
@@ -57,9 +55,7 @@ class AnalyticsViewsTest(TestCase):
         response = self.client.get(reverse("export_grant_report"))
 
         # They should be kicked back to the dashboard, NOT given a CSV download
-        self.assertRedirects(
-            response, reverse("manager_dashboard"), fetch_redirect_response=False
-        )
+        self.assertRedirects(response, reverse("manager_dashboard"), fetch_redirect_response=False)
 
     def test_enterprise_tier_can_export_csv(self):
         """BUSINESS LOGIC: Ensure paying Enterprise users receive the CSV file."""
@@ -139,9 +135,7 @@ class AnalyticsEmptyStateTests(TestCase):
     def setUp(self):
         self.client = Client()
         self.farm = Farm.objects.create(name="Empty Farm")
-        self.user = CustomUser.objects.create_user(
-            username="manager", email="manager@test.com", password="p"
-        )
+        self.user = CustomUser.objects.create_user(username="manager", email="manager@test.com", password="p")
         FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True)
 
         session = self.client.session

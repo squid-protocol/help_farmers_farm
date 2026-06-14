@@ -101,9 +101,7 @@ class CustomUserAdmin(UserAdmin):
     @admin.action(description="📈 BULK ACTION: Upgrade Role to Active Volunteer")
     def mark_as_active_volunteer(self, request, queryset):
         updated = queryset.update(role="volunteer")
-        self.message_user(
-            request, f"Successfully changed {updated} users to Active Volunteer."
-        )
+        self.message_user(request, f"Successfully changed {updated} users to Active Volunteer.")
 
     @admin.action(description="🛑 POWER MOVE: Deactivate (Lock Out) Users")
     def bulk_deactivate_users(self, request, queryset):
@@ -216,9 +214,7 @@ class FarmMembershipAdmin(admin.ModelAdmin):
     @admin.action(description="✅ BULK ACTION: Approve Pending Roster Applications")
     def bulk_approve(self, request, queryset):
         updated = queryset.update(is_approved=True)
-        self.message_user(
-            request, f"Approved {updated} volunteer applications across the platform."
-        )
+        self.message_user(request, f"Approved {updated} volunteer applications across the platform.")
 
     @admin.action(description="🛑 BULK ACTION: Revoke Approvals (Suspend)")
     def bulk_revoke(self, request, queryset):
