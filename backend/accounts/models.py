@@ -137,6 +137,7 @@ class FormSignature(models.Model):
     signer_ip_address = models.GenericIPAddressField(null=True, blank=True)
     document_hash = models.CharField(max_length=64, null=True, blank=True, help_text="SHA-256 Cryptographic Hash")
     pdf_receipt = models.FileField(upload_to="waivers/vault/", null=True, blank=True)
+    is_vaulted = models.BooleanField(default=False, help_text="True if successfully synced to AWS S3 Glacier/Vault")
 
     class Meta:
         unique_together = ("user", "form")

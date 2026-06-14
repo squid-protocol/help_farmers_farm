@@ -129,7 +129,17 @@ class CustomUserAdmin(UserAdmin):
     fieldsets = UserAdmin.fieldsets + (
         (
             "Contact & Identity",
-            {"fields": ("phone_number", "address_line1", "address_line2", "city", "state", "postal_code", "avatar")},
+            {
+                "fields": (
+                    "phone_number",
+                    "address_line1",
+                    "address_line2",
+                    "city",
+                    "state",
+                    "postal_code",
+                    "avatar",
+                )
+            },
         ),
         (
             "Platform Access & Compliance",

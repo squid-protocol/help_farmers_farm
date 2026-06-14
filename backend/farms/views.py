@@ -1006,7 +1006,7 @@ def landing_page_view(request):
                     "lng": f.longitude + random.uniform(-0.1, 0.1),
                     "is_accepting": is_accepting,
                     # Only provide a clickable link if the farm is actually public
-                    "url": reverse("public_farm_detail", args=[f.id]) if is_public else "",
+                    "url": (reverse("public_farm_detail", args=[f.id]) if is_public else ""),
                 }
             )
 
