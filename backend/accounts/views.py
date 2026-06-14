@@ -48,7 +48,11 @@ def profile_view(request):
         form = ProfileUpdateForm(instance=user)
 
     # 2. Fetch their signed legal documents
-    signatures = FormSignature.objects.filter(user=user).select_related("form").order_by("-signed_at")
+    signatures = (
+        FormSignature.objects.filter(user=user)
+        .select_related("form")
+        .order_by("-signed_at")
+    )
 
     # 3. Generate Trading Card Stats
     all_logs = LogEntry.objects.filter(volunteer=user)
@@ -74,8 +78,15 @@ def profile_view(request):
     top_veggie = top_veggie_data["crop__crop_name"] if top_veggie_data else "N/A"
 
     activity_map = dict(LogEntry.ACTIVITY_CHOICES)
-    top_act_data = all_logs.values("activity").annotate(total=Sum("duration_hours")).order_by("-total").first()
-    top_act = activity_map.get(top_act_data["activity"], "N/A") if top_act_data else "N/A"
+    top_act_data = (
+        all_logs.values("activity")
+        .annotate(total=Sum("duration_hours"))
+        .order_by("-total")
+        .first()
+    )
+    top_act = (
+        activity_map.get(top_act_data["activity"], "N/A") if top_act_data else "N/A"
+    )
 
     # 4. Lifetime Crop Chart (With Expanded Gamified Zero-State)
     lt_crop_names = []
@@ -142,7 +153,9 @@ def profile_view(request):
         if lifetime_hours == 0:
             fig_lt.update_xaxes(range=[0, 10])
 
-        lifetime_crop_chart_html = fig_lt.to_html(full_html=False, include_plotlyjs=False)
+        lifetime_crop_chart_html = fig_lt.to_html(
+            full_html=False, include_plotlyjs=False
+        )
 
     # 5. Lifetime Activity Chart
     lifetime_activity_chart_html = None
@@ -153,7 +166,11 @@ def profile_view(request):
     marker_colors = ["#e2e8f0"]
 
     if lifetime_hours > 0:
-        activity_data = all_logs.values("activity").annotate(total=Sum("duration_hours")).order_by("-total")
+        activity_data = (
+            all_logs.values("activity")
+            .annotate(total=Sum("duration_hours"))
+            .order_by("-total")
+        )
 
         if activity_data:
             activity_map = dict(LogEntry.ACTIVITY_CHOICES)
@@ -166,10 +183,14 @@ def profile_view(request):
                 "M": "#78350f",  # Move Dirt
             }
 
-            act_names = [activity_map.get(item["activity"], "Other") for item in activity_data]
+            act_names = [
+                activity_map.get(item["activity"], "Other") for item in activity_data
+            ]
             act_hours = [float(item["total"] or 0) for item in activity_data]
             # Map the exact color to the specific activity returned
-            marker_colors = [color_map.get(item["activity"], "#94a3b8") for item in activity_data]
+            marker_colors = [
+                color_map.get(item["activity"], "#94a3b8") for item in activity_data
+            ]
 
     fig_act = go.Figure(
         data=[
@@ -201,7 +222,9 @@ def profile_view(request):
         # Hide the hover tooltip for the empty zero-state ring
         fig_act.update_traces(textinfo="none", hoverinfo="skip")
 
-    lifetime_activity_chart_html = fig_act.to_html(full_html=False, include_plotlyjs=False)
+    lifetime_activity_chart_html = fig_act.to_html(
+        full_html=False, include_plotlyjs=False
+    )
 
     context = {
         "form": form,
@@ -314,7 +337,9 @@ def claim_account_setup(request, user_id):
             user.save()
 
             # Log them in automatically
-            login(request, user, backend="accounts.backends.EmailOrUsernameModelBackend")
+            login(
+                request, user, backend="accounts.backends.EmailOrUsernameModelBackend"
+            )
             messages.success(
                 request,
                 f"Welcome to the system, {user.first_name}! Your account is securely set up.",
@@ -358,7 +383,9 @@ def sign_waiver_view(request):
     if request.method == "POST" and "send_verification" in request.POST:
         signer = TimestampSigner()
         token = signer.sign(request.user.id)
-        verify_url = request.build_absolute_uri(reverse("verify_email_link", args=[token]))
+        verify_url = request.build_absolute_uri(
+            reverse("verify_email_link", args=[token])
+        )
 
         send_mail(
             subject=f"Verify your signature account for {farm.name}",
@@ -379,9 +406,9 @@ def sign_waiver_view(request):
     valid_forms = ComplianceForm.objects.filter(farm=farm, is_active=True).exclude(
         does_expire=True, expiration_date__lt=today
     )
-    signed_form_ids = FormSignature.objects.filter(user=request.user, form__in=valid_forms).values_list(
-        "form_id", flat=True
-    )
+    signed_form_ids = FormSignature.objects.filter(
+        user=request.user, form__in=valid_forms
+    ).values_list("form_id", flat=True)
 
     pending_forms = valid_forms.exclude(id__in=signed_form_ids)
 
@@ -391,7 +418,9 @@ def sign_waiver_view(request):
     form_to_sign = pending_forms.first()
     remaining_count = pending_forms.count()
 
-    if request.method == "POST" and ("sign_document" in request.POST or "digital_signature" in request.POST):
+    if request.method == "POST" and (
+        "sign_document" in request.POST or "digital_signature" in request.POST
+    ):
         # Security check: don't let them hack the form if they aren't verified
         if not request.user.is_email_verified:
             messages.error(request, "You must verify your email before signing.")
@@ -400,11 +429,15 @@ def sign_waiver_view(request):
         # --- SECURITY FIX 1: IDOR & Cross-Tenant Pollution Prevention ---
         submitted_form_id = request.POST.get("form_id")
         if submitted_form_id and str(form_to_sign.id) != str(submitted_form_id):
-            raise PermissionDenied("Security Exception: You cannot sign a document belonging to another farm.")
+            raise PermissionDenied(
+                "Security Exception: You cannot sign a document belonging to another farm."
+            )
 
         # --- SECURITY FIX 2: Strict Signature Payload Validation ---
         # Fallback to 'digital_signature' to catch automated DOM bypass attacks
-        signature = request.POST.get("digital_signature", request.POST.get("signature", "")).strip()
+        signature = request.POST.get(
+            "digital_signature", request.POST.get("signature", "")
+        ).strip()
         expected_name = f"{request.user.first_name} {request.user.last_name}".strip()
 
         is_guardian = request.POST.get("is_guardian") == "on"
@@ -429,7 +462,9 @@ def sign_waiver_view(request):
             elif signature.lower() == request.user.username.lower():
                 is_valid = True
             else:
-                error_message = "Your signature must match your first and last name exactly."
+                error_message = (
+                    "Your signature must match your first and last name exactly."
+                )
 
         if is_valid:
             # --- THE FIX: Prioritize Cloudflare's verified IP to prevent spoofing ---
@@ -466,10 +501,14 @@ def sign_waiver_view(request):
             )
 
             if remaining_count > 1:
-                messages.success(request, f"'{form_to_sign.name}' signed and is being secured.")
+                messages.success(
+                    request, f"'{form_to_sign.name}' signed and is being secured."
+                )
                 return redirect("sign_waiver")
             else:
-                messages.success(request, f"All forms signed and secured. Welcome to {farm.name}!")
+                messages.success(
+                    request, f"All forms signed and secured. Welcome to {farm.name}!"
+                )
                 return redirect("log_hours")
         else:
             messages.error(request, error_message)
@@ -499,7 +538,9 @@ def verify_email_link_view(request, token):
                 "✅ Your email is verified! You may now sign your legal documents.",
             )
         else:
-            messages.error(request, "That verification link belongs to a different account.")
+            messages.error(
+                request, "That verification link belongs to a different account."
+            )
 
     except (BadSignature, SignatureExpired):
         messages.error(
@@ -526,7 +567,9 @@ def delete_account_view(request):
     # Destroy their active browser session
     logout(request)
 
-    messages.success(request, "Your account has been permanently anonymized and deleted.")
+    messages.success(
+        request, "Your account has been permanently anonymized and deleted."
+    )
     return redirect("home")
 
 
@@ -591,7 +634,9 @@ def volunteer_signup_view(request):
             user.role = "volunteer"  # Enforce the role
             user.save()
 
-            login(request, user, backend="accounts.backends.EmailOrUsernameModelBackend")
+            login(
+                request, user, backend="accounts.backends.EmailOrUsernameModelBackend"
+            )
             messages.success(request, "Welcome! You can now apply to join a farm.")
             return redirect("home")  # Redirect to their unattached dashboard
     else:
@@ -682,7 +727,9 @@ def farm_signup_view(request):
                 return redirect("manager_dashboard")
 
             except Exception:
-                logger.exception("CRITICAL: Failed to provision new farm and manager account.")
+                logger.exception(
+                    "CRITICAL: Failed to provision new farm and manager account."
+                )
                 messages.error(
                     request,
                     "There was a critical error setting up your account. Our engineering team has been notified.",

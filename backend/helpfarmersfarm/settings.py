@@ -136,7 +136,9 @@ AXES_COOLOFF_TIME = 1  # Lock out for 1 hour
 AXES_RESET_ON_SUCCESS = True  # Reset the counter if they log in successfully
 
 # --- EMAIL CONFIGURATION ---
-EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
+EMAIL_BACKEND = env(
+    "EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"
+)
 EMAIL_HOST = env("EMAIL_HOST", default="smtp-relay.brevo.com")
 EMAIL_PORT = env.int("EMAIL_PORT", default=587)
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
@@ -231,7 +233,9 @@ STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
 STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
 
 # --- CLOUDFLARE TURNSTILE ---
-TURNSTILE_SECRET_KEY = env("TURNSTILE_SECRET_KEY", default="1x0000000000000000000000000000000AA")
+TURNSTILE_SECRET_KEY = env(
+    "TURNSTILE_SECRET_KEY", default="1x0000000000000000000000000000000AA"
+)
 
 # --- PHONE NUMBER FORMATTING ---
 PHONENUMBER_DEFAULT_REGION = "US"
@@ -251,3 +255,9 @@ Q_CLUSTER = {
 }
 
 TURNSTILE_SECRET_KEY = env("TURNSTILE_SECRET_KEY", default=None)
+
+# --- AWS S3 WORM VAULT SETTINGS ---
+AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID", default=None)
+AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY", default=None)
+AWS_S3_REGION_NAME = env("AWS_S3_REGION_NAME", default="us-east-2")
+AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME", default=None)

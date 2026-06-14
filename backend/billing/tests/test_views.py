@@ -58,7 +58,9 @@ class BillingCheckoutTests(TestCase):
     def test_checkout_handles_stripe_api_outage(self, mock_stripe_create):
         """Ensure the app doesn't crash if Stripe's servers go down."""
         self.client.force_login(self.user)
-        mock_stripe_create.side_effect = stripe.error.APIConnectionError("Stripe is down")
+        mock_stripe_create.side_effect = stripe.error.APIConnectionError(
+            "Stripe is down"
+        )
 
         response = self.client.post(self.checkout_url, {"price_id": "price_123"})
 
@@ -91,15 +93,21 @@ class BillingWebhookTests(TestCase):
         self.new_farm = Farm.objects.create(name="New Farm", is_paid=False)
 
         # Farm 2: Active subscriber
-        self.active_farm = Farm.objects.create(name="Premium Farm", is_paid=True, stripe_customer_id="cus_test999")
+        self.active_farm = Farm.objects.create(
+            name="Premium Farm", is_paid=True, stripe_customer_id="cus_test999"
+        )
 
     # --- SECURITY TESTS ---
 
     @patch("stripe.Webhook.construct_event")
     def test_webhook_rejects_invalid_signature(self, mock_construct):
         """Ensure hackers cannot spoof Stripe webhooks."""
-        mock_construct.side_effect = stripe.error.SignatureVerificationError("Bad sig", "sig_header")
-        response = self.client.post(self.webhook_url, data="fake_payload", content_type="application/json")
+        mock_construct.side_effect = stripe.error.SignatureVerificationError(
+            "Bad sig", "sig_header"
+        )
+        response = self.client.post(
+            self.webhook_url, data="fake_payload", content_type="application/json"
+        )
         self.assertEqual(response.status_code, 400)
 
     @patch("stripe.Webhook.construct_event")
@@ -210,7 +218,9 @@ class BillingWebhookTests(TestCase):
 class BillingPortalTests(TestCase):
     def setUp(self):
         self.client = Client()
-        self.farm = Farm.objects.create(name="Portal Test Farm", stripe_customer_id="cus_portal123")
+        self.farm = Farm.objects.create(
+            name="Portal Test Farm", stripe_customer_id="cus_portal123"
+        )
         self.user = User.objects.create_user(
             username="portal_manager",
             email="portal@example.com",
@@ -239,7 +249,9 @@ class BillingPortalTests(TestCase):
     def test_successful_portal_redirects_to_stripe(self, mock_portal_create):
         """Ensure a valid POST request generates a 303 redirect to the portal."""
         self.client.force_login(self.user)
-        mock_portal_create.return_value.url = "https://billing.stripe.com/p/session/test"
+        mock_portal_create.return_value.url = (
+            "https://billing.stripe.com/p/session/test"
+        )
 
         response = self.client.post(self.portal_url)
 
@@ -266,7 +278,9 @@ class WebhookEdgeCaseTests(TestCase):
     def test_webhook_ignores_missing_farm_safely_on_checkout(self, mock_construct):
         mock_construct.return_value = {
             "type": "checkout.session.completed",
-            "data": {"object": {"client_reference_id": "999999", "customer": "cus_123"}},
+            "data": {
+                "object": {"client_reference_id": "999999", "customer": "cus_123"}
+            },
         }
         response = self.client.post(self.webhook_url, content_type="application/json")
         self.assertEqual(response.status_code, 200)
@@ -310,7 +324,9 @@ class WebhookSubscriptionUpdatedTests(TestCase):
                 "object": {
                     "customer": "cus_upgrade_123",
                     "status": "active",
-                    "items": {"data": [{"price": {"id": "price_1TbLHZ6EZATAzdVSRo4kyEjN"}}]},
+                    "items": {
+                        "data": [{"price": {"id": "price_1TbLHZ6EZATAzdVSRo4kyEjN"}}]
+                    },
                 }
             },
         }
@@ -330,7 +346,9 @@ class WebhookSubscriptionUpdatedTests(TestCase):
                 "object": {
                     "customer": "cus_upgrade_123",
                     "status": "active",
-                    "items": {"data": [{"price": {"id": "price_1TbLHZ6EZATAzdVSFracrHkT"}}]},
+                    "items": {
+                        "data": [{"price": {"id": "price_1TbLHZ6EZATAzdVSFracrHkT"}}]
+                    },
                 }
             },
         }
@@ -349,7 +367,9 @@ class WebhookSubscriptionUpdatedTests(TestCase):
                 "object": {
                     "customer": "cus_upgrade_123",
                     "status": "unpaid",
-                    "items": {"data": [{"price": {"id": "price_1TbLHZ6EZATAzdVSRo4kyEjN"}}]},
+                    "items": {
+                        "data": [{"price": {"id": "price_1TbLHZ6EZATAzdVSRo4kyEjN"}}]
+                    },
                 }
             },
         }
@@ -368,7 +388,9 @@ class WebhookSubscriptionUpdatedTests(TestCase):
                 "object": {
                     "customer": "cus_ghost_updater",
                     "status": "active",
-                    "items": {"data": [{"price": {"id": "price_1TbLHZ6EZATAzdVSRo4kyEjN"}}]},
+                    "items": {
+                        "data": [{"price": {"id": "price_1TbLHZ6EZATAzdVSRo4kyEjN"}}]
+                    },
                 }
             },
         }

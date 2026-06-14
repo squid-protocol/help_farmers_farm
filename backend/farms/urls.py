@@ -51,7 +51,9 @@ urlpatterns = [
     path("profile/settings/", views.edit_farm_profile_view, name="edit_farm_profile"),
     path("invite/<uuid:token>/", views.invite_link_view, name="invite_link"),
     path("search/", views.farm_search_view, name="farm_search"),
-    path("request-join/<int:farm_id>/", views.request_join_farm_view, name="request_join"),
+    path(
+        "request-join/<int:farm_id>/", views.request_join_farm_view, name="request_join"
+    ),
     path(
         "directory/<int:farm_id>/",
         views.public_farm_detail_view,
@@ -62,5 +64,7 @@ urlpatterns = [
         views.approve_membership_view,
         name="approve_join",
     ),
-    path("fragments/live-stats/", views.live_stats_fragment, name="live_stats_fragment"),
+    path(
+        "fragments/live-stats/", views.live_stats_fragment, name="live_stats_fragment"
+    ),
 ]

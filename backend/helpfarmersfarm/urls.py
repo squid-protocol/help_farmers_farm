@@ -12,9 +12,15 @@ urlpatterns = [
     path("", farm_views.landing_page_view, name="home"),
     path("about/", TemplateView.as_view(template_name="about.html"), name="about"),
     path("faq/", TemplateView.as_view(template_name="faq.html"), name="faq"),
-    path("contact/", TemplateView.as_view(template_name="contact.html"), name="contact"),
-    path("pricing/", TemplateView.as_view(template_name="pricing.html"), name="pricing"),
-    path("privacy/", TemplateView.as_view(template_name="privacy.html"), name="privacy"),
+    path(
+        "contact/", TemplateView.as_view(template_name="contact.html"), name="contact"
+    ),
+    path(
+        "pricing/", TemplateView.as_view(template_name="pricing.html"), name="pricing"
+    ),
+    path(
+        "privacy/", TemplateView.as_view(template_name="privacy.html"), name="privacy"
+    ),
     path("terms/", TemplateView.as_view(template_name="terms.html"), name="terms"),
     path("billing/", include("billing.urls")),
     path("", include("logs.urls")),

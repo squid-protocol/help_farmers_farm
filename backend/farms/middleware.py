@@ -12,7 +12,9 @@ class ActiveFarmMiddleware:
         # Only process logged-in users
         if request.user.is_authenticated:
             # Fetch all approved memberships for this specific user
-            memberships = FarmMembership.objects.filter(user=request.user, is_approved=True).select_related("farm")
+            memberships = FarmMembership.objects.filter(
+                user=request.user, is_approved=True
+            ).select_related("farm")
 
             user_farms = [m.farm for m in memberships]
             request.user_farms = user_farms
@@ -23,7 +25,9 @@ class ActiveFarmMiddleware:
 
                 if active_farm_id:
                     # Securely grab the farm ONLY if they are a member of it
-                    request.active_farm = next((f for f in user_farms if f.id == active_farm_id), None)
+                    request.active_farm = next(
+                        (f for f in user_farms if f.id == active_farm_id), None
+                    )
 
                 # If they don't have a session yet (first login), default to their first farm
                 if not request.active_farm:

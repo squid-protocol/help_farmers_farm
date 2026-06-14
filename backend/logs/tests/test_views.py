@@ -78,7 +78,9 @@ class LogHoursIntegrationTests(TestCase):
 
     def test_unattached_volunteer_redirected_to_profile(self):
         """Ensure a volunteer without a farm cannot access the log hours dashboard."""
-        unattached_user = User.objects.create_user(username="floater", email="float@test.com", password="p")
+        unattached_user = User.objects.create_user(
+            username="floater", email="float@test.com", password="p"
+        )
         self.client.force_login(unattached_user)
 
         response = self.client.get(reverse("log_hours"))
@@ -108,7 +110,9 @@ class LogHoursIntegrationTests(TestCase):
         self.assertEqual(response_oldest.status_code, 200)
 
         # Current year should NOT have a next_year
-        response_current = self.client.get(self.log_url + f"?history_year={timezone.now().date().year}")
+        response_current = self.client.get(
+            self.log_url + f"?history_year={timezone.now().date().year}"
+        )
         self.assertEqual(response_current.status_code, 200)
 
     def test_manager_deletes_other_volunteer_log_routing(self):
@@ -173,7 +177,9 @@ class LogManagementTests(TestCase):
             password="p",
             role="volunteer",
         )
-        FarmMembership.objects.create(user=self.vol_a, farm=self.farm_a, is_approved=True, agreed_to_waiver=True)
+        FarmMembership.objects.create(
+            user=self.vol_a, farm=self.farm_a, is_approved=True, agreed_to_waiver=True
+        )
 
         self.log_a = LogEntry.objects.create(
             farm=self.farm_a,
@@ -196,7 +202,9 @@ class LogManagementTests(TestCase):
             password="p",
             role="volunteer",
         )
-        FarmMembership.objects.create(user=self.vol_b, farm=self.farm_b, is_approved=True, agreed_to_waiver=True)
+        FarmMembership.objects.create(
+            user=self.vol_b, farm=self.farm_b, is_approved=True, agreed_to_waiver=True
+        )
 
         self.log_b = LogEntry.objects.create(
             farm=self.farm_b,
@@ -237,8 +245,12 @@ class LogManagementTests(TestCase):
 
     def test_volunteer_cannot_edit_others_log(self):
         """Ensure volunteers get a 403 Forbidden if they try to edit a peer's log."""
-        vol_a2 = User.objects.create_user(username="vol_a2", email="vola2@test.com", password="p", role="volunteer")
-        FarmMembership.objects.create(user=vol_a2, farm=self.farm_a, is_approved=True, agreed_to_waiver=True)
+        vol_a2 = User.objects.create_user(
+            username="vol_a2", email="vola2@test.com", password="p", role="volunteer"
+        )
+        FarmMembership.objects.create(
+            user=vol_a2, farm=self.farm_a, is_approved=True, agreed_to_waiver=True
+        )
 
         self.client.force_login(vol_a2)
         url = reverse("edit_log", args=[self.log_a.id])
@@ -296,7 +308,9 @@ class LogManagementTests(TestCase):
             password="p",
             role="volunteer",
         )
-        FarmMembership.objects.create(user=vol_a2, farm=self.farm_a, is_approved=True, agreed_to_waiver=True)
+        FarmMembership.objects.create(
+            user=vol_a2, farm=self.farm_a, is_approved=True, agreed_to_waiver=True
+        )
 
         self.client.force_login(vol_a2)
         url = reverse("delete_log", args=[self.log_a.id])
@@ -319,7 +333,9 @@ class LogUnhappyPathTests(TestCase):
             season_end=timezone.now().date() + timedelta(days=100),
         )
         self.crop = Crop.objects.create(farm=self.farm, crop_name="Peppers")
-        self.user = User.objects.create_user(username="test_edge", email="edge@test.com", password="p")
+        self.user = User.objects.create_user(
+            username="test_edge", email="edge@test.com", password="p"
+        )
         FarmMembership.objects.create(user=self.user, farm=self.farm, is_approved=True)
 
         self.client.force_login(self.user)
@@ -330,7 +346,9 @@ class LogUnhappyPathTests(TestCase):
         from unittest.mock import patch, PropertyMock
 
         # Force the farm to appear as expired/unpaid
-        with patch("farms.models.Farm.is_active_account", new_callable=PropertyMock) as mock_active:
+        with patch(
+            "farms.models.Farm.is_active_account", new_callable=PropertyMock
+        ) as mock_active:
             mock_active.return_value = False
 
             response = self.client.post(
@@ -396,7 +414,9 @@ class LogUnhappyPathTests(TestCase):
         """Force the pacing engine to calculate required pace across all boundary lines."""
         from farms.models import WorkCommitment
 
-        commitment = WorkCommitment.objects.create(farm=self.farm, name="Tester", required_hours=10)
+        commitment = WorkCommitment.objects.create(
+            farm=self.farm, name="Tester", required_hours=10
+        )
         membership = FarmMembership.objects.get(user=self.user)
         membership.work_commitment = commitment
         membership.save()

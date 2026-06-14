@@ -49,7 +49,9 @@ def send_volunteer_welcome_email(user_id, farm_id, raw_password):
     return f"Welcome email sent to {user.email}"
 
 
-def send_broadcast_email(farm_id, subject, custom_body, audience_value, specific_ids=None):
+def send_broadcast_email(
+    farm_id, subject, custom_body, audience_value, specific_ids=None
+):
     """Compiles and mass-sends a broadcast email to a specific farm audience."""
     try:
         farm = Farm.objects.get(id=farm_id)
@@ -57,9 +59,9 @@ def send_broadcast_email(farm_id, subject, custom_body, audience_value, specific
         return "Failed: Farm not found."
 
     # 1. Start with a baseline: All active users who are NOT read-only legacy friends
-    memberships = FarmMembership.objects.filter(farm=farm, is_approved=True, user__is_active=True).exclude(
-        user__role="friend"
-    )
+    memberships = FarmMembership.objects.filter(
+        farm=farm, is_approved=True, user__is_active=True
+    ).exclude(user__role="friend")
 
     # 2. Filter down based on audience selection
     if audience_value == "specific" and specific_ids:
@@ -135,12 +137,16 @@ def geocode_farm_address(farm_id):
 
         # ATTEMPT 2: Fallback to just City, State, and ZIP
         if not location and farm.city and farm.state:
-            fallback_addr = f"{farm.city}, {farm.state} {farm.postal_code or ''}".strip()
+            fallback_addr = (
+                f"{farm.city}, {farm.state} {farm.postal_code or ''}".strip()
+            )
             time.sleep(1.1)  # Respect OpenStreetMap API rate limits
             location = geolocator.geocode(fallback_addr, timeout=10)
 
         if location:
             # Use update() to save without triggering the model's save() method again
-            Farm.objects.filter(id=farm.id).update(latitude=location.latitude, longitude=location.longitude)
+            Farm.objects.filter(id=farm.id).update(
+                latitude=location.latitude, longitude=location.longitude
+            )
     except Exception as e:
         print(f"Geocoding failed for Farm {farm_id}: {e}")

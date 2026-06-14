@@ -118,7 +118,11 @@ def log_hours_view(request):
         remaining_hours = max(target_hours - season_hours, 0)
 
         # The Pacing Engine
-        if request.active_farm.season_start and request.active_farm.season_end and remaining_hours > 0:
+        if (
+            request.active_farm.season_start
+            and request.active_farm.season_end
+            and remaining_hours > 0
+        ):
             today = timezone.now().date()
             season_end = request.active_farm.season_end
             season_start = request.active_farm.season_start
@@ -144,8 +148,15 @@ def log_hours_view(request):
     )
     top_veggie = top_veggie_data["crop__crop_name"] if top_veggie_data else "N/A"
 
-    top_act_data = season_logs.values("activity").annotate(total=Sum("duration_hours")).order_by("-total").first()
-    top_act = activity_map.get(top_act_data["activity"], "N/A") if top_act_data else "N/A"
+    top_act_data = (
+        season_logs.values("activity")
+        .annotate(total=Sum("duration_hours"))
+        .order_by("-total")
+        .first()
+    )
+    top_act = (
+        activity_map.get(top_act_data["activity"], "N/A") if top_act_data else "N/A"
+    )
 
     # 6. Build Personal Breakdowns (Plotly Charts)
     veggie_chart_html = None
@@ -155,7 +166,9 @@ def log_hours_view(request):
     if season_hours > 0:
         # Veggie Chart
         veggie_breakdown = (
-            season_logs.exclude(crop__isnull=True).values("crop__crop_name").annotate(total=Sum("duration_hours"))
+            season_logs.exclude(crop__isnull=True)
+            .values("crop__crop_name")
+            .annotate(total=Sum("duration_hours"))
         )
         v_labels = [item["crop__crop_name"] for item in veggie_breakdown]
         v_values = [item["total"] for item in veggie_breakdown]
@@ -175,13 +188,19 @@ def log_hours_view(request):
                 )
             ]
         )
-        fig_v.update_layout(margin=dict(t=0, b=0, l=0, r=0), height=250, showlegend=False)
+        fig_v.update_layout(
+            margin=dict(t=0, b=0, l=0, r=0), height=250, showlegend=False
+        )
         fig_v.update_traces(textposition="inside", textinfo="percent+label")
         veggie_chart_html = fig_v.to_html(full_html=False, include_plotlyjs=False)
 
         # Activity Chart
-        act_breakdown = season_logs.values("activity").annotate(total=Sum("duration_hours"))
-        a_labels = [activity_map.get(item["activity"], "Other") for item in act_breakdown]
+        act_breakdown = season_logs.values("activity").annotate(
+            total=Sum("duration_hours")
+        )
+        a_labels = [
+            activity_map.get(item["activity"], "Other") for item in act_breakdown
+        ]
         a_values = [item["total"] for item in act_breakdown]
         fig_a = go.Figure(
             data=[
@@ -200,15 +219,22 @@ def log_hours_view(request):
                 )
             ]
         )
-        fig_a.update_layout(margin=dict(t=0, b=0, l=0, r=0), height=250, showlegend=False)
+        fig_a.update_layout(
+            margin=dict(t=0, b=0, l=0, r=0), height=250, showlegend=False
+        )
         fig_a.update_traces(textposition="inside", textinfo="percent+label")
         activity_chart_html = fig_a.to_html(full_html=False, include_plotlyjs=False)
 
         # Farm-Wide Comparison Horizontal Bar Chart
         user_crop_hours = (
-            season_logs.filter(crop__is_active=True).values("crop__crop_name").annotate(total=Sum("duration_hours"))
+            season_logs.filter(crop__is_active=True)
+            .values("crop__crop_name")
+            .annotate(total=Sum("duration_hours"))
         )
-        user_crop_dict = {item["crop__crop_name"]: float(item["total"] or 0) for item in user_crop_hours}
+        user_crop_dict = {
+            item["crop__crop_name"]: float(item["total"] or 0)
+            for item in user_crop_hours
+        }
 
         farm_crop_hours = (
             LogEntry.objects.filter(
@@ -219,7 +245,10 @@ def log_hours_view(request):
             .values("crop__crop_name")
             .annotate(total=Sum("duration_hours"))
         )
-        farm_crop_dict = {item["crop__crop_name"]: float(item["total"] or 0) for item in farm_crop_hours}
+        farm_crop_dict = {
+            item["crop__crop_name"]: float(item["total"] or 0)
+            for item in farm_crop_hours
+        }
 
         from farms.models import Crop
 
@@ -269,7 +298,9 @@ def log_hours_view(request):
                 margin=dict(t=30, b=30, l=10, r=20),
                 height=max(300, len(crop_names) * 35 + 100),
                 showlegend=True,
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+                legend=dict(
+                    orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5
+                ),
                 hoverlabel=dict(bgcolor="white", font_size=13, font_color="black"),
                 xaxis=dict(
                     title="Total Farm Hours",
@@ -278,7 +309,9 @@ def log_hours_view(request):
                 ),
                 yaxis=dict(title="", tickfont=dict(size=12), automargin=True),
             )
-            comparison_chart_html = fig_comp.to_html(full_html=False, include_plotlyjs=False)
+            comparison_chart_html = fig_comp.to_html(
+                full_html=False, include_plotlyjs=False
+            )
 
     context = {
         "form": form,
@@ -376,7 +409,9 @@ def delete_log_view(request, log_id):
 
     # 2. Security Gate: Only the owner OR a manager can delete it
     if not is_manager and log.volunteer != request.user:
-        raise PermissionDenied("You do not have permission to delete someone else's log.")
+        raise PermissionDenied(
+            "You do not have permission to delete someone else's log."
+        )
 
     # 3. Store the owner before we destroy the object so we know where to route
     was_my_log = log.volunteer == request.user

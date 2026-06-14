@@ -60,7 +60,9 @@ class FarmAdmin(admin.ModelAdmin):
     @admin.action(description="BULK ACTION: Reset 60-Day Free Trial")
     def reset_trial_period(self, request, queryset):
         queryset.update(created_at=timezone.now())
-        self.message_user(request, "Selected farms have had their 60-day trials reset to today.")
+        self.message_user(
+            request, "Selected farms have had their 60-day trials reset to today."
+        )
 
     @admin.action(description="BULK ACTION: Grant Lifetime Free Access (Comped)")
     def grant_lifetime_access(self, request, queryset):
@@ -75,14 +77,20 @@ class FarmAdmin(admin.ModelAdmin):
     @admin.action(description="BULK ACTION: Revoke Premium Access (Mark Unpaid)")
     def revoke_premium(self, request, queryset):
         queryset.update(is_paid=False, is_comped=False)
-        self.message_user(request, "Premium access revoked. Farms returned to read-only/trial state.")
+        self.message_user(
+            request, "Premium access revoked. Farms returned to read-only/trial state."
+        )
 
-    @admin.action(description="BULK ACTION: Enable Joint Accounts (Disable strict liability)")
+    @admin.action(
+        description="BULK ACTION: Enable Joint Accounts (Disable strict liability)"
+    )
     def enable_joint_accounts(self, request, queryset):
         queryset.update(allows_joint_accounts=True)
         self.message_user(request, "Joint accounts enabled for selected farms.")
 
-    @admin.action(description="BULK ACTION: Disable Joint Accounts (Enforce strict liability)")
+    @admin.action(
+        description="BULK ACTION: Disable Joint Accounts (Enforce strict liability)"
+    )
     def disable_joint_accounts(self, request, queryset):
         queryset.update(allows_joint_accounts=False)
         self.message_user(request, "Strict liability enforced for selected farms.")

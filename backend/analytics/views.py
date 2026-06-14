@@ -198,7 +198,9 @@ def get_activity_heatmap(request):
     # Secure dictionary mapping
     from farms.models import Crop
 
-    crop_dict = {c.id: (c.crop_name, c.category) for c in Crop.objects.filter(farm=farm)}
+    crop_dict = {
+        c.id: (c.crop_name, c.category) for c in Crop.objects.filter(farm=farm)
+    }
     for item in data:
         crop_id = item.pop("crop", None)
         if crop_id and crop_id in crop_dict:
@@ -210,8 +212,15 @@ def get_activity_heatmap(request):
     df = pd.DataFrame(data)
 
     # 2. CLEAN AND PREPARE DATA
-    df["WeekOfYear"] = pd.to_datetime(df["date_logged"]).dt.isocalendar().week.astype(int)
-    df["Display_Veggie"] = df["crop_category"].replace("", pd.NA).fillna(df["crop_name"]).fillna("General / Deleted")
+    df["WeekOfYear"] = (
+        pd.to_datetime(df["date_logged"]).dt.isocalendar().week.astype(int)
+    )
+    df["Display_Veggie"] = (
+        df["crop_category"]
+        .replace("", pd.NA)
+        .fillna(df["crop_name"])
+        .fillna("General / Deleted")
+    )
 
     activity_priority = {"O": 0, "T": 1, "P": 2, "H": 3}
     activity_names = dict(LogEntry.ACTIVITY_CHOICES)
@@ -219,14 +228,18 @@ def get_activity_heatmap(request):
     df["Activity_Num"] = df["activity"].map(activity_priority)
 
     # 3. AGGREGATE
-    agg_df = df.groupby(["Display_Veggie", "WeekOfYear"]).agg(Dominant_Activity=("Activity_Num", "max")).reset_index()
+    agg_df = (
+        df.groupby(["Display_Veggie", "WeekOfYear"])
+        .agg(Dominant_Activity=("Activity_Num", "max"))
+        .reset_index()
+    )
 
     veggies = sorted(agg_df["Display_Veggie"].unique())
     weeks = list(range(1, 53))
 
-    pivot_z = agg_df.pivot(index="Display_Veggie", columns="WeekOfYear", values="Dominant_Activity").reindex(
-        index=veggies, columns=weeks
-    )
+    pivot_z = agg_df.pivot(
+        index="Display_Veggie", columns="WeekOfYear", values="Dominant_Activity"
+    ).reindex(index=veggies, columns=weeks)
 
     # THE FIX: Explicitly cast NaNs to None so the JSON parser doesn't swallow them
     z_matrix = pivot_z.where(pd.notnull(pivot_z), None).values.tolist()
@@ -365,25 +378,37 @@ def get_term_heatmap(request):
     crop_dict = {c.id: c.crop_name for c in Crop.objects.filter(farm=farm)}
     for item in data:
         crop_id = item.pop("crop", None)
-        item["crop_name"] = crop_dict.get(crop_id, "General / Deleted") if crop_id else "General / Deleted"
+        item["crop_name"] = (
+            crop_dict.get(crop_id, "General / Deleted")
+            if crop_id
+            else "General / Deleted"
+        )
 
     df = pd.DataFrame(data)
 
     # 2. PREPARE DATA
-    df["WeekOfYear"] = pd.to_datetime(df["date_logged"]).dt.isocalendar().week.astype(int)
+    df["WeekOfYear"] = (
+        pd.to_datetime(df["date_logged"]).dt.isocalendar().week.astype(int)
+    )
     activity_names = dict(LogEntry.ACTIVITY_CHOICES)
     df["Activity_Label"] = df["activity"].map(activity_names)
 
     # 3. SPLIT AND STACK
     df_veggies = df[["WeekOfYear", "crop_name"]].rename(columns={"crop_name": "Term"})
-    df_activities = df[["WeekOfYear", "Activity_Label"]].rename(columns={"Activity_Label": "Term"})
+    df_activities = df[["WeekOfYear", "Activity_Label"]].rename(
+        columns={"Activity_Label": "Term"}
+    )
     df_terms = pd.concat([df_veggies, df_activities]).dropna(subset=["Term"])
 
     # 4. AGGREGATE
-    agg_df = df_terms.groupby(["Term", "WeekOfYear"]).size().reset_index(name="Occurrences")
+    agg_df = (
+        df_terms.groupby(["Term", "WeekOfYear"]).size().reset_index(name="Occurrences")
+    )
 
     all_unique_terms = agg_df["Term"].unique().tolist()
-    activity_list = sorted([name for code, name in activity_names.items() if name in all_unique_terms])
+    activity_list = sorted(
+        [name for code, name in activity_names.items() if name in all_unique_terms]
+    )
     veggie_list = sorted([t for t in all_unique_terms if t not in activity_list])
     ordered_terms = activity_list + veggie_list
 
@@ -514,12 +539,18 @@ def get_seasonal_timeline(request):
     crop_dict = {c.id: c.crop_name for c in Crop.objects.filter(farm=farm)}
     for item in data:
         crop_id = item.pop("crop", None)
-        item["crop_name"] = crop_dict.get(crop_id, "General / Deleted") if crop_id else "General / Deleted"
+        item["crop_name"] = (
+            crop_dict.get(crop_id, "General / Deleted")
+            if crop_id
+            else "General / Deleted"
+        )
 
     df = pd.DataFrame(data)
 
     # 2. CALCULATE START AND END WEEKS
-    df["WeekOfYear"] = pd.to_datetime(df["date_logged"]).dt.isocalendar().week.astype(int)
+    df["WeekOfYear"] = (
+        pd.to_datetime(df["date_logged"]).dt.isocalendar().week.astype(int)
+    )
     activity_names = dict(LogEntry.ACTIVITY_CHOICES)
 
     # Group by crop and activity to find the absolute min and max week
@@ -547,7 +578,9 @@ def get_seasonal_timeline(request):
                     name=act_label,
                     x=act_data["Duration"],
                     y=act_data["crop_name"],
-                    base=act_data["StartWeek"],  # This is the magic trick! Pushes the bar to the Start Week
+                    base=act_data[
+                        "StartWeek"
+                    ],  # This is the magic trick! Pushes the bar to the Start Week
                     orientation="h",
                     marker_color=activity_colors.get(act_code, "#94a3b8"),
                     hovertemplate="<b>%{y}</b><br>"
@@ -644,7 +677,9 @@ def get_volunteer_heatmap(request):
     df = pd.DataFrame(data)
 
     # 2. PREPARE DATA
-    df["WeekOfYear"] = pd.to_datetime(df["date_logged"]).dt.isocalendar().week.astype(int)
+    df["WeekOfYear"] = (
+        pd.to_datetime(df["date_logged"]).dt.isocalendar().week.astype(int)
+    )
     df["duration_hours"] = df["duration_hours"].astype(float)
 
     # Create a clean display name for the Y-Axis
@@ -657,7 +692,9 @@ def get_volunteer_heatmap(request):
     df["Volunteer"] = df.apply(make_name, axis=1)
 
     # 3. AGGREGATE HOURS PER WEEK
-    agg_df = df.groupby(["Volunteer", "WeekOfYear"])["duration_hours"].sum().reset_index()
+    agg_df = (
+        df.groupby(["Volunteer", "WeekOfYear"])["duration_hours"].sum().reset_index()
+    )
 
     # Sort volunteers alphabetically (reverse so A is at the top of the Plotly Y-axis)
     volunteers = sorted(agg_df["Volunteer"].unique().tolist(), reverse=True)
@@ -763,18 +800,24 @@ def get_adoption_report(request):
     for farm in farms:
         # 1. Volunteer Participation %
         # Math: (Volunteers with logs in 7 days / Total active volunteers) * 100
-        all_volunteers = CustomUser.objects.filter(memberships__farm=farm, is_active=True).exclude(
-            role__in=["account_manager", "farm_manager"]
-        )
-        active_volunteers = all_volunteers.filter(logs__date_logged__gte=one_week_ago.date()).distinct()
+        all_volunteers = CustomUser.objects.filter(
+            memberships__farm=farm, is_active=True
+        ).exclude(role__in=["account_manager", "farm_manager"])
+        active_volunteers = all_volunteers.filter(
+            logs__date_logged__gte=one_week_ago.date()
+        ).distinct()
 
         total_vol_count = all_volunteers.count()
         active_vol_count = active_volunteers.count()
 
-        participation_pct = (active_vol_count / total_vol_count * 100) if total_vol_count > 0 else 0
+        participation_pct = (
+            (active_vol_count / total_vol_count * 100) if total_vol_count > 0 else 0
+        )
 
         # 2. Manager Engagement (Last Login)
-        manager = CustomUser.objects.filter(memberships__farm=farm, role="farm_manager").first()
+        manager = CustomUser.objects.filter(
+            memberships__farm=farm, role="farm_manager"
+        ).first()
         last_seen = manager.last_login if manager and manager.last_login else None
         is_engaged = last_seen and last_seen >= one_week_ago
 
@@ -819,14 +862,20 @@ def export_grant_report_csv(request):
 
     # 1. THE ENTERPRISE TOLLBOOTH
     # Only Institutional/Enterprise tier (or comped/staff) can download raw data
-    if farm.subscription_tier != "institutional" and not farm.is_comped and not request.user.is_staff:
+    if (
+        farm.subscription_tier != "institutional"
+        and not farm.is_comped
+        and not request.user.is_staff
+    ):
         messages.error(request, "Data Export is only available on the Enterprise tier.")
         return redirect("manager_dashboard")
 
     # 2. Setup the HTTP Response to trigger a file download
     response = HttpResponse(
         content_type="text/csv",
-        headers={"Content-Disposition": f'attachment; filename="{farm.name}_Grant_Report.csv"'},
+        headers={
+            "Content-Disposition": f'attachment; filename="{farm.name}_Grant_Report.csv"'
+        },
     )
 
     writer = csv.writer(response)
@@ -846,10 +895,18 @@ def export_grant_report_csv(request):
 
     # 4. Fetch and Write the Data
     # Optimize the query with select_related so we don't hit the DB 10,000 times
-    logs = LogEntry.objects.filter(farm=farm).select_related("volunteer", "crop").order_by("-date_logged")
+    logs = (
+        LogEntry.objects.filter(farm=farm)
+        .select_related("volunteer", "crop")
+        .order_by("-date_logged")
+    )
 
     for log in logs:
-        vol_name = f"{log.volunteer.first_name} {log.volunteer.last_name}".strip() if log.volunteer else "Deleted User"
+        vol_name = (
+            f"{log.volunteer.first_name} {log.volunteer.last_name}".strip()
+            if log.volunteer
+            else "Deleted User"
+        )
         vol_email = log.volunteer.email if log.volunteer else "N/A"
         crop_name = log.crop.crop_name if log.crop else "General/Deleted"
 
