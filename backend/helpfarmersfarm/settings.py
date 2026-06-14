@@ -250,8 +250,6 @@ Q_CLUSTER = {
     "orm": "default",  # Use your existing PostgreSQL database as the broker
 }
 
-TURNSTILE_SECRET_KEY = env("TURNSTILE_SECRET_KEY", default=None)
-
 # --- AWS S3 WORM VAULT SETTINGS ---
 AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID", default=None)
 AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY", default=None)
