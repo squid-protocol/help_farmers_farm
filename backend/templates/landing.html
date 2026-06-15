@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
 <!-- LEAFLET CSS -->
@@ -14,7 +15,7 @@
             <a href="{% url 'log_hours' %}" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-10 rounded-xl shadow-lg transition transform hover:-translate-y-1">Go to Dashboard</a>
         {% else %}
             <a href="{% url 'signup_gateway' %}" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-10 rounded-xl shadow-lg transition transform hover:-translate-y-1">I'm a Volunteer (Free)</a>
-            <a href="{% url 'pricing' %}" class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-4 px-10 rounded-xl shadow transition transform hover:-translate-y-1">I'm a Farm Manager</a>
+            <a href="{% url 'signup_farm' %}" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-10 rounded-xl shadow-lg transition transform hover:-translate-y-1">Join as a Farmer</a>
         {% endif %}
     </div>
 
@@ -50,23 +51,69 @@
     </div>
 </div>
 
-<div class="py-16 border-t border-gray-100">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+<!-- VOLUNTEER SECTION (Text Left, Image Right) -->
+<div class="py-24 border-t border-b border-gray-100 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="lg:grid lg:grid-cols-2 lg:gap-16 items-center">
+            
+            <!-- Text Content -->
+            <div class="mb-12 lg:mb-0">
+                <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight sm:text-4xl mb-4">
+                    For Volunteers: Discover & Connect
+                </h2>
+                <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+                    Want to get your hands in the dirt? Use our public directory to find farms in your area accepting volunteers. Each farm is unique in their expected work commitment system for the season. Easily log your shifts, and track your lifetime agricultural impact on your personal dashboard.
+                </p>
+                <div class="inline-block bg-emerald-100 text-emerald-800 font-bold px-4 py-2 rounded-lg mb-8 shadow-sm">
+                    100% free for volunteers!
+                </div>
+                <div>
+                    <a href="{% url 'signup_volunteer' %}" class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-xl shadow transition">
+                        Join as a Volunteer
+                    </a>
+                </div>
+            </div>
+
+            <!-- Image Framing wrapper -->
+            <div class="relative rounded-2xl p-2 bg-gray-200 shadow-inner">
+                <div class="overflow-hidden rounded-xl bg-white border border-gray-100 shadow-lg h-[450px]">
+                    <img src="{% static 'images/ind_volunteer_total_stats_profile_.webp' %}" alt="A volunteer's personal dashboard showing 94 lifetime hours, total shifts, and a pie chart of tasks like planting and harvesting" class="w-full h-full object-cover object-top">
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- FARM MANAGER SECTION (Image Left, Text Right) -->
+<div class="py-24 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <div class="bg-emerald-50 p-10 rounded-3xl border border-emerald-100 shadow-sm text-center md:text-left">
-            <div class="text-5xl mb-6">🌍</div>
-            <h3 class="text-2xl font-bold text-emerald-900 mb-3">For Volunteers: Discover & Connect</h3>
-            <p class="text-emerald-800 mb-4">Want to get your hands in the dirt? Use our public directory to find farms in your area accepting volunteers. Each farm is unique in their expected work commitment system for the season. Easily log your shifts, and track your lifetime agricultural impact on your personal dashboard.</p>
-            <span class="inline-block bg-white text-emerald-700 font-bold py-2 px-4 rounded-lg text-sm shadow-sm border border-emerald-200">100% free for volunteers! </span>
-        </div>
+        <div class="lg:grid lg:grid-cols-2 lg:gap-16 items-center flex flex-col-reverse lg:flex-row">
+            
+            <!-- Image Framing wrapper -->
+            <div class="relative rounded-2xl p-2 bg-gray-200 shadow-inner mt-12 lg:mt-0 w-full">
+                <div class="overflow-hidden rounded-xl bg-white border border-gray-100 shadow-lg h-[450px]">
+                    <img src="{% static 'images/volunteer_impact_by_veggies.webp' %}" alt="A farm manager's dashboard displaying a total of 282 seasonal labor hours broken down by specific crops and activities" class="w-full h-full object-cover object-top">
+                </div>
+            </div>
 
-        <div class="bg-blue-50 p-10 rounded-3xl border border-blue-100 shadow-sm text-center md:text-left">
-            <div class="text-5xl mb-6">🚜</div>
-            <h3 class="text-2xl font-bold text-blue-900 mb-3">For Farms: Compliance & Labor</h3>
-            <p class="text-blue-800 mb-4">List your farm on our public directory to attract willing hands. We handle the heavy lifting: digital liability waiver signature monitoring and record keeping, volunteer workforce communication platform and labor tracking reports. We make it easy to manange a volunteer workforce. Save hours of clipboard management and hours tracking. </p>
-            <a href="{% url 'pricing' %}" class="inline-block bg-white text-blue-700 hover:bg-blue-100 font-bold py-2 px-4 rounded-lg text-sm shadow-sm border border-blue-200 transition">View Seasonal Pricing &rarr;</a>
-        </div>
+            <!-- Text Content -->
+            <div>
+                <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight sm:text-4xl mb-4">
+                    For Farms: Compliance & Labor
+                </h2>
+                <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+                    List your farm on our public directory to attract willing hands. We handle the heavy lifting: digital liability waiver signature monitoring and record keeping, volunteer workforce communication platform and labor tracking reports. We make it easy to manage a volunteer workforce. Save hours of clipboard management and hours tracking.
+                </p>
+                <div>
+                    <a href="{% url 'signup_farm' %}" class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-xl shadow transition">
+                        Join as a Farmer
+                    </a>
+                </div>
+            </div>
 
+        </div>
     </div>
 </div>
 

@@ -1,34 +1,102 @@
 {% extends "base.html" %}
 {% load tailwind_filters %}
+{% load static %}
 
 {% block content %}
-<div class="max-w-md mx-auto mt-16 mb-20 px-4">
-    <div class="text-center mb-8">
-        <span class="text-5xl block mb-4">🌾</span>
-        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Join the Harvest</h1>
-        <p class="text-gray-500 mt-2">Create your free volunteer account to start logging hours.</p>
-    </div>
-
-    <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-xl">
-        <form method="POST" class="space-y-4">
-            {% csrf_token %}
-            
-            <div class="hidden" aria-hidden="true">
-                <label for="website_url">Personal Website</label>
-                <input type="text" name="website_url" id="website_url" tabindex="-1" autocomplete="off">
+<div class="max-w-7xl mx-auto mt-8 mb-20 px-4 sm:px-6 lg:px-8">
+    <div class="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col lg:flex-row">
+        
+        <!-- Left Side: The Form -->
+        <div class="w-full lg:w-1/2 p-8 md:p-12 lg:p-16">
+            <div class="mb-8">
+                <span class="text-5xl block mb-4">🌾</span>
+                <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Join the Harvest</h1>
+                <p class="text-gray-500">Create your free volunteer account to start logging hours.</p>
             </div>
 
-            {{ form|crispy }}
-            
-            <div class="cf-turnstile mt-4" data-sitekey="0x4AAAAAADU_K4sBw06JNZlD"></div>
-            
-            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow transition mt-6">
-                Create Volunteer Account
-            </button>
-        </form>
-        <div class="mt-6 text-center text-sm text-gray-500">
-            Already have an account? <a href="{% url 'login' %}" class="text-emerald-600 hover:underline font-bold">Log in</a>
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="bg-red-50 border-l-4 border-red-500 text-red-800 p-4 rounded-r-lg shadow-sm font-medium mb-6">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+                
+                <div class="hidden" aria-hidden="true">
+                    <label for="website_url">Personal Website</label>
+                    <input type="text" name="website_url" id="website_url" tabindex="-1" autocomplete="off">
+                </div>
+
+                {{ form|crispy }}
+                
+                <div class="cf-turnstile mt-4" data-sitekey="0x4AAAAAADU_K4sBw06JNZlD"></div>
+                
+                <div class="pt-4">
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-4 rounded-xl shadow-lg transition text-lg">
+                        Create Volunteer Account
+                    </button>
+                </div>
+            </form>
+            <div class="mt-8 text-center text-sm text-gray-500">
+                Already have an account? <a href="{% url 'login' %}" class="text-emerald-600 hover:underline font-bold">Log in</a>
+            </div>
         </div>
+
+        <!-- Right Side: The Reward -->
+        <div class="w-full lg:w-1/2 bg-gradient-to-br from-emerald-900 to-teal-900 p-8 md:p-12 lg:p-16 flex flex-col justify-center relative overflow-hidden hidden md:flex">
+            <!-- Background Decoration -->
+            <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-emerald-800 opacity-50 blur-3xl"></div>
+            <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-teal-800 opacity-50 blur-3xl"></div>
+            
+            <div class="relative z-10 flex flex-col h-full justify-center gap-12">
+                <div>
+                    <h2 class="text-4xl font-extrabold text-white mb-4 leading-tight">Build your stats. Logging hours is easy!</h2>
+                    <p class="text-emerald-100 text-lg leading-relaxed">
+                        Watch your personal impact grow as you dedicate time to the farm. Track your top crops, tasks, and lifetime hours.
+                    </p>
+                </div>
+
+                <div class="space-y-8">
+                    <!-- Image 1: Log Hours -->
+                    <div class="transform transition hover:-translate-y-1 hover:shadow-2xl duration-300 cursor-pointer group" onclick="openImageModal('{% static 'images/ind_volunteer_log-hours_.webp' %}')">
+                        <p class="text-emerald-300 font-bold text-sm uppercase tracking-widest mb-2 ml-1 group-hover:text-white transition">Effortless Shift Logging</p>
+                        <div class="rounded-xl overflow-hidden shadow-lg border border-emerald-700/50 bg-white p-1 relative">
+                                <img src="{% static 'images/ind_volunteer_log-hours_.webp' %}" alt="Volunteer interface for logging shift hours, crop types, and farming activities" class="w-full h-auto object-contain rounded-lg">                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition duration-300 flex items-center justify-center rounded-lg">
+                                <span class="text-white opacity-0 group-hover:opacity-100 text-4xl drop-shadow-lg transform scale-50 group-hover:scale-100 transition duration-300">🔍</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Image 2: Profile Stats -->
+                    <div class="transform transition hover:-translate-y-1 hover:shadow-2xl duration-300 cursor-pointer group" onclick="openImageModal('{% static 'images/ind_volunteer_total_stats_profile_.webp' %}')">
+                        <p class="text-emerald-300 font-bold text-sm uppercase tracking-widest mb-2 ml-1 group-hover:text-white transition">Your Agricultural Record</p>
+                        <div class="rounded-xl overflow-hidden shadow-lg border border-emerald-700/50 bg-white p-1 relative">
+                                <img src="{% static 'images/ind_volunteer_total_stats_profile_.webp' %}" alt="Volunteer profile displaying lifetime hours, seasonal badges, and agricultural impact charts" class="w-full h-auto object-contain rounded-lg">                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition duration-300 flex items-center justify-center rounded-lg">
+                                <span class="text-white opacity-0 group-hover:opacity-100 text-4xl drop-shadow-lg transform scale-50 group-hover:scale-100 transition duration-300">🔍</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
+
+<!-- Full Screen Image Modal -->
+<dialog id="image_modal" class="p-0 rounded-xl shadow-2xl bg-transparent backdrop:bg-slate-900/90 w-full max-w-6xl overflow-visible cursor-pointer" onclick="this.close()">
+    <div class="relative flex justify-center items-center p-4">
+        <button type="button" class="absolute -top-10 right-4 md:-right-10 text-white hover:text-emerald-400 font-bold text-4xl transition" title="Close" onclick="document.getElementById('image_modal').close()">&times;</button>
+        <img id="modal_image_src" src="" alt="Expanded full-screen view of the selected application dashboard" class="w-full h-auto max-h-[85vh] object-contain rounded-xl shadow-2xl border-4 border-white/10">    </div>
+</dialog>
+
+<script>
+    function openImageModal(imgSrc) {
+        document.getElementById('modal_image_src').src = imgSrc;
+        document.getElementById('image_modal').showModal();
+    }
+</script>
 {% endblock %}
