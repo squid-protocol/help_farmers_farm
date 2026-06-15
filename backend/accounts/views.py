@@ -527,13 +527,13 @@ def delete_account_view(request):
     logout(request)
 
     messages.success(request, "Your account has been permanently anonymized and deleted.")
-    return redirect("home")
+    return redirect("login")
 
 
 def signup_gateway_view(request):
     """Displays the choice between Volunteer or Farm Manager registration."""
     if request.user.is_authenticated:
-        return redirect("home")
+        return redirect("log_hours")
     return render(request, "accounts/signup_gateway.html")
 
 
@@ -563,14 +563,14 @@ def verify_turnstile(request):
 def volunteer_signup_view(request):
     """Registers a new volunteer without an attached farm."""
     if request.user.is_authenticated:
-        return redirect("home")
+        return redirect("farm_search")
 
     if request.method == "POST":
         # 0. The Honeypot Trap
         if request.POST.get("website_url"):
             # Bot detected: fake a success message and silently drop the request
             messages.success(request, "Welcome! You can now apply to join a farm.")
-            return redirect("home")
+            return redirect("farm_search")
 
         # 1. Cloudflare Turnstile Check
         if not verify_turnstile(request):
@@ -593,7 +593,7 @@ def volunteer_signup_view(request):
 
             login(request, user, backend="accounts.backends.EmailOrUsernameModelBackend")
             messages.success(request, "Welcome! You can now apply to join a farm.")
-            return redirect("home")  # Redirect to their unattached dashboard
+            return redirect("farm_search")  # Send them straight to the directory
     else:
         form = VolunteerSignUpForm()
 
@@ -603,14 +603,14 @@ def volunteer_signup_view(request):
 def farm_signup_view(request):
     """Registers a manager, provisions a farm, sets the 60-day trial, and links them."""
     if request.user.is_authenticated:
-        return redirect("home")
+        return redirect("log_hours")
 
     if request.method == "POST":
         # 0. The Honeypot Trap
         if request.POST.get("website_url"):
             # Bot detected: fake a success message and silently drop the request
             messages.success(request, "Welcome! Your 60-day free trial starts today.")
-            return redirect("home")
+            return redirect("log_hours")
 
         # 1. Cloudflare Turnstile Check
         if not verify_turnstile(request):
