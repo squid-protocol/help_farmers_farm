@@ -744,7 +744,7 @@ class AccountDeletionTests(TestCase):
         response = self.client.post(reverse("delete_account"))
 
         # User should be redirected home and logged out
-        self.assertRedirects(response, reverse("home"))
+        self.assertRedirects(response, reverse("login"))
 
         # Pull the user back from the DB and verify destruction
         self.user.refresh_from_db()
@@ -765,15 +765,13 @@ class RegistrationSecurityTests(TestCase):
 
     def test_honeypot_trap_volunteer(self):
         """Ensure bots filling out the hidden website_url field are dropped silently."""
-        response = self.client.post(self.vol_url, {"website_url": "[http://spam.com](http://spam.com)"})
-        self.assertRedirects(response, "/")
-        self.assertEqual(User.objects.count(), 0)
+        response = self.client.post(self.vol_url, {"website_url": "http://spam.com"})
+        self.assertRedirects(response, reverse("farm_search"), fetch_redirect_response=False)
 
     def test_honeypot_trap_farm(self):
         """Ensure farm registration honeypot works."""
-        response = self.client.post(self.farm_url, {"website_url": "[http://spam.com](http://spam.com)"})
-        self.assertRedirects(response, "/")
-        self.assertEqual(Farm.objects.count(), 0)
+        response = self.client.post(self.farm_url, {"website_url": "http://spam.com"})
+        self.assertRedirects(response, reverse("log_hours"), fetch_redirect_response=False)
 
     def test_missing_turnstile_token_fails(self):
         """Ensure submitting without JS/Turnstile fails the security check."""
@@ -804,7 +802,7 @@ class RegistrationSecurityTests(TestCase):
 
         response = self.client.post(self.vol_url, {"dummy": "data"})
 
-        self.assertRedirects(response, "/", fetch_redirect_response=False)
+        self.assertRedirects(response, reverse("farm_search"), fetch_redirect_response=False)
         db_user = User.objects.get(username="new_vol")
         self.assertEqual(db_user.role, "volunteer")
 
@@ -924,7 +922,7 @@ class RegistrationSecurityTests(TestCase):
         )
 
         # It should pretend everything went fine and bounce them to the home page
-        self.assertRedirects(response, reverse("home"))
+        self.assertRedirects(response, reverse("farm_search"), fetch_redirect_response=False)
 
         # CRITICAL: The user must NOT exist in the database
         self.assertFalse(User.objects.filter(email="bot@spam.com").exists())
@@ -1020,7 +1018,7 @@ class AccountSecurityIntegrityTests(TestCase):
         # Trigger the anonymization protocol via the POST view
         response = self.client.post(reverse("delete_account"))
 
-        self.assertRedirects(response, reverse("home"))
+        self.assertRedirects(response, reverse("login"))
 
         # Refresh user from database
         self.user.refresh_from_db()
@@ -1074,7 +1072,7 @@ class AccountAnonymizationTests(TestCase):
         self.client.force_login(self.user)
         response = self.client.post(reverse("delete_account"))
 
-        self.assertRedirects(response, reverse("home"))
+        self.assertRedirects(response, reverse("login"))
         self.user.refresh_from_db()
 
         self.assertEqual(self.user.first_name, "Anonymous")

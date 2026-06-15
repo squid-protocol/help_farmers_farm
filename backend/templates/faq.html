@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto mt-12 mb-20 px-4 sm:px-6">
@@ -33,23 +34,32 @@
 
         <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition">
             <h3 class="text-xl font-bold text-gray-900 mb-3">Who can see my personal data and logged hours?</h3>
-            <p class="text-gray-600 leading-relaxed">
+            <p class="text-gray-600 leading-relaxed mb-6">
                 <strong>Your data is strictly private.</strong> Your personal profile, contact information, and logged hours are only visible to you and the specific Farm Managers whose rosters you have explicitly joined. Your profile is completely hidden from the public and from other farms on the platform.
             </p>
+            <div class="rounded-xl overflow-hidden shadow-sm border border-gray-200 bg-gray-50 p-2 max-w-2xl mx-auto">
+                <img src="{% static 'images/ind_volunteer_total_stats_profile_.webp' %}" alt="Volunteer profile displaying lifetime hours, seasonal badges, and agricultural impact charts" class="w-full h-auto object-contain rounded-lg">
+            </div>
         </div>
 
         <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition">
             <h3 class="text-xl font-bold text-gray-900 mb-3">How do the digital liability waivers work?</h3>
-            <p class="text-gray-600 leading-relaxed">
+            <p class="text-gray-600 leading-relaxed mb-6">
                 When a farm requires a liability waiver or compliance document, you can review and sign it electronically directly from your dashboard. We use a highly secure, WORM-compliant (Write Once, Read Many) vault to generate an immutable PDF receipt of your signature, ensuring full legal protection for both you and the farm.
             </p>
+            <div class="rounded-xl overflow-hidden shadow-sm border border-gray-200 bg-gray-50 p-2 max-w-2xl mx-auto">
+                <img src="{% static 'images/farm_manager_waiver_dashboard.webp' %}" alt="Compliance dashboard tracking signed and missing digital liability waivers for farm volunteers" class="w-full h-auto object-contain rounded-lg">
+            </div>
         </div>
 
         <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition">
             <h3 class="text-xl font-bold text-gray-900 mb-3">How do I track my CSA work commitment?</h3>
-            <p class="text-gray-600 leading-relaxed">
+            <p class="text-gray-600 leading-relaxed mb-6">
                 Once approved on a farm's roster, use your personal dashboard to log your shifts. You can select the specific crop, the activity (Planting, Tending, Harvesting, Cultivating, or General Maintenance), and enter your hours. The platform's pacing engine will automatically calculate your progress toward your seasonal work share goal.
             </p>
+            <div class="rounded-xl overflow-hidden shadow-sm border border-gray-200 bg-gray-50 p-2 max-w-2xl mx-auto">
+                <img src="{% static 'images/ind_volunteer_log-hours_.webp' %}" alt="Volunteer interface for logging shift hours, crop types, and farming activities" class="w-full h-auto object-contain rounded-lg">
+            </div>
         </div>
 
         <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition">

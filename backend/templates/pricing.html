@@ -1,14 +1,82 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-    
-    <div class="max-w-3xl mx-auto mb-12 bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-center">
-        <span class="text-emerald-800 font-bold flex items-center justify-center gap-2">
-            <span>👋</span> <strong>Are you a Volunteer?</strong> Put your wallet away. Helping Farmers Farm is 100% free for individuals exploring and working on farms.
-        </span>
-    </div>
+<!-- HERO HOOK -->
+<div class="text-center py-16 px-4 sm:px-6 lg:px-8">
+    <h1 class="text-5xl md:text-6xl font-extrabold text-gray-900 tracking-tight mb-6">
+        Lose the clipboard. <span class="text-emerald-600">Manage your workforce</span> in one place.
+    </h1>
+    <p class="mt-4 text-xl text-gray-500 max-w-3xl mx-auto leading-relaxed">
+        List your farm on our directory, automate your liability waivers, and track every hour of labor by crop and activity.
+    </p>
+</div>
 
+<!-- FEATURE 1: Volunteer Progress -->
+<div class="py-16 bg-gray-50 border-t border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="lg:grid lg:grid-cols-2 lg:gap-16 items-center">
+            <div class="mb-12 lg:mb-0">
+                <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight sm:text-4xl mb-4">
+                    Track Volunteer Progress
+                </h2>
+                <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+                    Keep your team accountable. Instantly see how many hours each volunteer has logged per week and ensure everyone is meeting their seasonal commitments.
+                </p>
+            </div>
+            <div class="relative rounded-2xl p-2 bg-gray-200 shadow-inner">
+                <div class="overflow-hidden rounded-xl bg-white border border-gray-100 shadow-lg bg-gray-50">
+                    <img src="{% static 'images/volunteer_progress_over_the_season.webp' %}" alt="Bar chart interface tracking individual volunteer hours against their seasonal commitment goals" class="w-full h-auto object-contain">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FEATURE 2: Liability & Waivers -->
+<div class="py-16 bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="lg:grid lg:grid-cols-12 lg:gap-12 items-center flex flex-col-reverse lg:flex-row">
+            <div class="lg:col-span-7 relative rounded-2xl p-2 bg-gray-200 shadow-inner mt-12 lg:mt-0 w-full">
+                <div class="overflow-hidden rounded-xl bg-white border border-gray-100 shadow-lg bg-gray-50">
+                    <img src="{% static 'images/farm_manager_waiver_dashboard.webp' %}" alt="Compliance dashboard tracking signed and missing digital liability waivers for farm volunteers" class="w-full h-auto object-contain">
+                </div>
+            </div>
+            <div class="lg:col-span-5">
+                <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight sm:text-4xl mb-4">
+                    Automated Liability Protection
+                </h2>
+                <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+                    Never worry about missing paperwork again. Our digital waiver vault automatically prompts new volunteers to sign your customized liability agreements before they can log a single shift.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FEATURE 3: Deep Analytics -->
+<div class="py-16 bg-gray-50 border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="lg:grid lg:grid-cols-2 lg:gap-16 items-center">
+            <div class="mb-12 lg:mb-0">
+                <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight sm:text-4xl mb-4">
+                    Deep Labor Analytics
+                </h2>
+                <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+                    Stop guessing where the time goes. Instantly generate seasonal labor reports breaking down exactly how many volunteer hours were spent on specific crops and activities like planting, weeding, and harvesting.
+                </p>
+            </div>
+            <div class="relative rounded-2xl p-2 bg-gray-200 shadow-inner">
+                <div class="overflow-hidden rounded-xl bg-white border border-gray-100 shadow-lg bg-gray-50">
+                    <img src="{% static 'images/volunteer_impact_by_veggies.webp' %}" alt="Analytics dashboard showing volunteer labor hours broken down by crop and farming task" class="w-full h-auto object-contain">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PRICING SECTION -->
+<div class="max-w-7xl mx-auto py-24 px-4 sm:px-6 lg:px-8">
     <div class="text-center max-w-3xl mx-auto mb-16">
         <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight sm:text-5xl">
             Simple pricing for Farms.

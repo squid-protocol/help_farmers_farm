@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto mt-12 mb-20 px-4 sm:px-6">
@@ -22,10 +23,10 @@
                 We transformed into a discovery network. For <strong>Volunteers</strong>, we are a free portal to find local agriculture work share programs where volunteers commit to working on a farm for a few hours per week for a season, and track lifetime impact. For <strong>Farms</strong>, we are help honor your volunteers by making sure they know their impact to your harvest, we also can track seasonal logs so you know what your labor force did over the season and we have a liability waiver compliance tool that automates legal waivers. 
             </p>
         </div>
-        <div class="bg-emerald-50 p-8 rounded-3xl border border-emerald-100 text-center">
-            <span class="text-6xl mb-4 block">🌾</span>
-            <h3 class="text-xl font-bold text-emerald-900 mb-2">Built for the Field</h3>
-            <p class="text-emerald-800 text-sm">Designed from the ground up to be mobile-friendly, fast, and relentlessly focused on the unique needs of agricultural work shares and legal compliance.</p>
+        <div class="relative rounded-2xl p-2 bg-gray-200 shadow-inner">
+            <div class="overflow-hidden rounded-xl bg-white border border-gray-100 shadow-lg">
+                <img src="{% static 'images/ind_volunteer_total_stats_profile_.webp' %}" alt="Volunteer profile displaying lifetime hours, seasonal badges, and agricultural impact charts" class="w-full h-auto object-contain">
+            </div>
         </div>
     </div>
 
