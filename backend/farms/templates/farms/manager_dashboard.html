@@ -441,10 +441,26 @@
                 {% for form in compliance_forms %}
                     <li class="p-4 flex flex-col sm:flex-row justify-between sm:items-center group transition {% if not form.is_active %}bg-gray-50 opacity-60{% else %}hover:bg-gray-50{% endif %}">
                         <div>
-                            <strong class="text-gray-900 text-lg">{{ form.name }}</strong>
-                            {% if not form.is_active %}
-                                <span class="ml-2 text-xs font-bold text-red-500 uppercase tracking-wider">Inactive</span>
-                            {% endif %}
+                            <div class="flex items-center gap-2">
+                                <strong class="text-gray-900 text-lg">{{ form.name }}</strong>
+                                {% if form.is_active %}
+                                    {% if form.total_assigned == 0 %}
+                                        <span class="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-0.5 rounded border border-gray-200" title="No active volunteers assigned">
+                                            0 / 0
+                                        </span>
+                                    {% elif form.signed_count == form.total_assigned %}
+                                        <span class="bg-emerald-50 text-emerald-600 text-xs font-bold px-2 py-0.5 rounded border border-emerald-200" title="All assigned volunteers have signed">
+                                            {{ form.signed_count }} / {{ form.total_assigned }}
+                                        </span>
+                                    {% else %}
+                                        <span class="bg-red-50 text-red-600 text-xs font-bold px-2 py-0.5 rounded border border-red-200" title="Missing signatures">
+                                            {{ form.signed_count }} / {{ form.total_assigned }}
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="bg-red-50 text-red-500 text-xs font-bold px-2 py-0.5 rounded border border-red-200 uppercase tracking-wider">Inactive</span>
+                                {% endif %}
+                            </div>
                             <p class="text-sm text-gray-500 mt-1">
                                 {% if form.does_expire and form.expiration_date %}
                                     Expires on: <strong class="text-gray-700">{{ form.expiration_date|date:"M j, Y" }}</strong>

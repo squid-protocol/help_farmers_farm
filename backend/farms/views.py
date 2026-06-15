@@ -229,13 +229,33 @@ def manager_dashboard(request):
     requires_waivers = my_farm.can_use_waivers
     active_forms = []
 
+    # Always fetch the signature set so we can calculate dashboard stats
+    user_signatures = FormSignature.objects.filter(form__farm=my_farm).values_list("user_id", "form_id")
+    sig_set = set(user_signatures)
+
     if requires_waivers:
         all_active = ComplianceForm.objects.filter(farm=my_farm, is_active=True).prefetch_related("assigned_users")
         active_forms = [f for f in all_active if f.is_currently_valid()]
-        user_signatures = FormSignature.objects.filter(form__farm=my_farm).values_list("user_id", "form_id")
-        sig_set = set(user_signatures)
-    else:
-        sig_set = set()
+
+    # Calculate compliance form signature ratios for the dashboard
+    active_vols = [mem.user for mem in prog_memberships]
+    for cform in compliance_forms:
+        assigned_count = 0
+        signed_count = 0
+        is_all = getattr(cform, "assignment_type", "all") == "all"
+
+        assigned_user_ids = set()
+        if not is_all:
+            assigned_user_ids = set(cform.assigned_users.values_list("id", flat=True))
+
+        for vol in active_vols:
+            if is_all or vol.id in assigned_user_ids:
+                assigned_count += 1
+                if (vol.id, cform.id) in sig_set:
+                    signed_count += 1
+
+        cform.signed_count = signed_count
+        cform.total_assigned = assigned_count
 
     grouped_data = {}
 
