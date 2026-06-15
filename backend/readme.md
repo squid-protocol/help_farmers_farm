@@ -44,9 +44,7 @@ This root directory contains several critical utility files that power the devel
 ---
 
 ## 🛠 Local Development Workflow
-
-### The Golden Rule of Booting Up
-Do **not** run `python manage.py runserver` manually. 
+ 
 
 Because this project relies heavily on a custom Tailwind CSS pipeline, you must run both the Django server and the Tailwind watcher simultaneously. To spin up the local environment, simply run:
 

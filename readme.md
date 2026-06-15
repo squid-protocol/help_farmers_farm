@@ -6,6 +6,14 @@ This repository houses the entire ecosystem required to run the platform, from t
 
 ---
 
+## 📺 Full System Demo
+
+Watch the full platform walkthrough below to see both the Volunteer Experience and the Manager Command Center in action:
+
+[![Helping Farmers Farm System Demo](https://img.youtube.com/vi/VSIW91JPdyw/0.jpg)](https://www.youtube.com/watch?v=VSIW91JPdyw)
+
+---
+
 ## 🗺️ Repository Map
 
 This repository is structured to separate application logic from infrastructure and utility scripts. If you are looking for specific application code, check the corresponding directories below.
@@ -28,6 +36,3 @@ Because this is a multi-layered application, detailed documentation is stored al
 
 ---
 
-## 🔒 Security & Environment Notes
-* **Never commit `.env` files.** All secrets, API keys (Stripe, AWS, Turnstile), and database credentials must be managed via secure environment variables on the production server.
-* Ensure your Python virtual environment (`farm_venv`) is fully active before running any scripts from the `utils/` or `backend/` directories.
